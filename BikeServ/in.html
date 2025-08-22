@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BikeServ - Doorstep Bike Service & Genuine Parts | Tamil Nadu</title>
+    <link rel="icon" type="image/png" href="ico.png" />
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#218085">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="header-left">
+                    <h1 class="logo">🏍️ BikeServ</h1>
+                    <div class="bike-selector">
+                        <select id="bikeSelector" class="form-control">
+                            <option value="">Select your bike</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="header-center">
+                    <div class="search-bar">
+                        <input type="text" placeholder="Search services, parts..." class="form-control" id="searchInput">
+                        <button class="search-btn">🔍</button>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="language-toggle btn btn--outline btn--sm" id="languageToggle">தமிழ்</button>
+                    <a href="https://wa.me/919952876478?text=Hi%21%20I%20need%20help%20with%20my%20bike" target="_blank" class="btn btn--primary whatsapp-cta">
+                        📱 WhatsApp
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="container">
+                <h2 class="hero-title" data-en="Doorstep Bike Service & Genuine Parts" data-ta="வீட்டு வாசல் பைக் சேவை மற்றும் அசல் பாகங்கள்">
+                    Doorstep Bike Service & Genuine Parts
+                </h2>
+                <p class="hero-subtitle" data-en="Serving Tamil Nadu with certified mechanics and genuine spare parts" data-ta="சான்றளிக்கப்பட்ட பழுதுபார்ப்பு தொழிலாளர்கள் மற்றும் அசல் பாகங்களுடன் தமிழ்நாட்டிற்கு சேவை">
+                    Serving Tamil Nadu with certified mechanics and genuine spare parts
+                </p>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="stat-number">10K+</span>
+                        <span class="stat-label" data-en="Services Done" data-ta="சேவைகள் முடிந்தது">Services Done</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">500+</span>
+                        <span class="stat-label" data-en="Certified Mechanics" data-ta="சான்றளிக்கப்பட்ட பழுதுபார்ப்பு தொழிலாளர்கள்">Certified Mechanics</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">50+</span>
+                        <span class="stat-label" data-en="Cities Covered" data-ta="நகரங்கள் உள்ளடக்கப்பட்டுள்ளன">Cities Covered</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs">
+            <div class="container">
+                <div class="tabs">
+                    <button class="tab active" data-tab="services" data-en="Services" data-ta="சேவைகள்">Services</button>
+                    <button class="tab" data-tab="parts" data-en="Spare Parts" data-ta="உதிரி பாகங்கள்">Spare Parts</button>
+                    <button class="tab" data-tab="used-bikes" data-en="Used Bikes" data-ta="பயன்படுத்திய பைக்குகள்">Used Bikes</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Services Section -->
+        <section id="services" class="section active">
+            <div class="container">
+                <h3 class="section-title" data-en="Service Packages" data-ta="சேவை தொகுப்புகள்">Service Packages</h3>
+                <div class="service-packages" id="servicePackages">
+                    <!-- Service packages will be populated by JavaScript -->
+                </div>
+
+                <!-- Mechanics Section -->
+                <div class="mechanics-section">
+                    <h4 class="section-subtitle" data-en="Our Certified Mechanics" data-ta="எங்கள் சான்றளிக்கப்பட்ட பழுதுபார்ப்பு தொழிலாளர்கள்">Our Certified Mechanics</h4>
+                    <div class="mechanics-grid" id="mechanicsGrid">
+                        <!-- Mechanics will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Spare Parts Section -->
+        <section id="parts" class="section">
+            <div class="container">
+                <div class="parts-header">
+                    <h3 class="section-title" data-en="Genuine Spare Parts" data-ta="அசல் உதிரி பாகங்கள்">Genuine Spare Parts</h3>
+                    <div class="parts-filters">
+                        <select id="brandFilter" class="form-control">
+                            <option value="" data-en="All Brands" data-ta="அனைத்து பிராண்டுகள்">All Brands</option>
+                        </select>
+                        <select id="categoryFilter" class="form-control">
+                            <option value="" data-en="All Categories" data-ta="அனைத்து வகைகள்">All Categories</option>
+                            <option value="Engine" data-en="Engine" data-ta="இயந்திரம்">Engine</option>
+                            <option value="Brakes" data-en="Brakes" data-ta="பிரேக்குகள்">Brakes</option>
+                            <option value="Drive Train" data-en="Drive Train" data-ta="இயக்கு தொடர்">Drive Train</option>
+                            <option value="Tyres" data-en="Tyres" data-ta="டயர்கள்">Tyres</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="parts-grid" id="partsGrid">
+                    <!-- Parts will be populated by JavaScript -->
+                </div>
+                
+                <!-- Cart Summary -->
+                <div class="cart-summary" id="cartSummary" style="display: none;">
+                    <div class="cart-content">
+                        <h4 data-en="Cart Summary" data-ta="வண்டி சுருக்கம்">Cart Summary</h4>
+                        <div class="cart-items" id="cartItems"></div>
+                        <div class="cart-total" id="cartTotal"></div>
+                        <button class="btn btn--primary btn--full-width" id="orderViaWhatsApp" data-en="Order via WhatsApp" data-ta="WhatsApp மூலம் ஆர்டர்">
+                            📱 Order via WhatsApp
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Used Bikes Section -->
+        <section id="used-bikes" class="section">
+            <div class="container">
+                <h3 class="section-title" data-en="Verified Used Bikes" data-ta="சரிபார்க்கப்பட்ட பயன்படுத்திய பைக்குகள்">Verified Used Bikes</h3>
+                <div class="used-bikes-grid" id="usedBikesGrid">
+                    <!-- Used bikes will be populated by JavaScript -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Why Choose Us Section -->
+        <section class="why-choose-us">
+            <div class="container">
+                <h3 class="section-title" data-en="Why Choose BikeServ?" data-ta="ஏன் BikeServ ஐ தேர்வு செய்ய வேண்டும்?">Why Choose BikeServ?</h3>
+                <div class="features-grid">
+                    <div class="feature">
+                        <div class="feature-icon">✅</div>
+                        <h4 data-en="Certified Mechanics" data-ta="சான்றளிக்கப்பட்ட பழுதுபார்ப்பு தொழிலாளர்கள்">Certified Mechanics</h4>
+                        <p data-en="Trained & authorized by bike manufacturers" data-ta="பைக் உற்பத்தியாளர்களால் பயிற்சி & அங்கீகரிக்கப்பட்டது">Trained & authorized by bike manufacturers</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">🏠</div>
+                        <h4 data-en="Doorstep Service" data-ta="வீட்டு வாசல் சேவை">Doorstep Service</h4>
+                        <p data-en="Convenient pickup & drop at your location" data-ta="உங்கள் இடத்தில் வசதியான பிக்அப் & டிராப்">Convenient pickup & drop at your location</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">🔧</div>
+                        <h4 data-en="Genuine Parts" data-ta="அசல் பாகங்கள்">Genuine Parts</h4>
+                        <p data-en="Only authentic spare parts with warranty" data-ta="உத்தரவாதத்துடன் அசல் உதிரி பாகங்கள் மட்டுமே">Only authentic spare parts with warranty</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">💰</div>
+                        <h4 data-en="Transparent Pricing" data-ta="வெளிப்படையான விலை">Transparent Pricing</h4>
+                        <p data-en="No hidden charges, GST included" data-ta="மறைக்கப்பட்ட கட்டணங்கள் இல்லை, GST சேர்க்கப்பட்டுள்ளது">No hidden charges, GST included</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Sticky Bottom Navigation (Mobile) -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" data-tab="services">
+            <span class="nav-icon">🔧</span>
+            <span class="nav-label" data-en="Services" data-ta="சேவைகள்">Services</span>
+        </button>
+        <button class="nav-item" id="searchNav">
+            <span class="nav-icon">🔍</span>
+            <span class="nav-label" data-en="Search" data-ta="தேடல்">Search</span>
+        </button>
+        <a href="https://wa.me/919952876478?text=Hi%21%20I%20need%20help%20with%20my%20bike" target="_blank" class="nav-item whatsapp-nav">
+            <span class="nav-icon">📱</span>
+            <span class="nav-label">WhatsApp</span>
+        </a>
+        <button class="nav-item" id="cartNav">
+            <span class="nav-icon">🛒</span>
+            <span class="nav-label cart-label" data-en="Cart" data-ta="வண்டி">Cart</span>
+            <span class="cart-count" id="cartCount">0</span>
+        </button>
+        <button class="nav-item" id="accountNav">
+            <span class="nav-icon">👤</span>
+            <span class="nav-label" data-en="Account" data-ta="கணக்கு">Account</span>
+        </button>
+    </nav>
+
+    <!-- Modals -->
+    <!-- Service Booking Modal -->
+    <div class="modal hidden" id="serviceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Book Service</h3>
+                <button class="modal-close" id="closeServiceModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="booking-step active" id="step1">
+                    <h4 data-en="Service Type" data-ta="சேவை வகை">Service Type</h4>
+                    <div class="service-options">
+                        <label class="option">
+                            <input type="radio" name="serviceType" value="doorstep">
+                            <span data-en="Doorstep Service (+₹299)" data-ta="வீட்டு வாசல் சேவை (+₹299)">Doorstep Service (+₹299)</span>
+                        </label>
+                        <label class="option">
+                            <input type="radio" name="serviceType" value="workshop">
+                            <span data-en="Workshop Service" data-ta="பட்டறை சேவை">Workshop Service</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="booking-step" id="step2">
+                    <h4 data-en="Add-ons" data-ta="கூடுதல்">Add-ons</h4>
+                    <div class="addons-list" id="addonsList">
+                        <!-- Add-ons will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <div class="booking-step" id="step3">
+                    <h4 data-en="Address & Time" data-ta="முகவரி & நேரம்">Address & Time</h4>
+                    <div class="form-group">
+                        <label class="form-label" data-en="Address" data-ta="முகவரி">Address</label>
+                        <textarea class="form-control" id="serviceAddress" rows="3" placeholder="Enter your full address"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-en="Preferred Date" data-ta="விருப்பமான தேதி">Preferred Date</label>
+                        <input type="date" class="form-control" id="serviceDate">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-en="Preferred Time" data-ta="விருப்பமான நேரம்">Preferred Time</label>
+                        <select class="form-control" id="serviceTime">
+                            <option value="9am-12pm">9:00 AM - 12:00 PM</option>
+                            <option value="12pm-3pm">12:00 PM - 3:00 PM</option>
+                            <option value="3pm-6pm">3:00 PM - 6:00 PM</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="booking-summary" id="bookingSummary">
+                    <h4 data-en="Booking Summary" data-ta="முன்பதிவு சுருக்கம்">Booking Summary</h4>
+                    <div class="summary-content" id="summaryContent"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn--secondary" id="prevStep" style="display: none;" data-en="Previous" data-ta="முந்தைய">Previous</button>
+                <button class="btn btn--primary" id="nextStep" data-en="Next" data-ta="அடுத்து">Next</button>
+                <button class="btn btn--primary btn--full-width hidden" id="bookViaWhatsApp" data-en="Book via WhatsApp" data-ta="WhatsApp மூலம் முன்பதிவு">
+                    📱 Book via WhatsApp
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Used Bike Detail Modal -->
+    <div class="modal hidden" id="bikeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="bikeModalTitle">Bike Details</h3>
+                <button class="modal-close" id="closeBikeModal">×</button>
+            </div>
+            <div class="modal-body" id="bikeModalBody">
+                <!-- Bike details will be populated by JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn--primary btn--full-width" id="inquireViaWhatsApp" data-en="Inquire via WhatsApp" data-ta="WhatsApp மூலம் விசாரிக்கவும்">
+                    📱 Inquire via WhatsApp
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
