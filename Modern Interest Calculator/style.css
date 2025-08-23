@@ -1,0 +1,29 @@
+/* style.css */
+/* Custom styles for the theme toggle and animations */
+body {
+    font-family: 'Inter', sans-serif;
+}
+.theme-toggle-checkbox {
+    display: none;
+}
+.theme-toggle-label {
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+.theme-toggle-label:hover {
+    transform: scale(1.1);
+}
+/* Fade-in animation for the result */
+.result-animation {
+    animation: fadeIn 0.5s ease-in-out;
+}
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

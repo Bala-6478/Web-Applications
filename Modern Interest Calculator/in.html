@@ -1,0 +1,93 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interest Calculator</title>
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='90' height='90' x='5' y='5' rx='10' ry='10' fill='%236366F1'/%3E%3Crect width='60' height='20' x='20' y='15' rx='5' ry='5' fill='%23E0E7FF'/%3E%3Ccircle cx='30' cy='50' r='8' fill='%23E0E7FF'/%3E%3Ccircle cx='50' cy='50' r='8' fill='%23E0E7FF'/%3E%3Ccircle cx='70' cy='50' r='8' fill='%23E0E7FF'/%3E%3Ccircle cx='30' cy='75' r='8' fill='%23E0E7FF'/%3E%3Ccircle cx='50' cy='75' r='8' fill='%23E0E7FF'/%3E%3Ccircle cx='70' cy='75' r='8' fill='%23E0E7FF'/%3E%3C/svg%3E" type="image/svg+xml">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS Config -->
+    <script>
+        // This tells Tailwind CSS to use the 'class' strategy for dark mode.
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- External CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-500">
+
+    <!-- Theme Toggle Button -->
+    <div class="absolute top-4 right-4">
+        <input type="checkbox" id="themeToggle" class="theme-toggle-checkbox">
+        <label for="themeToggle" class="theme-toggle-label block w-12 h-7 rounded-full bg-gray-300 dark:bg-gray-700 relative">
+            <span class="absolute left-1 top-1 w-5 h-5 bg-white rounded-full transition-transform duration-300 ease-in-out transform dark:translate-x-5 flex items-center justify-center">
+                <!-- Sun Icon -->
+                <svg id="sunIcon" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm0 14a1 1 0 01-1 1v1a1 1 0 112 0v-1a1 1 0 01-1-1zM5.636 5.636a1 1 0 011.414 0l.707.707a1 1 0 01-1.414 1.414l-.707-.707a1 1 0 010-1.414zm10.071 7.071a1 1 0 010 1.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 0zM2 10a1 1 0 011-1h1a1 1 0 110 2H3a1 1 0 01-1-1zm14 0a1 1 0 011-1h1a1 1 0 110 2h-1a1 1 0 01-1-1zM5.636 14.364a1 1 0 010-1.414l.707-.707a1 1 0 011.414 1.414l-.707.707a1 1 0 01-1.414 0zm10.071-7.071a1 1 0 01-1.414 0l-.707-.707a1 1 0 011.414-1.414l.707.707a1 1 0 010 1.414zM10 5a5 5 0 100 10 5 5 0 000-10z" clip-rule="evenodd" />
+                </svg>
+                 <!-- Moon Icon -->
+                <svg id="moonIcon" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-700 hidden" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                </svg>
+            </span>
+        </label>
+    </div>
+
+    <div class="container mx-auto flex items-center justify-center min-h-screen p-4">
+        <div class="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 sm:p-8 transition-colors duration-500">
+            <h1 class="text-2xl sm:text-3xl font-bold text-center text-indigo-600 dark:text-indigo-400 mb-6">
+                Interest Calculator
+            </h1>
+
+            <div class="space-y-4">
+                <!-- Principal Input -->
+                <div>
+                    <label for="principal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Principal Amount (₹)</label>
+                    <input type="number" id="principal" placeholder="e.g., 50000" class="mt-1 block w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-300 ease-in-out transform focus:scale-105">
+                </div>
+
+                <!-- Rate of Interest Input -->
+                <div>
+                    <label for="rate" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Rate of Interest (%)</label>
+                    <input type="number" id="rate" placeholder="e.g., 8.5" class="mt-1 block w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-300 ease-in-out transform focus:scale-105">
+                </div>
+
+                <!-- Time Input -->
+                <div>
+                    <label for="time" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Time Period (Years)</label>
+                    <input type="number" id="time" placeholder="e.g., 10" class="mt-1 block w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-300 ease-in-out transform focus:scale-105">
+                </div>
+
+                <!-- Interest Type Select -->
+                <div>
+                    <label for="type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Interest Type</label>
+                    <select id="type" class="mt-1 block w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-300 ease-in-out transform focus:scale-105">
+                        <option value="simple">Simple Interest</option>
+                        <option value="compound">Compound Interest</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Calculate Button -->
+            <button onclick="calculateInterest()" class="w-full mt-8 py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 transition-all duration-300 ease-in-out transform hover:scale-105">
+                Calculate
+            </button>
+
+            <!-- Result Display -->
+            <div id="result" class="mt-6 text-center text-gray-600 dark:text-gray-400"></div>
+        </div>
+    </div>
+
+    <!-- External JS -->
+    <script src="script.js"></script>
+</body>
+</html>
