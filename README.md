@@ -5,6 +5,7 @@
 ### 2. BIKE SERVICE
 ![Image Alt](https://github.com/Bala-6478/Web-Applications/blob/main/BikeServ/Screenshot%20(79).png)
 ### Live Demo :- https://balavignesh2025.neocities.org/Project/BikeServ/in
-### Modern Interest Calculator
+### 3. Modern Interest Calculator
 ![Image Alt](https://github.com/Bala-6478/Web-Applications/blob/main/Modern%20Interest%20Calculator/Screenshot%20(93).png)
 ### Live Demo :- https://balavignesh2025.neocities.org/Project/Modern%20Interest%20Calculator/in
+### 4. Text Tools
