@@ -12,3 +12,4 @@
 ![Image Alt](https://github.com/Bala-6478/Web-Applications/blob/main/Text%20Tools/Screenshot%20(96).png)
 ### Live Demo :- https://balavignesh2025.neocities.org/Project/Text%20Tools/in
  
+ 
