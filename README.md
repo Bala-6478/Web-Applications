@@ -12,6 +12,6 @@
 ![Image Alt](https://github.com/Bala-6478/Web-Applications/blob/main/Text%20Tools/Screenshot%20(96).png)
 ### Live Demo :- https://balavignesh2025.neocities.org/Project/Text%20Tools/in
 ### 5. fruit ninja
-https://github.com/Bala-6478/Web-Applications/blob/main/fruit%20ninja/Screenshot%20(100).png
+![Image Alt](https://github.com/Bala-6478/Web-Applications/blob/main/fruit%20ninja/Screenshot%20(100).png)
  
  
