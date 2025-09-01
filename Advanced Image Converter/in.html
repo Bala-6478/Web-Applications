@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PNG to ICO Converter</title>
+    <link rel="icon" type="image/png" href="ico.png" />
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for the file input button */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .file-input-button {
+            cursor: pointer;
+        }
+        /* Hide the default file input */
+        #file-upload {
+            display: none;
+        }
+        /* Spinner animation */
+        .spinner {
+            border-top-color: #3498db;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-md bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 space-y-6">
+        
+        <!-- Header Section -->
+        <div class="text-center">
+            <h1 class="text-3xl font-bold text-gray-100">PNG to ICO Converter</h1>
+            <p class="text-gray-400 mt-2">Create a browser-ready favicon.ico from your PNG image.</p>
+        </div>
+
+        <!-- File Upload Section -->
+        <div>
+            <!-- This label acts as the custom button for the hidden file input -->
+            <label for="file-upload" class="file-input-button w-full flex flex-col items-center justify-center border-2 border-dashed border-gray-600 hover:border-blue-500 rounded-xl p-8 transition-colors duration-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-gray-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                <span id="file-name" class="font-medium text-gray-300">Click to upload a PNG</span>
+                <span class="text-sm text-gray-500">Max file size: 5MB</span>
+            </label>
+            <!-- The actual file input is hidden and controlled by the label -->
+            <input id="file-upload" type="file" accept="image/png">
+        </div>
+
+        <!-- Image Preview Section -->
+        <div id="preview-container" class="hidden text-center space-y-3">
+            <h3 class="text-lg font-semibold text-gray-200">Image Preview</h3>
+            <div class="flex justify-center">
+                <img id="image-preview" src="#" alt="Image preview" class="max-w-full h-auto max-h-48 rounded-lg shadow-md bg-gray-700"/>
+            </div>
+        </div>
+
+        <!-- Conversion Button -->
+        <button id="convert-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-800 disabled:bg-gray-600 disabled:cursor-not-allowed disabled:transform-none" disabled>
+            Convert to ICO
+        </button>
+
+        <!-- Output/Result Section -->
+        <div id="result-container" class="hidden text-center space-y-4 pt-4">
+             <!-- Spinner -->
+            <div id="spinner" class="hidden mx-auto w-8 h-8 border-4 border-gray-600 rounded-full spinner"></div>
+            <!-- Download Link -->
+            <a id="download-link" class="hidden inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105">
+                Download .ico File
+            </a>
+            <!-- Message Box -->
+            <div id="message-box" class="text-red-400 text-sm"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- DOM Element References ---
+        const fileUpload = document.getElementById('file-upload');
+        const fileNameDisplay = document.getElementById('file-name');
+        const convertBtn = document.getElementById('convert-btn');
+        const previewContainer = document.getElementById('preview-container');
+        const imagePreview = document.getElementById('image-preview');
+        const resultContainer = document.getElementById('result-container');
+        const spinner = document.getElementById('spinner');
+        const downloadLink = document.getElementById('download-link');
+        const messageBox = document.getElementById('message-box');
+
+        let selectedFile = null;
+
+        // --- Event Listener for File Input ---
+        fileUpload.addEventListener('change', (event) => {
+            selectedFile = event.target.files[0];
+            
+            // Clear previous results and messages
+            resetState();
+
+            if (selectedFile) {
+                // Basic validation for file type and size
+                if (selectedFile.type !== 'image/png') {
+                    showMessage('Error: Please upload a PNG file.');
+                    selectedFile = null;
+                    return;
+                }
+                if (selectedFile.size > 5 * 1024 * 1024) { // 5MB limit
+                    showMessage('Error: File size exceeds 5MB.');
+                    selectedFile = null;
+                    return;
+                }
+
+                // Update UI with file name and show preview
+                fileNameDisplay.textContent = selectedFile.name;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imagePreview.src = e.target.result;
+                    previewContainer.classList.remove('hidden');
+                };
+                reader.readAsDataURL(selectedFile);
+                
+                // Enable the convert button
+                convertBtn.disabled = false;
+            }
+        });
+
+        // --- Event Listener for the Convert Button ---
+        convertBtn.addEventListener('click', () => {
+            if (!selectedFile) {
+                showMessage('Please select a PNG file first.');
+                return;
+            }
+
+            // Show the result container and the spinner
+            resultContainer.classList.remove('hidden');
+            spinner.classList.remove('hidden');
+            downloadLink.classList.add('hidden');
+            messageBox.textContent = '';
+            convertBtn.disabled = true; // Prevent multiple clicks
+
+            // --- The Conversion Logic ---
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    // Define standard ICO sizes
+                    const sizes = [16, 32, 48, 64]; 
+                    // We will create a single 32x32 icon, which is the most common for favicons.
+                    // For a true multi-size .ico, a more complex library would be needed.
+                    const size = 32; 
+
+                    // Create an off-screen canvas
+                    const canvas = document.createElement('canvas');
+                    canvas.width = size;
+                    canvas.height = size;
+                    const ctx = canvas.getContext('2d');
+
+                    // Draw the uploaded image onto the canvas, resizing it
+                    ctx.drawImage(img, 0, 0, size, size);
+
+                    // Get the image data from the canvas as a PNG data URL
+                    const dataUrl = canvas.toDataURL('image/png');
+
+                    // Set up the download link
+                    downloadLink.href = dataUrl;
+                    downloadLink.download = 'favicon.ico'; // Name the file with .ico extension
+
+                    // Hide spinner and show the download button
+                    setTimeout(() => { // Small delay for better UX
+                        spinner.classList.add('hidden');
+                        downloadLink.classList.remove('hidden');
+                        convertBtn.disabled = false; // Re-enable button
+                    }, 500);
+                };
+                img.onerror = () => {
+                    // Handle potential errors in loading the image data
+                    showMessage('Error: Could not process the image file.');
+                    resetState();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(selectedFile);
+        });
+
+        // --- Helper Functions ---
+
+        /**
+         * Displays a message in the message box.
+         * @param {string} message - The text to display.
+         */
+        function showMessage(message) {
+            messageBox.textContent = message;
+            resultContainer.classList.remove('hidden');
+        }
+
+        /**
+         * Resets the UI to its initial state.
+         */
+        function resetState() {
+            convertBtn.disabled = true;
+            previewContainer.classList.add('hidden');
+            resultContainer.classList.add('hidden');
+            spinner.classList.add('hidden');
+            downloadLink.classList.add('hidden');
+            messageBox.textContent = '';
+            if (!selectedFile) {
+                fileNameDisplay.textContent = 'Click to upload a PNG';
+                fileUpload.value = ''; // Clear the file input
+            }
+        }
+    </script>
+</body>
+</html>

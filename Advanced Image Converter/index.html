@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Image Converter</title>
+    <link rel="icon" type="image/png" href="ico.png" />
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* bg-gray-900 */
+        }
+        .file-input-button {
+            cursor: pointer;
+        }
+        #file-upload {
+            display: none;
+        }
+        .spinner {
+            border-top-color: #3b82f6; /* border-blue-500 */
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        /* Custom styles for radio buttons */
+        .size-option input:checked + label {
+            border-color: #3b82f6;
+            background-color: #1f2937; /* bg-gray-700 */
+        }
+        /* Custom styles for range slider */
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #3b82f6;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #3b82f6;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="text-gray-200 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-lg bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 space-y-6">
+        
+        <!-- Header Section -->
+        <div class="text-center">
+            <h1 class="text-3xl font-bold text-white">Advanced Image Converter</h1>
+            <p class="text-gray-400 mt-2">Convert PNG, JPG, or WEBP to high-quality icons and images.</p>
+        </div>
+
+        <!-- File Upload Section -->
+        <div id="upload-box">
+            <label for="file-upload" class="file-input-button w-full flex flex-col items-center justify-center border-2 border-dashed border-gray-600 hover:border-blue-500 rounded-xl p-8 transition-colors duration-300 bg-gray-900/50">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-gray-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                <span id="file-name" class="font-medium text-gray-300">Click to upload an image</span>
+                <span class="text-sm text-gray-500">PNG, JPG, WEBP accepted (Max 5MB)</span>
+            </label>
+            <input id="file-upload" type="file" accept="image/png, image/jpeg, image/webp">
+        </div>
+
+        <!-- Image Preview & Options (Initially Hidden) -->
+        <div id="editor-panel" class="hidden space-y-6">
+            <div class="text-center space-y-3">
+                <img id="image-preview" src="#" alt="Image preview" class="max-w-full h-auto max-h-48 mx-auto rounded-lg shadow-md bg-gray-700"/>
+            </div>
+
+            <!-- Conversion Options -->
+            <div class="space-y-4">
+                <!-- Output Format -->
+                <div>
+                    <label for="format-select" class="block text-sm font-medium text-gray-300 mb-2">Output Format</label>
+                    <select id="format-select" class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="ico">ICO (Favicon)</option>
+                        <option value="png">PNG</option>
+                        <option value="jpeg">JPEG</option>
+                        <option value="webp">WEBP</option>
+                    </select>
+                </div>
+
+                <!-- Image Size -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Image Size</label>
+                    <div class="grid grid-cols-3 sm:grid-cols-4 gap-2 text-center">
+                        <div class="size-option">
+                            <input type="radio" id="size-orig" name="size" value="original" class="hidden" checked>
+                            <label for="size-orig" class="block border-2 border-gray-600 rounded-lg p-2 cursor-pointer transition-colors">Original</label>
+                        </div>
+                        <div class="size-option">
+                            <input type="radio" id="size-256" name="size" value="256" class="hidden">
+                            <label for="size-256" class="block border-2 border-gray-600 rounded-lg p-2 cursor-pointer transition-colors">256x256</label>
+                        </div>
+                         <div class="size-option">
+                            <input type="radio" id="size-64" name="size" value="64" class="hidden">
+                            <label for="size-64" class="block border-2 border-gray-600 rounded-lg p-2 cursor-pointer transition-colors">64x64</label>
+                        </div>
+                        <div class="size-option">
+                            <input type="radio" id="size-32" name="size" value="32" class="hidden">
+                            <label for="size-32" class="block border-2 border-gray-600 rounded-lg p-2 cursor-pointer transition-colors">32x32</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quality Slider (for JPEG/WEBP) -->
+                <div id="quality-control" class="hidden">
+                    <label for="quality-slider" class="block text-sm font-medium text-gray-300 mb-2">Quality: <span id="quality-value">0.92</span></label>
+                    <input id="quality-slider" type="range" min="0.1" max="1.0" step="0.01" value="0.92" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button id="convert-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-800">
+                    Convert & Download
+                </button>
+                <button id="reset-btn" class="w-full sm:w-auto bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-4 rounded-lg transition">
+                    New Image
+                </button>
+            </div>
+        </div>
+
+        <!-- Output/Result Section -->
+        <div id="result-container" class="hidden text-center space-y-4 pt-4">
+             <div id="spinner" class="hidden mx-auto w-8 h-8 border-4 border-gray-600 rounded-full spinner"></div>
+             <div id="message-box" class="text-red-400 text-sm"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Element References ---
+        const fileUpload = document.getElementById('file-upload');
+        const fileNameDisplay = document.getElementById('file-name');
+        const uploadBox = document.getElementById('upload-box');
+        const editorPanel = document.getElementById('editor-panel');
+        const imagePreview = document.getElementById('image-preview');
+        
+        const formatSelect = document.getElementById('format-select');
+        const qualityControl = document.getElementById('quality-control');
+        const qualitySlider = document.getElementById('quality-slider');
+        const qualityValue = document.getElementById('quality-value');
+        
+        const convertBtn = document.getElementById('convert-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        
+        const resultContainer = document.getElementById('result-container');
+        const spinner = document.getElementById('spinner');
+        const messageBox = document.getElementById('message-box');
+
+        let selectedFile = null;
+        let originalImage = new Image();
+
+        // --- Event Listeners ---
+        fileUpload.addEventListener('change', handleFileSelect);
+        formatSelect.addEventListener('change', toggleQualitySlider);
+        qualitySlider.addEventListener('input', () => {
+            qualityValue.textContent = parseFloat(qualitySlider.value).toFixed(2);
+        });
+        convertBtn.addEventListener('click', processImageConversion);
+        resetBtn.addEventListener('click', resetApp);
+
+        // --- Core Functions ---
+
+        /**
+         * Handles the initial file selection and validation.
+         */
+        function handleFileSelect(event) {
+            selectedFile = event.target.files[0];
+            if (!selectedFile) return;
+
+            // Validate file type and size
+            const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
+            if (!allowedTypes.includes(selectedFile.type)) {
+                showMessage('Error: Please upload a PNG, JPG, or WEBP file.');
+                return;
+            }
+            if (selectedFile.size > 5 * 1024 * 1024) { // 5MB limit
+                showMessage('Error: File size exceeds 5MB.');
+                return;
+            }
+
+            // Read the file and display the editor
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                originalImage.onload = () => {
+                    imagePreview.src = e.target.result;
+                    uploadBox.classList.add('hidden');
+                    editorPanel.classList.remove('hidden');
+                    messageBox.textContent = '';
+                    resultContainer.classList.add('hidden');
+                };
+                originalImage.src = e.target.result;
+            };
+            reader.readAsDataURL(selectedFile);
+        }
+
+        /**
+         * Shows or hides the quality slider based on the selected format.
+         */
+        function toggleQualitySlider() {
+            const selectedFormat = formatSelect.value;
+            if (selectedFormat === 'jpeg' || selectedFormat === 'webp') {
+                qualityControl.classList.remove('hidden');
+            } else {
+                qualityControl.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Main function to handle the image conversion process.
+         */
+        function processImageConversion() {
+            showSpinner(true);
+            
+            // Use a timeout to allow the UI to update with the spinner
+            setTimeout(() => {
+                try {
+                    const sizeValue = document.querySelector('input[name="size"]:checked').value;
+                    const format = formatSelect.value;
+                    
+                    let targetWidth, targetHeight;
+                    if (sizeValue === 'original') {
+                        targetWidth = originalImage.naturalWidth;
+                        targetHeight = originalImage.naturalHeight;
+                    } else {
+                        targetWidth = targetHeight = parseInt(sizeValue, 10);
+                    }
+                    
+                    // Create canvas and draw the image
+                    const canvas = document.createElement('canvas');
+                    canvas.width = targetWidth;
+                    canvas.height = targetHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(originalImage, 0, 0, targetWidth, targetHeight);
+                    
+                    // Determine MIME type and quality
+                    const mimeType = format === 'jpeg' ? 'image/jpeg' : (format === 'webp' ? 'image/webp' : 'image/png');
+                    const quality = parseFloat(qualitySlider.value);
+                    
+                    // Get data URL from canvas
+                    const dataUrl = canvas.toDataURL(mimeType, (mimeType !== 'image/png') ? quality : undefined);
+                    
+                    // Trigger download
+                    const filename = getOutputFilename(format);
+                    triggerDownload(dataUrl, filename);
+
+                } catch (error) {
+                    console.error("Conversion Error:", error);
+                    showMessage('An unexpected error occurred during conversion.');
+                } finally {
+                    showSpinner(false);
+                }
+            }, 50); // Short delay for UX
+        }
+
+        /**
+         * Creates a temporary link and clicks it to start the download.
+         * @param {string} dataUrl - The base64 data URL of the image.
+         * @param {string} filename - The desired filename for the download.
+         */
+        function triggerDownload(dataUrl, filename) {
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        /**
+         * Resets the application to its initial state.
+         */
+        function resetApp() {
+            selectedFile = null;
+            fileUpload.value = ''; // Clear the file input
+            originalImage = new Image();
+            
+            uploadBox.classList.remove('hidden');
+            editorPanel.classList.add('hidden');
+            resultContainer.classList.add('hidden');
+            messageBox.textContent = '';
+            
+            // Reset options to default
+            document.getElementById('size-orig').checked = true;
+            formatSelect.value = 'ico';
+            qualitySlider.value = '0.92';
+            qualityValue.textContent = '0.92';
+            toggleQualitySlider();
+        }
+
+        // --- Helper Functions ---
+        
+        function showMessage(message) {
+            messageBox.textContent = message;
+            resultContainer.classList.remove('hidden');
+        }
+
+        function showSpinner(show) {
+            resultContainer.classList.remove('hidden');
+            if (show) {
+                spinner.classList.remove('hidden');
+                convertBtn.disabled = true;
+            } else {
+                spinner.classList.add('hidden');
+                convertBtn.disabled = false;
+            }
+        }
+
+        function getOutputFilename(format) {
+            const baseName = selectedFile.name.split('.').slice(0, -1).join('.') || 'converted-image';
+            const extension = format === 'ico' ? 'ico' : format;
+            return `${baseName}.${extension}`;
+        }
+    </script>
+</body>
+</html>
