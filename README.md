@@ -15,5 +15,5 @@
 ![Image Alt](https://github.com/Bala-6478/Web-Applications/blob/main/fruit%20ninja/Screenshot%20(100).png)
 ### Live Demo :- https://balavignesh2025.neocities.org/Project/fruit%20ninja/game
 ### 6. Advanced Image Converter
-https://github.com/Bala-6478/Web-Applications/blob/main/Advanced%20Image%20Converter/Screenshot%20(104).png
+![Image Alt](https://github.com/Bala-6478/Web-Applications/blob/main/Advanced%20Image%20Converter/Screenshot%20(104).png)
  
