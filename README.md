@@ -19,4 +19,4 @@
 ### Live Demo :- https://balavignesh2025.neocities.org/Project/Advanced%20Image%20Converter/
 ### 7. Bala_Studio Player  
 ![Image Alt](https://github.com/Bala-6478/Web-Applications/blob/main/Bala_Studio%20Player/Screenshot%20(111).png)
-### Live Demo :- 
+### Live Demo :- https://balavignesh2025.neocities.org/Project/Bala_Studio%20Player/indes
