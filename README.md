@@ -19,6 +19,6 @@
 ### Live Demo :- https://balavignesh2025.neocities.org/Project/Advanced%20Image%20Converter/
 ### 7. Bala_Studio Player  
 ![Image Alt](https://github.com/Bala-6478/Web-Applications/blob/main/Bala_Studio%20Player/Screenshot%20(111).png)
-### Online Resume Builder  
+### 8. Online Resume Builder  
 ![Image Alt](https://github.com/Bala-6478/Web-Applications/blob/main/Online%20Resume%20Builder/Screenshot%20(113).png)
 ### Live Demo :-  https://balavignesh2025.neocities.org/Project/Online%20Resume%20Builder/
