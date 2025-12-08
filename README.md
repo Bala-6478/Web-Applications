@@ -14,7 +14,7 @@ These projects focus on essential skills in structuring, styling, and adding int
 
 * **Personal Portfolio Site:**
     * **Focus:** Semantic **HTML** structure, responsive **CSS** layout (Flexbox/Grid), and basic **JavaScript** for smooth scrolling or a simple contact form validation.
-* **Simple Blog/Magazine Layout:**
+* **Simple Blog/Magazine Layout:**  
     * **Focus:** Advanced **CSS** techniques, media queries for **responsiveness**, and good typographic practices.
 * **To-Do List Application:**
     * **Focus:** Heavy use of **JavaScript** for **DOM manipulation** (adding, removing, editing list items), local storage integration for persistence.
