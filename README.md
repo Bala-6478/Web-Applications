@@ -22,25 +22,26 @@
 | 🎮 Fruit Ninja Game | [View](https://balavignesh2025.neocities.org/Project/fruit%20ninja/game) | Fun browser game |
 
 ---
-
 ## ✨ Features
-
 - ⚡ Fast and responsive UI  
 - 🎯 Clean and modern design  
 - 🔥 Real-time functionality  
 - 📱 Mobile-friendly layouts  
 - 🧠 Practical use-case projects  
-
 ---
-
 ## 🛠️ Tech Stack
-
 - HTML5  
 - CSS3  
 - JavaScript (ES6)
 
 ---
+## 📢 Disclaimer
 
-## 📷 Preview
-
-> *(Add screenshots here to make your README more attractive)*  
+These projects are created for **learning and demonstration purposes**.  
+They may not include full production-level features.
+---
+## 🙌 Author
+**Balavignesh A**  
+💼 Aspiring Frontend Developer  
+---
+⭐ *If you like this project, don't forget to star the repository!*
