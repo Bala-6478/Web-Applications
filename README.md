@@ -23,15 +23,15 @@ A browser-based operating system simulation with interactive features.
 Create professional resumes quickly with customizable templates.  
 🔗 https://balavignesh2025.neocities.org/Project/Online%20Resume%20Builder/  
 ---
-### ✍️ Text Tools  
+## ✍️ Text Tools  
 A collection of useful text utilities like formatting, case conversion, and more.  
 🔗 https://balavignesh2025.neocities.org/Project/Text%20Tools/in  
 ---
-### 🧑‍💻 VS Code Editor (Web Version)  
+## 🧑‍💻 VS Code Editor (Web Version)  
 A browser-based code editor inspired by VS Code with essential features.  
 🔗 https://balavignesh2025.neocities.org/Project/VS%20Code/best_team_editor  
 ---
-### 🎮 Fruit Ninja Game  
+## 🎮 Fruit Ninja Game  
 A fun and interactive browser game inspired by Fruit Ninja.  
 🔗 https://balavignesh2025.neocities.org/Project/fruit%20ninja/game  
 ---
