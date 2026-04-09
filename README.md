@@ -1,53 +1,46 @@
-# 🌐 Web Applications
+# 🌐 Web Applications Portfolio
 
-A collection of interactive web-based projects built using **HTML, CSS, and JavaScript**. These projects demonstrate UI design, logic building, and real-world functionality.
----
-## 🚀 Projects
-## 🖼️ Advanced Image Converter  
+![HTML](https://img.shields.io/badge/HTML-5-orange?style=for-the-badge&logo=html5)
+![CSS](https://img.shields.io/badge/CSS-3-blue?style=for-the-badge&logo=css3)
+![JavaScript](https://img.shields.io/badge/JavaScript-ES6-yellow?style=for-the-badge&logo=javascript)
 
-🔗 https://balavignesh2025.neocities.org/Project/Advanced%20Image%20Converter/final  
----
-## 💰 Modern Interest Calculator  
+> 🚀 A collection of modern, responsive, and interactive web applications built using **HTML, CSS, and JavaScript**.
 
-🔗 https://balavignesh2025.neocities.org/Project/Modern%20Interest%20Calculator/in  
 ---
-## 📊 Money Tracker  
- 
-🔗 https://balavignesh2025.neocities.org/Project/Mony%20Tracker/test  
----
-## 💻 Web OS  
 
-🔗 https://balavignesh2025.neocities.org/Project/OS/in  
----
-## 📄 Online Resume Builder  
+## 📌 Live Projects
 
-🔗 https://balavignesh2025.neocities.org/Project/Online%20Resume%20Builder/  
----
-## ✍️ Text Tools  
+| 💡 Project | 🔗 Live Demo | 📖 Description |
+|-----------|------------|---------------|
+| 🖼️ Advanced Image Converter | [View](https://balavignesh2025.neocities.org/Project/Advanced%20Image%20Converter/final) | Convert images between formats easily |
+| 💰 Modern Interest Calculator | [View](https://balavignesh2025.neocities.org/Project/Modern%20Interest%20Calculator/in) | Calculate simple & compound interest |
+| 📊 Money Tracker | [View](https://balavignesh2025.neocities.org/Project/Mony%20Tracker/test) | Track income and expenses |
+| 💻 Web OS | [View](https://balavignesh2025.neocities.org/Project/OS/in) | Browser-based OS simulation |
+| 📄 Resume Builder | [View](https://balavignesh2025.neocities.org/Project/Online%20Resume%20Builder/) | Create professional resumes |
+| ✍️ Text Tools | [View](https://balavignesh2025.neocities.org/Project/Text%20Tools/in) | Text utilities and formatting tools |
+| 🧑‍💻 VS Code Editor | [View](https://balavignesh2025.neocities.org/Project/VS%20Code/best_team_editor) | Web-based code editor |
+| 🎮 Fruit Ninja Game | [View](https://balavignesh2025.neocities.org/Project/fruit%20ninja/game) | Fun browser game |
 
-🔗 https://balavignesh2025.neocities.org/Project/Text%20Tools/in  
 ---
-## 🧑‍💻 VS Code Editor (Web Version)  
 
-🔗 https://balavignesh2025.neocities.org/Project/VS%20Code/best_team_editor  
----
-## 🎮 Fruit Ninja Game    
+## ✨ Features
 
-🔗 https://balavignesh2025.neocities.org/Project/fruit%20ninja/game  
+- ⚡ Fast and responsive UI  
+- 🎯 Clean and modern design  
+- 🔥 Real-time functionality  
+- 📱 Mobile-friendly layouts  
+- 🧠 Practical use-case projects  
+
 ---
-## 🛠️ Technologies Used
+
+## 🛠️ Tech Stack
+
 - HTML5  
 - CSS3  
-- JavaScript  
+- JavaScript (ES6)
+
 ---
-## 📌 Features
-- Responsive Design  
-- Interactive UI  
-- Real-time functionality  
-- Beginner to advanced level projects  
----
-## 📢 Disclaimer
-These projects are created for **educational and demonstration purposes**. Some features may be simplified versions of real-world applications.
----
-## 🙌 Author
-**Balavignesh A**
+
+## 📷 Preview
+
+> *(Add screenshots here to make your README more attractive)*  
