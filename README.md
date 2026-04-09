@@ -16,50 +16,44 @@
 ---
 ## 📌 Projects
 ### 🖼️ Advanced Image Converter  
-🔗 https://balavignesh2025.neocities.org/Project/Advanced%20Image%20Converter/final  
+## 🔗 https://balavignesh2025.neocities.org/Project/Advanced%20Image%20Converter/final  
 Convert images between different formats easily with a user-friendly interface.
 
 ---
 ### 💰 Modern Interest Calculator  
-🔗 https://balavignesh2025.neocities.org/Project/Modern%20Interest%20Calculator/in  
+## 🔗 https://balavignesh2025.neocities.org/Project/Modern%20Interest%20Calculator/in  
 Calculate simple and compound interest with accurate results.
 
 ---
 ### 📊 Money Tracker  
-🔗 https://balavignesh2025.neocities.org/Project/Mony%20Tracker/test  
+## 🔗 https://balavignesh2025.neocities.org/Project/Mony%20Tracker/test  
 Track income and expenses efficiently.
 
 ---
 ### 💻 Web OS  
-🔗 https://balavignesh2025.neocities.org/Project/OS/in  
+## 🔗 https://balavignesh2025.neocities.org/Project/OS/in  
 A browser-based operating system simulation.
 
 ---
 ### 📄 Online Resume Builder  
-🔗 https://balavignesh2025.neocities.org/Project/Online%20Resume%20Builder/  
+## 🔗 https://balavignesh2025.neocities.org/Project/Online%20Resume%20Builder/  
 Create professional resumes quickly.
 
 ---
 ### ✍️ Text Tools  
-🔗 https://balavignesh2025.neocities.org/Project/Text%20Tools/in  
+## 🔗 https://balavignesh2025.neocities.org/Project/Text%20Tools/in  
 Useful text utilities and formatting tools.
 
 ---
 ### 🧑‍💻 VS Code Editor  
-🔗 https://balavignesh2025.neocities.org/Project/VS%20Code/best_team_editor  
+## 🔗 https://balavignesh2025.neocities.org/Project/VS%20Code/best_team_editor  
 A web-based code editor inspired by VS Code.
 
 ---
 ### 🎮 Fruit Ninja Game  
-🔗 https://balavignesh2025.neocities.org/Project/fruit%20ninja/game  
+## 🔗 https://balavignesh2025.neocities.org/Project/fruit%20ninja/game  
 A fun and interactive browser game.
 
----
-## 📷 Preview
-*(Add your project screenshots here to improve visual appeal)*
----
-## 📢 Disclaimer
-These projects are created for **educational and demonstration purposes**.
 ---
 ## 🙌 Author
 
