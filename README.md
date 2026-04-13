@@ -15,48 +15,50 @@
 - 🧠 Practical real-world projects  
 ---
 ## 📌 Projects
-### 🖼️ Advanced Image Converter  
+###  Advanced Image Converter  
 ## 🔗 https://balavignesh2025.neocities.org/Project/Advanced%20Image%20Converter/final  
 Convert images between different formats easily with a user-friendly interface.
 
 ---
-### 💰 Modern Interest Calculator  
+###  Modern Interest Calculator  
 ## 🔗 https://balavignesh2025.neocities.org/Project/Modern%20Interest%20Calculator/in  
 Calculate simple and compound interest with accurate results.
 
 ---
-### 📊 Money Tracker  
+###  Money Tracker  
 ## 🔗 https://balavignesh2025.neocities.org/Project/Mony%20Tracker/test  
 Track income and expenses efficiently.
 
 ---
-### 💻 Web OS  
+###  Web OS  
 ## 🔗 https://balavignesh2025.neocities.org/Project/OS/in  
 A browser-based operating system simulation.
 
 ---
-### 📄 Online Resume Builder  
+###  Online Resume Builder  
 ## 🔗 https://balavignesh2025.neocities.org/Project/Online%20Resume%20Builder/  
 Create professional resumes quickly.
 
 ---
-### ✍️ Text Tools  
+###  Text Tools  
 ## 🔗 https://balavignesh2025.neocities.org/Project/Text%20Tools/in  
 Useful text utilities and formatting tools.
 
 ---
-### 🧑‍💻 VS Code Editor  
+### VS Code Editor  
 ## 🔗 https://balavignesh2025.neocities.org/Project/VS%20Code/best_team_editor  
 A web-based code editor inspired by VS Code.
 
 ---
-### 🎮 Fruit Ninja Game  
+###  Fruit Ninja Game  
 ## 🔗 https://balavignesh2025.neocities.org/Project/fruit%20ninja/game  
 A fun and interactive browser game.
 
 ---
-### 📁 Rotate & Flip Image Tool
+### Rotate & Flip Image Tool
 ### 🔗 https://balavignesh2025.neocities.org/Project/Rotate%20&%20Flip%20Image/in
+A dedicated tool for quick image orientation adjustments.
+--- 
 ## 🙌 Author
 
 **Balavignesh A**  
