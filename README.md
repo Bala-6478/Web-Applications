@@ -55,6 +55,8 @@ A web-based code editor inspired by VS Code.
 A fun and interactive browser game.
 
 ---
+### <img width="224" height="224" alt="image" src="https://github.com/user-attachments/assets/eb0e18b4-96c6-4af9-a02c-f7de67d02a5f" />
+
 ## 🙌 Author
 
 **Balavignesh A**  
