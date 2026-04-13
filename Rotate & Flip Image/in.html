@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotate & Flip Image Tool</title>
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --secondary-color: #2563eb;
+            --bg-color: #f8fafc;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+            --panel-bg: #ffffff;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: var(--panel-bg);
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .app-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .datetime {
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        .help-icon {
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: var(--primary-color);
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            gap: 1rem;
+        }
+
+        @media (min-width: 1024px) {
+            main {
+                flex-direction: row;
+            }
+        }
+
+        .panel {
+            background-color: var(--panel-bg);
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+        }
+
+        .left-panel {
+            flex: 0 0 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .center-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 500px;
+        }
+
+        .right-panel {
+            flex: 0 0 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .drop-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 0.5rem;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .drop-area:hover, .drop-area.dragover {
+            border-color: var(--primary-color);
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+
+        .drop-area p {
+            margin-top: 0.5rem;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .btn-secondary {
+            background-color: #e2e8f0;
+            color: var(--text-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: #cbd5e1;
+        }
+
+        .btn-danger {
+            background-color: var(--error-color);
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+        }
+
+        .btn-success:hover {
+            background-color: #059669;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-info {
+            background-color: #f1f5f9;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .file-info div {
+            margin-bottom: 0.5rem;
+        }
+
+        .viewer-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background-image: 
+                linear-gradient(45deg, #f1f5f9 25%, transparent 25%),
+                linear-gradient(-45deg, #f1f5f9 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #f1f5f9 75%),
+                linear-gradient(-45deg, transparent 75%, #f1f5f9 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+
+        #image-canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform-origin: 0 0;
+        }
+
+        .viewer-controls {
+            margin-top: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        .control-group {
+            margin-bottom: 1rem;
+        }
+
+        .control-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .slider-container input[type="range"] {
+            flex: 1;
+        }
+
+        .angle-input {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .angle-input input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .export-options {
+            display: none;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .export-option {
+            margin-bottom: 0.5rem;
+        }
+
+        .export-option label {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-weight: 500;
+        }
+
+        footer {
+            background-color: var(--panel-bg);
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .copyright, .format-note {
+            color: #64748b;
+        }
+
+        .developer {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            background-color: var(--text-color);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .toast.success {
+            background-color: var(--success-color);
+        }
+
+        .toast.error {
+            background-color: var(--error-color);
+        }
+
+        /* Loading spinner */
+        .spinner {
+            border: 3px solid #f1f5f9;
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 1023px) {
+            .left-panel, .right-panel {
+                flex: 1;
+            }
+            
+            main {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="app-title">Rotate & Flip Image Tool</div>
+        <div class="datetime" id="datetime">Loading...</div>
+        <button class="help-icon" id="help-btn">❓</button>
+    </header>
+
+    <main>
+        <div class="panel left-panel">
+            <h3 class="panel-title">File Input</h3>
+            <div class="drop-area" id="drop-area">
+                <div>📁</div>
+                <p>Drag & drop image here</p>
+                <p>or</p>
+                <button class="btn" id="choose-file-btn">Choose File</button>
+                <input type="file" id="file-input" class="file-input" accept="image/*">
+                <p>Ctrl+V to paste from clipboard</p>
+            </div>
+
+            <div class="file-info" id="file-info">
+                <p>No file selected</p>
+            </div>
+
+            <h3 class="panel-title">Export Options</h3>
+            <select id="export-format" class="btn-secondary">
+                <option value="png">PNG</option>
+                <option value="jpeg">JPEG</option>
+                <option value="webp">WebP</option>
+                <option value="bmp">BMP</option>
+            </select>
+
+            <div class="export-options" id="jpeg-options">
+                <div class="export-option">
+                    <label for="jpeg-quality">Quality</label>
+                    <input type="range" id="jpeg-quality" min="0" max="100" value="90">
+                    <span id="jpeg-quality-value">90%</span>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="jpeg-progressive">
+                    <label for="jpeg-progressive">Progressive</label>
+                </div>
+            </div>
+
+            <div class="export-options" id="webp-options">
+                <div class="export-option">
+                    <label for="webp-quality">Quality</label>
+                    <input type="range" id="webp-quality" min="0" max="100" value="90">
+                    <span id="webp-quality-value">90%</span>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="webp-lossless">
+                    <label for="webp-lossless">Lossless</label>
+                </div>
+            </div>
+
+            <div class="control-buttons">
+                <button class="btn" id="download-btn" disabled>Download</button>
+                <button class="btn btn-secondary" id="copy-btn" disabled>Copy to Clipboard</button>
+                <button class="btn btn-secondary" id="print-btn" disabled>Print</button>
+            </div>
+        </div>
+
+        <div class="panel center-panel">
+            <div class="viewer-container" id="viewer-container">
+                <canvas id="image-canvas"></canvas>
+                <div id="loading-indicator" class="hidden">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+            <div class="viewer-controls">
+                <button class="btn btn-secondary" id="zoom-in-btn">Zoom In</button>
+                <button class="btn btn-secondary" id="zoom-out-btn">Zoom Out</button>
+                <button class="btn btn-secondary" id="reset-view-btn">Reset View</button>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="grid-toggle">
+                    <label for="grid-toggle">Show Grid</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="ruler-toggle">
+                    <label for="ruler-toggle">Show Rulers</label>
+                </div>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="compare-toggle">
+                <label for="compare-toggle">Before/After Comparison</label>
+            </div>
+            <div id="comparison-slider" class="hidden">
+                <input type="range" min="0" max="100" value="50" id="comparison-range">
+            </div>
+        </div>
+
+        <div class="panel right-panel">
+            <h3 class="panel-title">Transform Controls</h3>
+            
+            <div class="control-buttons">
+                <button class="btn btn-secondary" id="rotate-left-btn">Rotate 90° CCW</button>
+                <button class="btn btn-secondary" id="rotate-right-btn">Rotate 90° CW</button>
+            </div>
+
+            <div class="slider-container">
+                <label for="angle-slider">Angle:</label>
+                <input type="range" id="angle-slider" min="-360" max="360" value="0" step="0.1">
+                <span id="angle-value">0°</span>
+            </div>
+
+            <div class="angle-input">
+                <input type="number" id="angle-input" step="0.1" min="-360" max="360" value="0">
+                <button class="btn" id="apply-angle-btn">Apply</button>
+            </div>
+
+            <div class="control-buttons">
+                <button class="btn btn-secondary" id="flip-h-btn">Flip Horizontal</button>
+                <button class="btn btn-secondary" id="flip-v-btn">Flip Vertical</button>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="snap-to-90">
+                <label for="snap-to-90">Snap to 90° increments</label>
+            </div>
+
+            <button class="btn btn-secondary" id="reset-transform-btn">Reset Transform</button>
+
+            <h3 class="panel-title">History</h3>
+            <div class="control-buttons">
+                <button class="btn btn-secondary" id="undo-btn" disabled>Undo</button>
+                <button class="btn btn-secondary" id="redo-btn" disabled>Redo</button>
+            </div>
+
+            <h3 class="panel-title">Background</h3>
+            <div class="checkbox-group">
+                <input type="color" id="bg-color-picker" value="#ffffff">
+                <label for="bg-color-picker">Canvas Background</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="transparent-bg" checked>
+                <label for="transparent-bg">Transparent Background</label>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="copyright">© 2023 Image Tool</div>
+        <div class="developer">Developed By BEST</div>
+        <div class="format-note">Some formats may require conversion</div>
+    </footer>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // DOM Elements
+        const datetimeElement = document.getElementById('datetime');
+        const dropArea = document.getElementById('drop-area');
+        const fileInput = document.getElementById('file-input');
+        const chooseFileBtn = document.getElementById('choose-file-btn');
+        const fileInfo = document.getElementById('file-info');
+        const canvas = document.getElementById('image-canvas');
+        const ctx = canvas.getContext('2d');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const exportFormat = document.getElementById('export-format');
+        const jpegOptions = document.getElementById('jpeg-options');
+        const webpOptions = document.getElementById('webp-options');
+        const downloadBtn = document.getElementById('download-btn');
+        const copyBtn = document.getElementById('copy-btn');
+        const printBtn = document.getElementById('print-btn');
+        const zoomInBtn = document.getElementById('zoom-in-btn');
+        const zoomOutBtn = document.getElementById('zoom-out-btn');
+        const resetViewBtn = document.getElementById('reset-view-btn');
+        const rotateLeftBtn = document.getElementById('rotate-left-btn');
+        const rotateRightBtn = document.getElementById('rotate-right-btn');
+        const angleSlider = document.getElementById('angle-slider');
+        const angleValue = document.getElementById('angle-value');
+        const angleInput = document.getElementById('angle-input');
+        const applyAngleBtn = document.getElementById('apply-angle-btn');
+        const flipHBtn = document.getElementById('flip-h-btn');
+        const flipVBtn = document.getElementById('flip-v-btn');
+        const snapTo90 = document.getElementById('snap-to-90');
+        const resetTransformBtn = document.getElementById('reset-transform-btn');
+        const undoBtn = document.getElementById('undo-btn');
+        const redoBtn = document.getElementById('redo-btn');
+        const bgColorPicker = document.getElementById('bg-color-picker');
+        const transparentBg = document.getElementById('transparent-bg');
+        const compareToggle = document.getElementById('compare-toggle');
+        const comparisonSlider = document.getElementById('comparison-slider');
+        const comparisonRange = document.getElementById('comparison-range');
+        const gridToggle = document.getElementById('grid-toggle');
+        const rulerToggle = document.getElementById('ruler-toggle');
+        const toast = document.getElementById('toast');
+        const helpBtn = document.getElementById('help-btn');
+
+        // State variables
+        let originalImage = null;
+        let currentImage = null;
+        let scale = 1;
+        let offsetX = 0;
+        let offsetY = 0;
+        let isDragging = false;
+        let lastX, lastY;
+        let rotationAngle = 0;
+        let flipH = false;
+        let flipV = false;
+        let history = [];
+        let historyIndex = -1;
+        let fileName = '';
+        let fileType = '';
+        let naturalWidth = 0;
+        let naturalHeight = 0;
+
+        // Initialize
+        function init() {
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+            
+            setupEventListeners();
+            updateExportOptions();
+        }
+
+        // Update date and time
+        function updateDateTime() {
+            const now = new Date();
+            datetimeElement.textContent = now.toLocaleString();
+        }
+
+        // Set up event listeners
+        function setupEventListeners() {
+            // File input
+            chooseFileBtn.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', handleFileSelect);
+            dropArea.addEventListener('dragover', handleDragOver);
+            dropArea.addEventListener('dragleave', handleDragLeave);
+            dropArea.addEventListener('drop', handleDrop);
+            document.addEventListener('paste', handlePaste);
+
+            // Export
+            exportFormat.addEventListener('change', updateExportOptions);
+            downloadBtn.addEventListener('click', handleDownload);
+            copyBtn.addEventListener('click', handleCopyToClipboard);
+            printBtn.addEventListener('click', handlePrint);
+
+            // Viewer controls
+            zoomInBtn.addEventListener('click', () => adjustZoom(0.1));
+            zoomOutBtn.addEventListener('click', () => adjustZoom(-0.1));
+            resetViewBtn.addEventListener('click', resetView);
+            canvas.addEventListener('mousedown', startDragging);
+            canvas.addEventListener('mousemove', whileDragging);
+            canvas.addEventListener('mouseup', stopDragging);
+            canvas.addEventListener('mouseleave', stopDragging);
+            canvas.addEventListener('wheel', handleWheel);
+            
+            // Touch events for mobile
+            canvas.addEventListener('touchstart', handleTouchStart);
+            canvas.addEventListener('touchmove', handleTouchMove);
+            canvas.addEventListener('touchend', handleTouchEnd);
+
+            // Transform controls
+            rotateLeftBtn.addEventListener('click', () => rotateImage(-90));
+            rotateRightBtn.addEventListener('click', () => rotateImage(90));
+            angleSlider.addEventListener('input', updateAngleFromSlider);
+            applyAngleBtn.addEventListener('click', applyAngleFromInput);
+            flipHBtn.addEventListener('click', () => flipImage('horizontal'));
+            flipVBtn.addEventListener('click', () => flipImage('vertical'));
+            resetTransformBtn.addEventListener('click', resetTransform);
+            snapTo90.addEventListener('change', updateSnapTo90);
+            
+            // History
+            undoBtn.addEventListener('click', undo);
+            redoBtn.addEventListener('click', redo);
+            
+            // Background
+            bgColorPicker.addEventListener('change', updateBackground);
+            transparentBg.addEventListener('change', updateBackground);
+            
+            // Comparison
+            compareToggle.addEventListener('change', toggleComparison);
+            comparisonRange.addEventListener('input', updateComparison);
+            
+            // Help
+            helpBtn.addEventListener('click', showHelp);
+        }
+
+        // File handling
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) processFile(file);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            dropArea.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            dropArea.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            dropArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) processFile(file);
+        }
+
+        function handlePaste(e) {
+            if (e.clipboardData && e.clipboardData.items) {
+                const items = e.clipboardData.items;
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                        const file = items[i].getAsFile();
+                        if (file) processFile(file);
+                        break;
+                    }
+                }
+            }
+        }
+
+        function processFile(file) {
+            showLoading(true);
+            
+            // Check if file type is supported
+            const fileType = file.type.toLowerCase();
+            const supportedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/bmp', 'image/webp'];
+            
+            if (!supportedTypes.includes(fileType)) {
+                showToast('This image format may not be fully supported. Try converting to PNG/JPEG/WebP for best results.', 'error');
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    originalImage = img;
+                    currentImage = img;
+                    fileName = file.name.replace(/\.[^/.]+$/, "");
+                    fileType = file.type;
+                    naturalWidth = img.naturalWidth;
+                    naturalHeight = img.naturalHeight;
+                    
+                    updateFileInfo(file);
+                    resetTransform();
+                    resetView();
+                    enableControls();
+                    addToHistory();
+                    
+                    showLoading(false);
+                    renderImage();
+                };
+                img.onerror = function() {
+                    showToast('Error loading image. The file may be corrupted or in an unsupported format.', 'error');
+                    showLoading(false);
+                };
+                img.src = e.target.result;
+            };
+            reader.onerror = function() {
+                showToast('Error reading file', 'error');
+                showLoading(false);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateFileInfo(file) {
+            const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+            fileInfo.innerHTML = `
+                <div><strong>Name:</strong> ${file.name}</div>
+                <div><strong>Size:</strong> ${sizeInMB} MB</div>
+                <div><strong>Type:</strong> ${file.type}</div>
+                <div><strong>Dimensions:</strong> ${naturalWidth} × ${naturalHeight} px</div>
+            `;
+        }
+
+        // Image rendering and transformation
+        function renderImage() {
+            if (!currentImage) return;
+            
+            const container = document.getElementById('viewer-container');
+            const containerWidth = container.clientWidth;
+            const containerHeight = container.clientHeight;
+            
+            // Calculate rotated dimensions
+            const rad = rotationAngle * Math.PI / 180;
+            const cos = Math.abs(Math.cos(rad));
+            const sin = Math.abs(Math.sin(rad));
+            const rotatedWidth = currentImage.width * cos + currentImage.height * sin;
+            const rotatedHeight = currentImage.width * sin + currentImage.height * cos;
+            
+            // Set canvas size
+            canvas.width = rotatedWidth;
+            canvas.height = rotatedHeight;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Set background
+            if (!transparentBg.checked) {
+                ctx.fillStyle = bgColorPicker.value;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+            
+            // Apply transformations
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate(rotationAngle * Math.PI / 180);
+            ctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
+            ctx.drawImage(
+                currentImage, 
+                -currentImage.width / 2, 
+                -currentImage.height / 2,
+                currentImage.width,
+                currentImage.height
+            );
+            ctx.restore();
+            
+            // Apply zoom and pan
+            canvas.style.transform = `scale(${scale}) translate(${offsetX}px, ${offsetY}px)`;
+            
+            // Draw grid if enabled
+            if (gridToggle.checked) {
+                drawGrid();
+            }
+            
+            // Draw rulers if enabled
+            if (rulerToggle.checked) {
+                drawRulers();
+            }
+        }
+
+        function drawGrid() {
+            const gridSize = 20;
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.lineWidth = 1;
+            
+            // Vertical lines
+            for (let x = gridSize; x < canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            // Horizontal lines
+            for (let y = gridSize; y < canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+        }
+
+        function drawRulers() {
+            const rulerSize = 20;
+            ctx.font = '10px Arial';
+            ctx.fillStyle = '#000';
+            
+            // Top ruler
+            ctx.fillRect(0, 0, canvas.width, rulerSize);
+            ctx.fillStyle = '#fff';
+            for (let x = 0; x < canvas.width; x += 50) {
+                ctx.fillText(x.toString(), x + 2, 12);
+            }
+            
+            // Left ruler
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, rulerSize, canvas.height);
+            ctx.fillStyle = '#fff';
+            for (let y = 0; y < canvas.height; y += 50) {
+                ctx.fillText(y.toString(), 2, y + 12);
+            }
+        }
+
+        function rotateImage(angle) {
+            if (snapTo90.checked) {
+                angle = Math.round(angle / 90) * 90;
+            }
+            
+            rotationAngle += angle;
+            // Normalize angle to be between 0 and 360
+            rotationAngle = (rotationAngle % 360 + 360) % 360;
+            
+            updateAngleDisplays();
+            addToHistory();
+            renderImage();
+        }
+
+        function flipImage(direction) {
+            if (direction === 'horizontal') {
+                flipH = !flipH;
+            } else if (direction === 'vertical') {
+                flipV = !flipV;
+            }
+            
+            addToHistory();
+            renderImage();
+        }
+
+        function resetTransform() {
+            rotationAngle = 0;
+            flipH = false;
+            flipV = false;
+            
+            updateAngleDisplays();
+            addToHistory();
+            renderImage();
+        }
+
+        function updateAngleFromSlider() {
+            rotationAngle = parseFloat(angleSlider.value);
+            updateAngleDisplays();
+            renderImage();
+        }
+
+        function applyAngleFromInput() {
+            rotationAngle = parseFloat(angleInput.value);
+            updateAngleDisplays();
+            addToHistory();
+            renderImage();
+        }
+
+        function updateAngleDisplays() {
+            angleSlider.value = rotationAngle;
+            angleValue.textContent = `${rotationAngle}°`;
+            angleInput.value = rotationAngle;
+        }
+
+        function updateSnapTo90() {
+            if (snapTo90.checked) {
+                rotationAngle = Math.round(rotationAngle / 90) * 90;
+                updateAngleDisplays();
+                renderImage();
+            }
+        }
+
+        // Zoom and pan
+        function adjustZoom(amount) {
+            scale += amount;
+            scale = Math.max(0.1, Math.min(5, scale));
+            renderImage();
+        }
+
+        function resetView() {
+            scale = 1;
+            offsetX = 0;
+            offsetY = 0;
+            renderImage();
+        }
+
+        function startDragging(e) {
+            isDragging = true;
+            lastX = e.clientX - canvas.getBoundingClientRect().left;
+            lastY = e.clientY - canvas.getBoundingClientRect().top;
+            canvas.style.cursor = 'grabbing';
+        }
+
+        function whileDragging(e) {
+            if (!isDragging) return;
+            const currentX = e.clientX - canvas.getBoundingClientRect().left;
+            const currentY = e.clientY - canvas.getBoundingClientRect().top;
+            
+            offsetX += (currentX - lastX) / scale;
+            offsetY += (currentY - lastY) / scale;
+            
+            lastX = currentX;
+            lastY = currentY;
+            
+            renderImage();
+        }
+
+        function stopDragging() {
+            isDragging = false;
+            canvas.style.cursor = 'grab';
+        }
+
+        function handleWheel(e) {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.1 : 0.1;
+            adjustZoom(delta);
+        }
+
+        // Touch events for mobile
+        function handleTouchStart(e) {
+            if (e.touches.length === 1) {
+                // Single touch for dragging
+                isDragging = true;
+                lastX = e.touches[0].clientX - canvas.getBoundingClientRect().left;
+                lastY = e.touches[0].clientY - canvas.getBoundingClientRect().top;
+            } else if (e.touches.length === 2) {
+                // Multi-touch for zooming
+                e.preventDefault();
+                // Calculate initial distance between two touches
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                initialTouchDistance = Math.sqrt(dx * dx + dy * dy);
+            }
+        }
+
+        function handleTouchMove(e) {
+            if (e.touches.length === 1 && isDragging) {
+                // Single touch drag
+                const currentX = e.touches[0].clientX - canvas.getBoundingClientRect().left;
+                const currentY = e.touches[0].clientY - canvas.getBoundingClientRect().top;
+                
+                offsetX += (currentX - lastX) / scale;
+                offsetY += (currentY - lastY) / scale;
+                
+                lastX = currentX;
+                lastY = currentY;
+                
+                renderImage();
+            } else if (e.touches.length === 2) {
+                // Multi-touch zoom
+                e.preventDefault();
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                const currentDistance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (initialTouchDistance) {
+                    const zoomFactor = currentDistance / initialTouchDistance;
+                    scale = Math.max(0.1, Math.min(5, scale * zoomFactor));
+                    initialTouchDistance = currentDistance;
+                    renderImage();
+                }
+            }
+        }
+
+        function handleTouchEnd(e) {
+            if (e.touches.length === 0) {
+                isDragging = false;
+                initialTouchDistance = null;
+            }
+        }
+
+        // History management
+        function addToHistory() {
+            // Remove future history if we're not at the end
+            if (historyIndex < history.length - 1) {
+                history = history.slice(0, historyIndex + 1);
+            }
+            
+            // Add current state to history
+            history.push({
+                rotationAngle: rotationAngle,
+                flipH: flipH,
+                flipV: flipV
+            });
+            
+            // Limit history to 10 items
+            if (history.length > 10) {
+                history.shift();
+            }
+            
+            historyIndex = history.length - 1;
+            updateHistoryButtons();
+        }
+
+        function undo() {
+            if (historyIndex > 0) {
+                historyIndex--;
+                applyHistoryState();
+            }
+        }
+
+        function redo() {
+            if (historyIndex < history.length - 1) {
+                historyIndex++;
+                applyHistoryState();
+            }
+        }
+
+        function applyHistoryState() {
+            const state = history[historyIndex];
+            rotationAngle = state.rotationAngle;
+            flipH = state.flipH;
+            flipV = state.flipV;
+            
+            updateAngleDisplays();
+            updateHistoryButtons();
+            renderImage();
+        }
+
+        function updateHistoryButtons() {
+            undoBtn.disabled = historyIndex <= 0;
+            redoBtn.disabled = historyIndex >= history.length - 1;
+        }
+
+        // Background
+        function updateBackground() {
+            renderImage();
+        }
+
+        // Comparison
+        function toggleComparison() {
+            if (compareToggle.checked) {
+                comparisonSlider.classList.remove('hidden');
+            } else {
+                comparisonSlider.classList.add('hidden');
+            }
+            renderImage();
+        }
+
+        function updateComparison() {
+            renderImage();
+        }
+
+        // Export
+        function updateExportOptions() {
+            const format = exportFormat.value;
+            
+            // Hide all options first
+            jpegOptions.style.display = 'none';
+            webpOptions.style.display = 'none';
+            
+            // Show options for selected format
+            if (format === 'jpeg') {
+                jpegOptions.style.display = 'flex';
+            } else if (format === 'webp') {
+                webpOptions.style.display = 'flex';
+            }
+            
+            // Update quality value displays
+            document.getElementById('jpeg-quality').addEventListener('input', function() {
+                document.getElementById('jpeg-quality-value').textContent = this.value + '%';
+            });
+            
+            document.getElementById('webp-quality').addEventListener('input', function() {
+                document.getElementById('webp-quality-value').textContent = this.value + '%';
+            });
+        }
+
+        function handleDownload() {
+            if (!currentImage) return;
+            
+            const format = exportFormat.value;
+            let quality;
+            
+            if (format === 'jpeg') {
+                quality = document.getElementById('jpeg-quality').value / 100;
+            } else if (format === 'webp') {
+                quality = document.getElementById('webp-quality').value / 100;
+            }
+            
+            // Create a temporary canvas for export
+            const exportCanvas = document.createElement('canvas');
+            const exportCtx = exportCanvas.getContext('2d');
+            
+            // Calculate rotated dimensions
+            const rad = rotationAngle * Math.PI / 180;
+            const cos = Math.abs(Math.cos(rad));
+            const sin = Math.abs(Math.sin(rad));
+            const rotatedWidth = currentImage.width * cos + currentImage.height * sin;
+            const rotatedHeight = currentImage.width * sin + currentImage.height * cos;
+            
+            exportCanvas.width = rotatedWidth;
+            exportCanvas.height = rotatedHeight;
+            
+            // Set background if not transparent
+            if (!transparentBg.checked || format === 'jpeg') {
+                exportCtx.fillStyle = bgColorPicker.value;
+                exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+            }
+            
+            // Apply transformations
+            exportCtx.save();
+            exportCtx.translate(exportCanvas.width / 2, exportCanvas.height / 2);
+            exportCtx.rotate(rotationAngle * Math.PI / 180);
+            exportCtx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
+            exportCtx.drawImage(
+                currentImage, 
+                -currentImage.width / 2, 
+                -currentImage.height / 2,
+                currentImage.width,
+                currentImage.height
+            );
+            exportCtx.restore();
+            
+            // Get the data URL
+            let dataURL;
+            if (format === 'jpeg') {
+                dataURL = exportCanvas.toDataURL('image/jpeg', quality);
+            } else if (format === 'png') {
+                dataURL = exportCanvas.toDataURL('image/png');
+            } else if (format === 'webp') {
+                dataURL = exportCanvas.toDataURL('image/webp', quality);
+            } else if (format === 'bmp') {
+                // Note: BMP format is not natively supported by toDataURL in some browsers
+                dataURL = exportCanvas.toDataURL('image/bmp');
+            }
+            
+            // Create download link
+            const link = document.createElement('a');
+            link.download = `${fileName}_rotated_${rotationAngle}.${format}`;
+            link.href = dataURL;
+            link.click();
+            
+            showToast('Image downloaded successfully!', 'success');
+        }
+
+        function handleCopyToClipboard() {
+            if (!currentImage) return;
+            
+            canvas.toBlob(function(blob) {
+                const item = new ClipboardItem({ 'image/png': blob });
+                navigator.clipboard.write([item])
+                    .then(() => {
+                        showToast('Image copied to clipboard!', 'success');
+                    })
+                    .catch(err => {
+                        showToast('Failed to copy image to clipboard', 'error');
+                        console.error('Copy failed:', err);
+                    });
+            });
+        }
+
+        function handlePrint() {
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Print Image</title>
+                        <style>
+                            body { 
+                                text-align: center; 
+                                margin: 0; 
+                                padding: 20px; 
+                            }
+                            img { 
+                                max-width: 100%; 
+                                height: auto; 
+                            }
+                            @media print {
+                                body { padding: 0; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <img src="${canvas.toDataURL('image/png')}" alt="Printed Image">
+                    </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.focus();
+            
+            // Wait for image to load before printing
+            printWindow.onload = function() {
+                printWindow.print();
+            };
+        }
+
+        // UI helpers
+        function enableControls() {
+            downloadBtn.disabled = false;
+            copyBtn.disabled = false;
+            printBtn.disabled = false;
+            rotateLeftBtn.disabled = false;
+            rotateRightBtn.disabled = false;
+            angleSlider.disabled = false;
+            angleInput.disabled = false;
+            applyAngleBtn.disabled = false;
+            flipHBtn.disabled = false;
+            flipVBtn.disabled = false;
+            resetTransformBtn.disabled = false;
+        }
+
+        function showLoading(show) {
+            if (show) {
+                loadingIndicator.classList.remove('hidden');
+            } else {
+                loadingIndicator.classList.add('hidden');
+            }
+        }
+
+        function showToast(message, type = '') {
+            toast.textContent = message;
+            toast.className = 'toast';
+            if (type) toast.classList.add(type);
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function showHelp() {
+            alert(`
+Keyboard Shortcuts:
+- Ctrl/Cmd + V: Paste image from clipboard
+- Mouse Wheel: Zoom in/out
+- Drag: Pan the image
+
+Tips:
+- Use the angle slider for precise rotation control
+- Enable "Snap to 90°" for perfect right-angle rotations
+- Toggle grid and rulers for alignment assistance
+- Use the before/after comparison to see your changes
+            `);
+        }
+
+        // Initialize the app
+        init();
+    </script>
+</body>
+</html>
