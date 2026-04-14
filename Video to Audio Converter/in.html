@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Video to Audio Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Downgraded FFmpeg to a version more compatible with environments without SharedArrayBuffer -->
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.10.1/dist/ffmpeg.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white rounded-lg shadow-xl p-8 max-w-lg w-full">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Video to Audio Converter</h1>
+            <p class="text-gray-500 mt-2">Convert your video files to high-quality MP3 audio, right in your browser.</p>
+        </div>
+
+        <div class="space-y-6">
+            <div>
+                <label for="video-upload" class="block text-sm font-medium text-gray-700 mb-2">1. Upload your video</label>
+                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                    <div class="space-y-1 text-center">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <div class="flex text-sm text-gray-600">
+                            <label for="video-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+                                <span>Upload a file</span>
+                                <input id="video-upload" name="video-upload" type="file" class="sr-only" accept="video/*">
+                            </label>
+                            <p class="pl-1">or drag and drop</p>
+                        </div>
+                        <p id="file-name" class="text-xs text-gray-500">MP4, MOV, AVI, WEBM up to 1GB</p>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <button id="convert-btn" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-300 disabled:cursor-not-allowed" disabled>
+                    Convert to MP3
+                </button>
+            </div>
+
+            <div id="status" class="text-center text-gray-500 hidden">
+                <div class="flex items-center justify-center">
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <p id="status-text">Processing your video...</p>
+                </div>
+            </div>
+
+            <div id="result" class="hidden">
+                <label class="block text-sm font-medium text-gray-700 mb-2">2. Your audio is ready!</label>
+                <audio id="audio-player" controls class="w-full"></audio>
+                <a id="download-link" class="mt-4 w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500" download="audio.mp3">
+                    Download MP3
+                </a>
+            </div>
+        </div>
+        <p class="text-center text-xs text-gray-400 mt-8">Your files are processed entirely in your browser and are never uploaded to a server.</p>
+    </div>
+
+    <script>
+        const { createFFmpeg, fetchFile } = FFmpeg;
+        let ffmpeg;
+        let videoFile = null;
+
+        const videoUpload = document.getElementById('video-upload');
+        const fileNameDisplay = document.getElementById('file-name');
+        const convertBtn = document.getElementById('convert-btn');
+        const statusDiv = document.getElementById('status');
+        const statusText = document.getElementById('status-text');
+        const resultDiv = document.getElementById('result');
+        const audioPlayer = document.getElementById('audio-player');
+        const downloadLink = document.getElementById('download-link');
+
+        // Initialize FFmpeg
+        const initializeFFmpeg = async () => {
+            // Create FFmpeg instance
+            ffmpeg = createFFmpeg({ 
+                log: true,
+                // Use the core from the downgraded version
+                corePath: 'https://unpkg.com/@ffmpeg/core@0.10.1/dist/ffmpeg-core.js',
+            });
+            // Loading the core scripts
+            await ffmpeg.load();
+        };
+        initializeFFmpeg();
+
+        // Handle file upload
+        videoUpload.addEventListener('change', (event) => {
+            videoFile = event.target.files[0];
+            if (videoFile) {
+                fileNameDisplay.textContent = videoFile.name;
+                convertBtn.disabled = false;
+                resultDiv.classList.add('hidden');
+            } else {
+                fileNameDisplay.textContent = 'MP4, MOV, AVI, WEBM up to 1GB';
+                convertBtn.disabled = true;
+            }
+        });
+
+        // Handle convert button click
+        convertBtn.addEventListener('click', async () => {
+            if (!videoFile) return;
+
+            convertBtn.disabled = true;
+            statusDiv.classList.remove('hidden');
+            resultDiv.classList.add('hidden');
+            statusText.textContent = 'Loading FFmpeg core...';
+
+            try {
+                if (!ffmpeg.isLoaded()) {
+                    await ffmpeg.load();
+                }
+
+                statusText.textContent = 'Reading your file...';
+                ffmpeg.FS('writeFile', 'input.video', await fetchFile(videoFile));
+
+                statusText.textContent = 'Converting... this may take a moment.';
+                
+                // Run FFmpeg command to convert video to mp3
+                // -i: input file
+                // -vn: disable video recording
+                // -acodec: set audio codec
+                // -ab: set audio bitrate
+                // -ar: set audio sampling rate
+                await ffmpeg.run('-i', 'input.video', '-vn', '-acodec', 'libmp3lame', '-ab', '192k', '-ar', '44100', 'output.mp3');
+
+                statusText.textContent = 'Finalizing audio...';
+                const data = ffmpeg.FS('readFile', 'output.mp3');
+
+                // Create a URL for the converted audio
+                const audioUrl = URL.createObjectURL(new Blob([data.buffer], { type: 'audio/mpeg' }));
+                
+                audioPlayer.src = audioUrl;
+                downloadLink.href = audioUrl;
+                downloadLink.download = `${videoFile.name.split('.').slice(0, -1).join('.')}.mp3`;
+
+                resultDiv.classList.remove('hidden');
+
+            } catch (error) {
+                console.error(error);
+                statusText.textContent = 'An error occurred during conversion. Please try again.';
+                // Show error for a few seconds then hide
+                setTimeout(() => {
+                    statusDiv.classList.add('hidden');
+                    convertBtn.disabled = false;
+                }, 5000);
+                return; // Stop execution if an error occurs
+            } finally {
+                // Always hide status and re-enable button unless an error occurred
+                if (!statusText.textContent.includes('error')) {
+                    statusDiv.classList.add('hidden');
+                    convertBtn.disabled = false;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+
