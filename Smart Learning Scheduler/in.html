@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Learning Scheduler</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom Styles & Overrides */
+        :root {
+            --bg-light: #f7fafc; /* gray-100 */
+            --bg-dark: #1a202c;  /* gray-800 */
+            --card-light: #ffffff;
+            --card-dark: #2d3748; /* gray-700 */
+            --text-light: #2d3748; /* gray-700 */
+            --text-dark: #e2e8f0;  /* gray-200 */
+            --border-light: #e2e8f0; /* gray-200 */
+            --border-dark: #4a5568;  /* gray-600 */
+            --primary-color: #4f46e5; /* indigo-600 */
+            --primary-hover: #4338ca; /* indigo-700 */
+        }
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-light);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .dark body {
+            background-color: var(--bg-dark);
+            color: var(--text-dark);
+        }
+        .card {
+            background-color: var(--card-light);
+            border: 1px solid var(--border-light);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .dark .card {
+            background-color: var(--card-dark);
+            border-color: var(--border-dark);
+        }
+        input, select {
+            background-color: var(--bg-light);
+            border-color: var(--border-light);
+        }
+        .dark input, .dark select {
+            background-color: #4a5568; /* gray-600 */
+            border-color: #718096; /* gray-500 */
+            color: var(--text-dark);
+        }
+        input[type="time"]::-webkit-calendar-picker-indicator {
+             filter: invert(0.5);
+        }
+        .dark input[type="time"]::-webkit-calendar-picker-indicator {
+             filter: invert(1);
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            transition: background-color 0.2s;
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+        .btn-secondary {
+            background-color: #e2e8f0; /* gray-200 */
+            color: #4a5568; /* gray-600 */
+            transition: background-color 0.2s;
+        }
+        .dark .btn-secondary {
+            background-color: #4a5568; /* gray-600 */
+            color: #e2e8f0; /* gray-200 */
+        }
+        .btn-secondary:hover {
+            background-color: #cbd5e0; /* gray-300 */
+        }
+        .dark .btn-secondary:hover {
+            background-color: #2d3748; /* gray-700 */
+        }
+
+        /* Toast Notification */
+        #toast {
+            position: fixed;
+            bottom: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: bottom 0.5s ease-in-out;
+            z-index: 50;
+        }
+        #toast.show {
+            bottom: 20px;
+        }
+
+        /* Print Styles */
+        @media print {
+            body { background-color: white; color: black; }
+            header, footer, #schedule-form, #results-actions, .no-print { display: none; }
+            main, #results-section { all: unset; }
+            .schedule-day {
+                page-break-inside: avoid;
+                box-shadow: none;
+                border: 1px solid #ccc;
+                margin-bottom: 2rem;
+            }
+        }
+    </style>
+</head>
+<body class="font-sans antialiased">
+
+    <header class="sticky top-0 z-10 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-bold text-indigo-600 dark:text-indigo-400">Smart Learning Scheduler</h1>
+            <div class="flex items-center space-x-2">
+                <span class="text-sm text-gray-500 dark:text-gray-400">☀️</span>
+                <label for="darkModeToggle" class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" value="" id="darkModeToggle" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+                </label>
+                <span class="text-sm">🌙</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-6 lg:p-8">
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+            
+            <form id="schedule-form" class="lg:col-span-2 space-y-6">
+                <div class="card p-5 rounded-lg shadow-md">
+                    <h2 class="text-lg font-semibold mb-4 border-b pb-2 border-gray-200 dark:border-gray-600">1. Skills to Learn</h2>
+                    <div id="skills-container" class="space-y-3">
+                        </div>
+                    <button type="button" id="add-skill-btn" class="mt-4 w-full text-sm font-semibold py-2 px-4 rounded-md btn-secondary">
+                        + Add Skill
+                    </button>
+                    <p id="skill-error" class="text-red-500 text-xs mt-2 hidden">Please add at least one skill.</p>
+                </div>
+
+                <div class="card p-5 rounded-lg shadow-md">
+                    <h2 class="text-lg font-semibold mb-4 border-b pb-2 border-gray-200 dark:border-gray-600">2. Plan Scope</h2>
+                    <div class="flex space-x-4">
+                        <label class="flex items-center"><input type="radio" name="mode" value="Daily" class="mr-2" checked> Daily</label>
+                        <label class="flex items-center"><input type="radio" name="mode" value="Monthly" class="mr-2"> Monthly</label>
+                    </div>
+                    <div id="daily-options" class="mt-4">
+                        <label for="dailyHours" class="block text-sm font-medium">Available Hours per Day</label>
+                        <input type="number" id="dailyHours" name="dailyHours" min="1" max="24" value="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                    </div>
+                    <div id="monthly-options" class="mt-4 hidden space-y-3">
+                        <div>
+                            <label for="startDate" class="block text-sm font-medium">Start Date</label>
+                            <input type="date" id="startDate" name="startDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                        </div>
+                        <div>
+                            <label for="endDate" class="block text-sm font-medium">End Date</label>
+                            <input type="date" id="endDate" name="endDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-5 rounded-lg shadow-md space-y-4">
+                    <h2 class="text-lg font-semibold mb-4 border-b pb-2 border-gray-200 dark:border-gray-600">3. Daily Schedule</h2>
+                    <div>
+                        <label class="block text-sm font-medium">Working Window</label>
+                        <div class="flex items-center space-x-2 mt-1">
+                            <input type="time" id="startTime" name="startTime" value="09:00" class="block w-full rounded-md border-gray-300 shadow-sm p-2">
+                            <span>to</span>
+                            <input type="time" id="endTime" name="endTime" value="17:00" class="block w-full rounded-md border-gray-300 shadow-sm p-2">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium">Break Pattern (Pomodoro-style)</label>
+                        <div class="flex items-center space-x-2 mt-1">
+                             <input type="number" id="workBlockMins" name="workBlockMins" value="50" min="25" step="5" class="block w-full rounded-md border-gray-300 shadow-sm p-2">
+                             <span class="text-gray-500">min work /</span>
+                             <input type="number" id="breakMins" name="breakMins" value="10" min="5" step="5" class="block w-full rounded-md border-gray-300 shadow-sm p-2">
+                             <span class="text-gray-500">min break</span>
+                        </div>
+                    </div>
+                     <div>
+                        <label class="flex items-center">
+                            <input type="checkbox" id="enableLunch" name="enableLunch" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                            <span class="ml-2 text-sm">Include Lunch Break</span>
+                        </label>
+                        <div id="lunch-options" class="hidden flex items-center space-x-2 mt-2">
+                            <input type="time" id="lunchStart" name="lunchStart" value="13:00" class="block w-full rounded-md border-gray-300 shadow-sm p-2">
+                            <input type="number" id="lunchDuration" name="lunchDuration" value="60" min="15" step="15" class="block w-full rounded-md border-gray-300 shadow-sm p-2">
+                            <span class="text-gray-500 text-sm">mins</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sticky bottom-4">
+                    <button type="submit" class="w-full btn-primary font-bold py-3 px-4 rounded-lg shadow-lg hover:shadow-xl transition transform hover:-translate-y-1">
+                        🚀 Generate Schedule
+                    </button>
+                </div>
+            </form>
+
+            <section id="results-section" class="lg:col-span-3 space-y-6 hidden">
+                <div class="card p-5 rounded-lg shadow-md">
+                    <div id="results-actions" class="flex flex-wrap gap-2 mb-4 border-b pb-4 border-gray-200 dark:border-gray-600">
+                        <button id="save-btn" class="text-sm btn-secondary py-2 px-3 rounded-md">💾 Save</button>
+                        <button id="reset-btn" class="text-sm btn-secondary py-2 px-3 rounded-md">🔄 Reset</button>
+                        <button id="download-pdf-btn" class="text-sm btn-secondary py-2 px-3 rounded-md">📄 Download PDF</button>
+                        <button id="copy-json-btn" class="text-sm btn-secondary py-2 px-3 rounded-md">📋 Copy JSON</button>
+                    </div>
+                    
+                    <h2 class="text-lg font-semibold mb-3">Summary</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-gray-50 dark:bg-gray-800">
+                                <tr>
+                                    <th class="p-2">Skill</th>
+                                    <th class="p-2 text-right">Total Minutes</th>
+                                    <th class="p-2 text-right">% Allocation</th>
+                                </tr>
+                            </thead>
+                            <tbody id="summary-table-body">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="schedule-display" class="space-y-6">
+                     </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="text-center py-6 mt-8 text-sm text-gray-500 dark:text-gray-400">
+        <p>Developed by BEST</p>
+    </footer>
+
+    <div id="toast" class="bg-gray-800 dark:bg-gray-200 text-white dark:text-black"></div>
+    
+    <template id="skill-template">
+        <div class="skill-row grid grid-cols-[1fr,auto,auto,auto] gap-2 items-center">
+            <input type="text" name="skillName" placeholder="e.g., Python" required class="p-2 w-full rounded-md border-gray-300 shadow-sm text-sm">
+            <select name="priority" class="p-2 rounded-md border-gray-300 shadow-sm text-sm">
+                <option value="High">High</option>
+                <option value="Medium" selected>Medium</option>
+                <option value="Low">Low</option>
+            </select>
+            <input type="number" name="estHours" placeholder="Hrs" min="1" required class="p-2 w-20 rounded-md border-gray-300 shadow-sm text-sm">
+            <button type="button" class="remove-skill-btn text-red-500 hover:text-red-700 dark:hover:text-red-400 p-2 rounded-full no-print">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        </div>
+    </template>
+
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // --- DOM Elements ---
+        const form = document.getElementById('schedule-form');
+        const skillsContainer = document.getElementById('skills-container');
+        const addSkillBtn = document.getElementById('add-skill-btn');
+        const skillTemplate = document.getElementById('skill-template');
+        const skillError = document.getElementById('skill-error');
+        
+        const modeRadios = document.querySelectorAll('input[name="mode"]');
+        const dailyOptions = document.getElementById('daily-options');
+        const monthlyOptions = document.getElementById('monthly-options');
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+
+        const enableLunchCheckbox = document.getElementById('enableLunch');
+        const lunchOptions = document.getElementById('lunch-options');
+        
+        const resultsSection = document.getElementById('results-section');
+        const summaryTableBody = document.getElementById('summary-table-body');
+        const scheduleDisplay = document.getElementById('schedule-display');
+
+        const saveBtn = document.getElementById('save-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const downloadPdfBtn = document.getElementById('download-pdf-btn');
+        const copyJsonBtn = document.getElementById('copy-json-btn');
+        
+        const toast = document.getElementById('toast');
+
+        const darkModeToggle = document.getElementById('darkModeToggle');
+
+        // --- State Management ---
+        const STORAGE_KEY = 'skillScheduler:v1:state';
+        let state = {
+            inputs: null,
+            schedule: [],
+            totals: [],
+        };
+        
+        // --- Dark Mode Handler ---
+        const initDarkMode = () => {
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                document.documentElement.classList.add('dark');
+                darkModeToggle.checked = true;
+            } else {
+                document.documentElement.classList.remove('dark');
+                darkModeToggle.checked = false;
+            }
+        };
+
+        darkModeToggle.addEventListener('change', () => {
+            if (darkModeToggle.checked) {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+
+
+        // --- Helper Functions ---
+        const timeToMinutes = (timeStr) => {
+            if (!timeStr) return 0;
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            return hours * 60 + minutes;
+        };
+
+        const minutesToTime = (totalMinutes) => {
+            const hours = Math.floor(totalMinutes / 60).toString().padStart(2, '0');
+            const minutes = (totalMinutes % 60).toString().padStart(2, '0');
+            return `${hours}:${minutes}`;
+        };
+
+        const roundTo5 = (num) => Math.round(num / 5) * 5;
+
+        const showToast = (message, type = 'success') => {
+            toast.textContent = message;
+            toast.className = `bg-gray-800 dark:bg-gray-200 text-white dark:text-black`;
+            if (type === 'error') {
+                 toast.className = `bg-red-600 text-white`;
+            }
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        };
+        
+        // --- UI Logic ---
+        const addSkillRow = (skill = { skillName: '', priority: 'Medium', estHours: '' }) => {
+            const newSkillRow = skillTemplate.content.cloneNode(true);
+            newSkillRow.querySelector('input[name="skillName"]').value = skill.skillName;
+            newSkillRow.querySelector('select[name="priority"]').value = skill.priority;
+            newSkillRow.querySelector('input[name="estHours"]').value = skill.estHours;
+            skillsContainer.appendChild(newSkillRow);
+        };
+
+        skillsContainer.addEventListener('click', (e) => {
+            if (e.target.closest('.remove-skill-btn')) {
+                e.target.closest('.skill-row').remove();
+            }
+        });
+        
+        modeRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const isDaily = e.target.value === 'Daily';
+                dailyOptions.classList.toggle('hidden', !isDaily);
+                monthlyOptions.classList.toggle('hidden', isDaily);
+            });
+        });
+        
+        enableLunchCheckbox.addEventListener('change', () => {
+            lunchOptions.classList.toggle('hidden', !enableLunchCheckbox.checked);
+        });
+
+        const setDateDefaults = () => {
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+            const nextMonth = new Date(today.setMonth(today.getMonth() + 1));
+            const nextMonthStr = nextMonth.toISOString().split('T')[0];
+            startDateInput.value = todayStr;
+            endDateInput.value = nextMonthStr;
+        };
+
+        // --- Core Scheduling Algorithm ---
+        const generateSchedule = () => {
+            // 1. Parse Inputs and Validate
+            const inputs = parseForm();
+            if (!inputs) return;
+
+            if (inputs.skills.length === 0) {
+                skillError.classList.remove('hidden');
+                showToast('Please add at least one skill.', 'error');
+                return;
+            }
+            skillError.classList.add('hidden');
+            
+            const PRIORITY_WEIGHTS = { High: 3, Medium: 2, Low: 1 };
+            let skills = inputs.skills.map((s, i) => ({
+                ...s,
+                id: i,
+                weight: PRIORITY_WEIGHTS[s.priority],
+                remainingMins: s.estHours * 60
+            })).filter(s => s.remainingMins > 0);
+
+            // 2. Date Calculation
+            const dates = [];
+            if (inputs.settings.mode === 'Daily') {
+                dates.push(new Date().toISOString().split('T')[0]);
+            } else {
+                let currentDate = new Date(inputs.settings.startDate + 'T00:00:00');
+                const endDate = new Date(inputs.settings.endDate + 'T00:00:00');
+                while (currentDate <= endDate) {
+                    dates.push(currentDate.toISOString().split('T')[0]);
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+            }
+
+            // 3. Main Loop (per day)
+            const schedule = [];
+            let dailySkillStartIndex = 0;
+
+            for (const date of dates) {
+                // Stop if all skills are completed
+                if (skills.every(s => s.remainingMins <= 0)) break;
+
+                const dailyBlocks = [];
+                let currentTime = timeToMinutes(inputs.settings.startTime);
+                const endTime = timeToMinutes(inputs.settings.endTime);
+                const lunchStart = inputs.settings.lunch.enabled ? timeToMinutes(inputs.settings.lunch.start) : -1;
+                const lunchEnd = lunchStart + (inputs.settings.lunch.enabled ? inputs.settings.lunch.duration : 0);
+                
+                // Calculate allocatable minutes for the day
+                let totalWindowMins = endTime - currentTime;
+                if (inputs.settings.lunch.enabled) {
+                    totalWindowMins -= inputs.settings.lunch.duration;
+                }
+                let dailyWorkLimit = inputs.settings.mode === 'Daily' ? inputs.settings.dailyHours * 60 : totalWindowMins;
+                dailyWorkLimit = Math.min(dailyWorkLimit, totalWindowMins);
+
+                const cycleDuration = inputs.settings.workBlockMins + inputs.settings.breakMins;
+                const numCycles = Math.floor(dailyWorkLimit / cycleDuration);
+                let totalWorkableMins = numCycles * inputs.settings.workBlockMins;
+                let remainingDailyWorkMins = totalWorkableMins;
+
+                // Calculate skill allocation for the day
+                let activeSkills = skills.filter(s => s.remainingMins > 0);
+                const totalWeight = activeSkills.reduce((sum, s) => sum + s.weight, 0);
+                if (totalWeight === 0) continue;
+
+                activeSkills.forEach(s => {
+                    s.dailyQuotaMins = Math.floor((s.weight / totalWeight) * totalWorkableMins);
+                });
+
+                // Build a rotated priority queue for this day
+                const skillQueue = [...activeSkills].sort((a, b) => b.weight - a.weight);
+                const rotatedQueue = [...skillQueue.slice(dailySkillStartIndex), ...skillQueue.slice(0, dailySkillStartIndex)];
+                let skillQueueIndex = 0;
+
+                // 4. Block Generation Loop
+                while (currentTime < endTime && remainingDailyWorkMins > 0) {
+                     // Handle lunch
+                    if (inputs.settings.lunch.enabled && currentTime >= lunchStart && currentTime < lunchEnd) {
+                        const blockEnd = Math.min(endTime, lunchEnd);
+                        if (blockEnd > currentTime) {
+                           dailyBlocks.push({ start: minutesToTime(currentTime), end: minutesToTime(blockEnd), type: 'lunch', skillName: 'Lunch', minutes: blockEnd - currentTime });
+                           currentTime = blockEnd;
+                        }
+                        continue;
+                    }
+
+                    // Find next skill to work on
+                    let skillToSchedule = null;
+                    let attempts = 0;
+                    while (attempts < rotatedQueue.length) {
+                        const candidate = rotatedQueue[skillQueueIndex % rotatedQueue.length];
+                        if (candidate.dailyQuotaMins > 0 && candidate.remainingMins > 0) {
+                            skillToSchedule = candidate;
+                            break;
+                        }
+                        skillQueueIndex++;
+                        attempts++;
+                    }
+                    
+                    // If no skill can be scheduled, fill with Buffer
+                    if (!skillToSchedule) {
+                        const nextEventTime = (inputs.settings.lunch.enabled && currentTime < lunchStart) ? lunchStart : endTime;
+                        const blockEnd = Math.min(endTime, nextEventTime);
+                        if (blockEnd > currentTime) {
+                           dailyBlocks.push({ start: minutesToTime(currentTime), end: minutesToTime(blockEnd), type: 'buffer', skillName: 'Buffer / Review', minutes: blockEnd - currentTime });
+                           currentTime = blockEnd;
+                        }
+                        continue;
+                    }
+                    
+                    // Add work block
+                    const workBlockDuration = roundTo5(Math.min(inputs.settings.workBlockMins, skillToSchedule.dailyQuotaMins, skillToSchedule.remainingMins, remainingDailyWorkMins));
+                    const nextEventTime = (inputs.settings.lunch.enabled && currentTime < lunchStart) ? lunchStart : endTime;
+                    const blockEnd = Math.min(currentTime + workBlockDuration, endTime, nextEventTime);
+                    const actualDuration = blockEnd - currentTime;
+                    
+                    if (actualDuration >= 25) { // Minimum block constraint
+                        dailyBlocks.push({
+                            start: minutesToTime(currentTime),
+                            end: minutesToTime(blockEnd),
+                            type: 'work',
+                            skillId: skillToSchedule.id,
+                            skillName: skillToSchedule.skillName,
+                            minutes: actualDuration
+                        });
+                        
+                        skillToSchedule.dailyQuotaMins -= actualDuration;
+                        skillToSchedule.remainingMins -= actualDuration;
+                        remainingDailyWorkMins -= actualDuration;
+                        currentTime = blockEnd;
+                        
+                        // Add break block if applicable
+                        if (currentTime < endTime && remainingDailyWorkMins > 0) {
+                            const breakEnd = Math.min(currentTime + inputs.settings.breakMins, endTime, nextEventTime);
+                            if (breakEnd > currentTime) {
+                                dailyBlocks.push({ start: minutesToTime(currentTime), end: minutesToTime(breakEnd), type: 'break', skillName: 'Break', minutes: breakEnd - currentTime });
+                                currentTime = breakEnd;
+                            }
+                        }
+                    } else {
+                        // If the remaining time is too small, we break to avoid tiny blocks
+                        remainingDailyWorkMins = 0; // Force exit
+                    }
+                    
+                    skillQueueIndex++;
+                }
+
+                // Add buffer for any remaining time
+                if (currentTime < endTime) {
+                    const nextEventTime = (inputs.settings.lunch.enabled && currentTime < lunchStart) ? lunchStart : endTime;
+                    const blockEnd = Math.min(endTime, nextEventTime);
+                     if (blockEnd > currentTime) {
+                        dailyBlocks.push({ start: minutesToTime(currentTime), end: minutesToTime(blockEnd), type: 'buffer', skillName: 'Buffer / Review', minutes: blockEnd - currentTime });
+                    }
+                }
+
+                if (dailyBlocks.length > 0) {
+                    schedule.push({ date, blocks: dailyBlocks });
+                }
+
+                // Rotate starting skill for next day
+                dailySkillStartIndex = (dailySkillStartIndex + 1) % Math.max(1, skillQueue.length);
+            }
+            
+            // 5. Finalize and Render
+            state.inputs = inputs;
+            state.schedule = schedule;
+            state.totals = calculateTotals(inputs.skills, schedule);
+            renderResults();
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        };
+        
+        const calculateTotals = (skills, schedule) => {
+            const totals = skills.map((s, i) => ({ skillId: i, skillName: s.skillName, minutes: 0 }));
+            schedule.forEach(day => {
+                day.blocks.forEach(block => {
+                    if (block.type === 'work' && totals[block.skillId]) {
+                        totals[block.skillId].minutes += block.minutes;
+                    }
+                });
+            });
+            const totalScheduledMinutes = totals.reduce((sum, s) => sum + s.minutes, 0);
+            return totals.map(s => ({
+                ...s,
+                percent: totalScheduledMinutes > 0 ? ((s.minutes / totalScheduledMinutes) * 100).toFixed(1) : 0
+            }));
+        };
+
+        // --- Rendering Logic ---
+        const renderResults = () => {
+            // Render Summary
+            summaryTableBody.innerHTML = '';
+            state.totals.forEach(total => {
+                const row = document.createElement('tr');
+                row.className = 'border-b dark:border-gray-700';
+                row.innerHTML = `
+                    <td class="p-2 font-medium">${total.skillName}</td>
+                    <td class="p-2 text-right">${total.minutes}</td>
+                    <td class="p-2 text-right">${total.percent}%</td>
+                `;
+                summaryTableBody.appendChild(row);
+            });
+            
+            // Render Daily Schedules
+            scheduleDisplay.innerHTML = '';
+            if(state.schedule.length === 0) {
+                scheduleDisplay.innerHTML = `<div class="card p-5 rounded-lg text-center text-gray-500">
+                    <p>No study blocks could be scheduled.</p>
+                    <p class="text-sm">This might happen if your skills' estimated hours are met or the time window is too small.</p>
+                </div>`
+            } else {
+                state.schedule.forEach(({ date, blocks }) => {
+                    const dayCard = document.createElement('div');
+                    dayCard.className = 'schedule-day card p-5 rounded-lg shadow-md';
+                    const formattedDate = new Intl.DateTimeFormat('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(date + 'T00:00:00'));
+                    
+                    let tableRows = '';
+                    blocks.forEach(block => {
+                        let rowClass = '';
+                        let skillDisplay = `<strong>${block.skillName}</strong>`;
+                        switch(block.type) {
+                            case 'work': rowClass = 'bg-indigo-50 dark:bg-indigo-900/50'; break;
+                            case 'break': rowClass = 'bg-green-50 dark:bg-green-900/50'; skillDisplay = '<em>Break</em>'; break;
+                            case 'lunch': rowClass = 'bg-yellow-50 dark:bg-yellow-900/50'; skillDisplay = '<em>Lunch</em>'; break;
+                            case 'buffer': rowClass = 'bg-gray-100 dark:bg-gray-600'; skillDisplay = '<em>Buffer / Review</em>'; break;
+                        }
+                        
+                        tableRows += `
+                            <tr class="${rowClass}">
+                                <td class="p-2 w-1/4">${block.start} - ${block.end}</td>
+                                <td class="p-2 w-1/2">${skillDisplay}</td>
+                                <td class="p-2 w-1/4 text-right text-gray-500 dark:text-gray-400">${block.minutes} min</td>
+                            </tr>
+                        `;
+                    });
+
+                    dayCard.innerHTML = `
+                        <h3 class="text-md font-semibold mb-3">${formattedDate}</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <tbody>${tableRows}</tbody>
+                            </table>
+                        </div>
+                    `;
+                    scheduleDisplay.appendChild(dayCard);
+                });
+            }
+            
+            resultsSection.classList.remove('hidden');
+        };
+        
+        const parseForm = () => {
+            const skillRows = skillsContainer.querySelectorAll('.skill-row');
+            const skills = Array.from(skillRows).map(row => ({
+                skillName: row.querySelector('input[name="skillName"]').value,
+                priority: row.querySelector('select[name="priority"]').value,
+                estHours: parseInt(row.querySelector('input[name="estHours"]').value) || 0,
+            })).filter(s => s.skillName && s.estHours > 0);
+            
+            // Deduplicate skills
+            const uniqueSkills = [];
+            const skillNames = new Set();
+            for(const skill of skills) {
+                if(!skillNames.has(skill.skillName.toLowerCase())) {
+                    skillNames.add(skill.skillName.toLowerCase());
+                    uniqueSkills.push(skill);
+                }
+            }
+
+            const mode = document.querySelector('input[name="mode"]:checked').value;
+            
+            return {
+                skills: uniqueSkills,
+                settings: {
+                    mode: mode,
+                    dailyHours: parseFloat(document.getElementById('dailyHours').value) || 0,
+                    startDate: startDateInput.value,
+                    endDate: endDateInput.value,
+                    startTime: document.getElementById('startTime').value,
+                    endTime: document.getElementById('endTime').value,
+                    workBlockMins: parseInt(document.getElementById('workBlockMins').value) || 50,
+                    breakMins: parseInt(document.getElementById('breakMins').value) || 10,
+                    lunch: {
+                        enabled: enableLunchCheckbox.checked,
+                        start: document.getElementById('lunchStart').value,
+                        duration: parseInt(document.getElementById('lunchDuration').value) || 60,
+                    }
+                }
+            };
+        };
+
+        const loadInputs = (inputs) => {
+            if (!inputs) return;
+
+            // Load skills
+            skillsContainer.innerHTML = '';
+            inputs.skills.forEach(skill => addSkillRow(skill));
+
+            // Load settings
+            document.querySelector(`input[name="mode"][value="${inputs.settings.mode}"]`).checked = true;
+            document.querySelector(`input[name="mode"][value="${inputs.settings.mode}"]`).dispatchEvent(new Event('change'));
+            document.getElementById('dailyHours').value = inputs.settings.dailyHours;
+            startDateInput.value = inputs.settings.startDate;
+            endDateInput.value = inputs.settings.endDate;
+            document.getElementById('startTime').value = inputs.settings.startTime;
+            document.getElementById('endTime').value = inputs.settings.endTime;
+            document.getElementById('workBlockMins').value = inputs.settings.workBlockMins;
+            document.getElementById('breakMins').value = inputs.settings.breakMins;
+            
+            enableLunchCheckbox.checked = inputs.settings.lunch.enabled;
+            enableLunchCheckbox.dispatchEvent(new Event('change'));
+            document.getElementById('lunchStart').value = inputs.settings.lunch.start;
+            document.getElementById('lunchDuration').value = inputs.settings.lunch.duration;
+        };
+        
+        // --- Event Listeners ---
+        addSkillBtn.addEventListener('click', () => addSkillRow());
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            generateSchedule();
+        });
+
+        saveBtn.addEventListener('click', () => {
+            state.inputs = parseForm(); // Ensure latest inputs are saved
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            showToast('✅ Schedule saved successfully!');
+        });
+        
+        resetBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to reset everything? This will clear the form and the schedule.')) {
+                localStorage.removeItem(STORAGE_KEY);
+                form.reset();
+                skillsContainer.innerHTML = '';
+                addSkillRow({ skillName: 'JavaScript', priority: 'High', estHours: '40' });
+                addSkillRow({ skillName: 'CSS', priority: 'Medium', estHours: '20' });
+                resultsSection.classList.add('hidden');
+                init();
+                showToast('🔄 Reset complete.');
+            }
+        });
+
+        downloadPdfBtn.addEventListener('click', () => {
+            window.print();
+        });
+
+        copyJsonBtn.addEventListener('click', () => {
+            const jsonString = JSON.stringify(state.schedule, null, 2);
+            navigator.clipboard.writeText(jsonString).then(() => {
+                showToast('📋 JSON copied to clipboard!');
+            }).catch(err => {
+                showToast('Failed to copy JSON.', 'error');
+                console.error('Could not copy text: ', err);
+            });
+        });
+
+        // --- Initialization ---
+        const init = () => {
+            initDarkMode();
+            setDateDefaults();
+            
+            const savedState = localStorage.getItem(STORAGE_KEY);
+            if (savedState) {
+                try {
+                    state = JSON.parse(savedState);
+                    loadInputs(state.inputs);
+                    if (state.schedule && state.schedule.length > 0) {
+                        renderResults();
+                    }
+                } catch(e) {
+                    console.error("Failed to load saved state:", e);
+                    localStorage.removeItem(STORAGE_KEY);
+                }
+            }
+            
+            if (skillsContainer.children.length === 0) {
+                addSkillRow({ skillName: 'JavaScript', priority: 'High', estHours: '40' });
+                addSkillRow({ skillName: 'CSS', priority: 'Medium', estHours: '20' });
+                addSkillRow({ skillName: 'UX Design', priority: 'Low', estHours: '15' });
+            }
+        };
+
+        init();
+    });
+    </script>
+</body>
+</html>
