@@ -44,7 +44,7 @@
 🔗 https://balavignesh2025.neocities.org/Project/Rotate%20&%20Flip%20Image/in
 ---
 ### Smart Learning Scheduler
-🔗 
+🔗 https://balavignesh2025.neocities.org/web%20apps%20/Smart%20Learning%20Scheduler/in
 ---
 ## 🙌 Author
 
