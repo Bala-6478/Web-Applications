@@ -2,7 +2,7 @@
 
 > 🚀 A curated collection of modern, responsive, and interactive web applications built using **HTML, CSS, and JavaScript**.
 ---
-## 🛠️ Tech Stack
+## 🛠️ Tech Stack  
 - HTML5  
 - CSS3  
 - JavaScript (ES6)
