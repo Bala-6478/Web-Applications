@@ -5,7 +5,7 @@
 ## 🛠️ Tech Stack  
 - HTML5  
 - CSS3  
-- JavaScript (ES6)
+- JavaScript (ES6)  
 ---
 ## ✨ Features
 - ⚡ Fast and responsive UI  
