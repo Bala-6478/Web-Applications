@@ -16,19 +16,19 @@
 ---
 # 📌 Projects
 
-###  Advanced Image Converter
+### 1. Advanced Image Converter
 🔗 https://balavignesh2025.neocities.org/Project/Advanced%20Image%20Converter/final.
 ---
-###  Modern Interest Calculator
+### 2. Modern Interest Calculator
 🔗 https://balavignesh2025.neocities.org/Project/Modern%20Interest%20Calculator/in
 ---
-### Money Tracker
+### 3. Money Tracker
 🔗 https://balavignesh2025.neocities.org/Project/Mony%20Tracker/test
 ---
-###  Web OS
+### 4. Web OS
 🔗 https://balavignesh2025.neocities.org/Project/OS/in
 ---
-###  Online Resume Builder
+###  5. Online Resume Builder
 🔗 https://balavignesh2025.neocities.org/Project/Online%20Resume%20Builder/
 ---
 ###  Text Tools
