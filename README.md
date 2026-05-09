@@ -1,6 +1,6 @@
 # 🌐 Web Applications Portfolio
 
-> 🚀 A curated collection of modern, responsive, and interactive web applications built using **HTML, CSS, and JavaScript**.
+🚀 A curated collection of modern, responsive, and interactive web applications built using **HTML, CSS, and JavaScript**.
 ---
 ## 🛠️ Tech Stack  
 - HTML5  
