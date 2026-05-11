@@ -14,6 +14,18 @@
 - 🔥 Real-time functionality  
 - 🧠 Practical real-world projects  
 ---
+
+## 🙌 Author
+
+**Balavignesh A**
+💼 Frontend Developer
+
+### ⭐ My Web Site :  https://balavignesh2025.neocities.org/New  
+---
+### ⭐ Support
+⭐ If you like this repository, consider giving it a star!
+---
+
 # 📌 Projects
 
 ### 1. Advanced Image Converter
@@ -49,12 +61,4 @@
 ### 11.  Best team image toolkit
 🔗 https://balavignesh2025.neocities.org/web%20apps%20/Best%20team%20image%20toolkit/Best_team_Image_Toolkit%20-%20Copy
 ---
-## 🙌 Author
 
-**Balavignesh A**
-💼 Frontend Developer
-
-### ⭐ My Web Site :  https://balavignesh2025.neocities.org/New  
----
-### ⭐ Support
-⭐ If you like this repository, consider giving it a star!
