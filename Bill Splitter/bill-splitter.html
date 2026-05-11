@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Splitwise — Bill Splitter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #0a0a0f;
+            --surface: #111118;
+            --card: #16161f;
+            --border: rgba(255,255,255,0.07);
+            --border-hover: rgba(255,255,255,0.14);
+            --accent: #c8f542;
+            --accent-dim: rgba(200,245,66,0.12);
+            --accent-glow: rgba(200,245,66,0.25);
+            --text: #f0f0f8;
+            --muted: #6b6b80;
+            --danger: #ff5e5e;
+            --white: #ffffff;
+            --font-display: 'Syne', sans-serif;
+            --font-body: 'DM Sans', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+            overflow-x: hidden;
+        }
+
+        /* Ambient background blobs */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -20%;
+            left: -10%;
+            width: 60vw;
+            height: 60vw;
+            background: radial-gradient(circle, rgba(200,245,66,0.04) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -20%;
+            right: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(100,100,255,0.05) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .wrapper {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        /* Top label */
+        .eyebrow {
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .eyebrow::before {
+            content: '';
+            display: inline-block;
+            width: 24px;
+            height: 2px;
+            background: var(--accent);
+        }
+
+        .app-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            overflow: hidden;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset;
+            animation: slideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(32px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* LEFT PANEL */
+        .left-panel {
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2.2rem;
+            border-right: 1px solid var(--border);
+        }
+
+        .panel-heading h1 {
+            font-family: var(--font-display);
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--white);
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+        }
+        .panel-heading p {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            font-weight: 300;
+        }
+
+        /* Field groups */
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+        .field-label {
+            font-family: var(--font-display);
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+        .field-label.danger { color: var(--danger); }
+
+        .input-wrap {
+            position: relative;
+        }
+        .input-prefix {
+            position: absolute;
+            left: 1.1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            font-size: 1rem;
+            font-weight: 500;
+            pointer-events: none;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 14px;
+            color: var(--text);
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 0.85rem 1.1rem;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+            -moz-appearance: textfield;
+        }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+        input[type="number"].has-prefix { padding-left: 2.2rem; }
+        input[type="number"].has-icon   { padding-left: 2.8rem; }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: #111118;
+            box-shadow: 0 0 0 4px var(--accent-glow);
+        }
+        input[type="number"].error-state {
+            border-color: var(--danger);
+            box-shadow: 0 0 0 4px rgba(255,94,94,0.15);
+        }
+        input[type="number"]::placeholder { color: #3a3a50; }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            width: 18px;
+            height: 18px;
+            pointer-events: none;
+        }
+
+        /* Tip grid */
+        .tip-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.55rem;
+        }
+
+        .tip-btn {
+            padding: 0.7rem 0.5rem;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            color: var(--muted);
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.18s ease;
+        }
+        .tip-btn:hover {
+            border-color: var(--border-hover);
+            color: var(--text);
+            background: #1a1a25;
+        }
+        .tip-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #0a0a0f;
+            box-shadow: 0 4px 16px var(--accent-glow);
+        }
+
+        .custom-tip-input {
+            text-align: center;
+            padding: 0.7rem 0.5rem !important;
+            font-size: 0.9rem !important;
+        }
+
+        /* RIGHT PANEL */
+        .right-panel {
+            padding: 3rem;
+            background: linear-gradient(160deg, #13131c 0%, #0e0e16 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Decorative accent circle */
+        .right-panel::before {
+            content: '';
+            position: absolute;
+            top: -60px;
+            right: -60px;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(200,245,66,0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .results-label {
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 0.3rem;
+        }
+
+        .result-block {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: border-color 0.3s, background 0.3s;
+        }
+        .result-block.highlight {
+            border-color: rgba(200,245,66,0.2);
+            background: rgba(200,245,66,0.04);
+        }
+
+        .result-meta h2 {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .result-meta p {
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-top: 0.2rem;
+        }
+
+        .result-amount {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.3rem;
+        }
+        .result-currency {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--muted);
+            margin-top: 0.5rem;
+        }
+        .result-value {
+            font-family: var(--font-display);
+            font-size: 2.8rem;
+            font-weight: 800;
+            color: var(--accent);
+            letter-spacing: -0.04em;
+            line-height: 1;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .result-value.pop {
+            transform: scale(1.08);
+        }
+
+        .results-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 1rem 0;
+        }
+
+        .grand-total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 0.2rem;
+        }
+        .grand-total-label {
+            font-size: 0.85rem;
+            color: var(--muted);
+            font-weight: 400;
+        }
+        .grand-total-value {
+            font-family: var(--font-display);
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        /* People counter stepper */
+        .stepper {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        .stepper-btn {
+            width: 44px;
+            height: 52px;
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            font-size: 1.4rem;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .stepper-btn:hover { background: var(--accent-dim); color: var(--accent); }
+        .stepper-input {
+            flex: 1;
+            border: none !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            text-align: center;
+            box-shadow: none !important;
+            border-left: 1px solid var(--border) !important;
+            border-right: 1px solid var(--border) !important;
+        }
+        .stepper-input:focus { box-shadow: none !important; }
+
+        /* Reset button */
+        .reset-btn {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 14px;
+            border: none;
+            background: var(--accent);
+            color: #0a0a0f;
+            font-family: var(--font-display);
+            font-size: 0.95rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 1.2rem;
+        }
+        .reset-btn:hover:not(:disabled) {
+            background: #d6ff55;
+            box-shadow: 0 8px 24px var(--accent-glow);
+            transform: translateY(-1px);
+        }
+        .reset-btn:active:not(:disabled) { transform: translateY(0); }
+        .reset-btn:disabled {
+            background: #1e1e2a;
+            color: var(--muted);
+            cursor: not-allowed;
+        }
+
+        .error-text {
+            color: var(--danger);
+            font-size: 0.78rem;
+            font-weight: 500;
+            display: none;
+        }
+        .error-text.visible { display: block; }
+
+        /* Responsive */
+        @media (max-width: 680px) {
+            .app-card { grid-template-columns: 1fr; }
+            .left-panel { border-right: none; border-bottom: 1px solid var(--border); padding: 2rem; }
+            .right-panel { padding: 2rem; }
+            .result-value { font-size: 2.2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="eyebrow">Bill Splitter</div>
+        <div class="app-card">
+
+            <!-- LEFT: Inputs -->
+            <section class="left-panel">
+                <div class="panel-heading">
+                    <h1>Split the<br>Bill.</h1>
+                    <p>Fast, fair, and effortless.</p>
+                </div>
+
+                <!-- Bill Amount -->
+                <div class="field-group">
+                    <label class="field-label" for="bill-amount">Bill Amount</label>
+                    <div class="input-wrap">
+                        <span class="input-prefix">$</span>
+                        <input type="number" id="bill-amount" class="has-prefix" placeholder="0.00" min="0" step="0.01">
+                    </div>
+                </div>
+
+                <!-- Tip -->
+                <div class="field-group">
+                    <label class="field-label">Tip Percentage</label>
+                    <div class="tip-grid">
+                        <button class="tip-btn" data-tip="5">5%</button>
+                        <button class="tip-btn" data-tip="10">10%</button>
+                        <button class="tip-btn" data-tip="15">15%</button>
+                        <button class="tip-btn" data-tip="18">18%</button>
+                        <button class="tip-btn" data-tip="25">25%</button>
+                        <input type="number" id="custom-tip" class="tip-btn custom-tip-input" placeholder="Custom %" min="0" max="100">
+                    </div>
+                </div>
+
+                <!-- People -->
+                <div class="field-group">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <label class="field-label" for="num-people">Number of People</label>
+                        <span class="error-text" id="error-msg">Must be at least 1</span>
+                    </div>
+                    <div class="stepper">
+                        <button class="stepper-btn" id="dec-btn" type="button">−</button>
+                        <input type="number" id="num-people" class="stepper-input" value="1" min="1" step="1">
+                        <button class="stepper-btn" id="inc-btn" type="button">+</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RIGHT: Results -->
+            <section class="right-panel">
+                <div>
+                    <div class="results-stack">
+                        <!-- Tip per person -->
+                        <div class="result-block">
+                            <div class="result-meta">
+                                <h2>Tip Amount</h2>
+                                <p>per person</p>
+                            </div>
+                            <div class="result-amount">
+                                <span class="result-currency">$</span>
+                                <span class="result-value" id="tip-display">0.00</span>
+                            </div>
+                        </div>
+
+                        <!-- Total per person -->
+                        <div class="result-block highlight">
+                            <div class="result-meta">
+                                <h2>Total</h2>
+                                <p>per person</p>
+                            </div>
+                            <div class="result-amount">
+                                <span class="result-currency">$</span>
+                                <span class="result-value" id="total-display">0.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="grand-total-row">
+                        <span class="grand-total-label">Grand Total (bill + tip)</span>
+                        <span class="grand-total-value">
+                            $<span id="grand-total">0.00</span>
+                        </span>
+                    </div>
+                </div>
+
+                <button class="reset-btn" id="reset-btn" disabled>↺ &nbsp; Reset</button>
+            </section>
+
+        </div>
+    </div>
+
+    <script>
+        const billInput    = document.getElementById('bill-amount');
+        const numInput     = document.getElementById('num-people');
+        const customTip    = document.getElementById('custom-tip');
+        const tipBtns      = document.querySelectorAll('.tip-btn[data-tip]');
+        const tipDisplay   = document.getElementById('tip-display');
+        const totalDisplay = document.getElementById('total-display');
+        const grandTotal   = document.getElementById('grand-total');
+        const errorMsg     = document.getElementById('error-msg');
+        const resetBtn     = document.getElementById('reset-btn');
+        const decBtn       = document.getElementById('dec-btn');
+        const incBtn       = document.getElementById('inc-btn');
+
+        let bill = 0, tip = 0, people = 1;
+
+        function animatePop(el) {
+            el.classList.remove('pop');
+            void el.offsetWidth;
+            el.classList.add('pop');
+            setTimeout(() => el.classList.remove('pop'), 300);
+        }
+
+        function fmt(n) { return isNaN(n) ? '0.00' : n.toFixed(2); }
+
+        function calculate() {
+            const canReset = bill > 0 || people !== 1 || tip !== 0 || customTip.value !== '';
+            resetBtn.disabled = !canReset;
+
+            if (people < 1) {
+                errorMsg.classList.add('visible');
+                numInput.classList.add('error-state');
+                tipDisplay.textContent = '0.00';
+                totalDisplay.textContent = '0.00';
+                grandTotal.textContent = '0.00';
+                return;
+            }
+            errorMsg.classList.remove('visible');
+            numInput.classList.remove('error-state');
+
+            const totalTip   = (bill * tip) / 100;
+            const tipPP      = totalTip / people;
+            const totalPP    = (bill + totalTip) / people;
+            const grand      = bill + totalTip;
+
+            const prevTip   = tipDisplay.textContent;
+            const prevTotal = totalDisplay.textContent;
+
+            tipDisplay.textContent   = fmt(tipPP);
+            totalDisplay.textContent = fmt(totalPP);
+            grandTotal.textContent   = fmt(grand);
+
+            if (prevTip   !== tipDisplay.textContent)   animatePop(tipDisplay);
+            if (prevTotal !== totalDisplay.textContent) animatePop(totalDisplay);
+        }
+
+        billInput.addEventListener('input', e => { bill = parseFloat(e.target.value) || 0; calculate(); });
+
+        numInput.addEventListener('input', e => {
+            let v = parseInt(e.target.value);
+            if (isNaN(v)) v = 0;
+            people = v;
+            calculate();
+        });
+
+        decBtn.addEventListener('click', () => {
+            let v = parseInt(numInput.value) || 1;
+            if (v > 1) { numInput.value = --v; people = v; calculate(); }
+        });
+        incBtn.addEventListener('click', () => {
+            let v = parseInt(numInput.value) || 1;
+            numInput.value = ++v; people = v; calculate();
+        });
+
+        tipBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const val = parseFloat(btn.dataset.tip);
+                if (tip === val && btn.classList.contains('active')) {
+                    tip = 0;
+                    btn.classList.remove('active');
+                } else {
+                    tipBtns.forEach(b => b.classList.remove('active'));
+                    tip = val;
+                    btn.classList.add('active');
+                    customTip.value = '';
+                }
+                calculate();
+            });
+        });
+
+        customTip.addEventListener('input', e => {
+            tipBtns.forEach(b => b.classList.remove('active'));
+            let v = parseFloat(e.target.value);
+            tip = isNaN(v) || v < 0 ? 0 : v;
+            calculate();
+        });
+
+        resetBtn.addEventListener('click', () => {
+            bill = 0; tip = 0; people = 1;
+            billInput.value = '';
+            numInput.value  = '1';
+            customTip.value = '';
+            tipBtns.forEach(b => b.classList.remove('active'));
+            errorMsg.classList.remove('visible');
+            numInput.classList.remove('error-state');
+            calculate();
+        });
+
+        calculate();
+    </script>
+</body>
+</html>

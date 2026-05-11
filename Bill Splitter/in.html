@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Bill Splitter</title>
+    <!-- Load Tailwind CSS via CDN for rapid styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Custom configuration for Tailwind colors to give a unique theme -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#10b981', // Emerald 500
+                        secondary: '#34d399', // Emerald 400
+                        dark: '#0f172a', // Slate 900
+                        light: '#f8fafc', // Slate 50
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Include Google Fonts for better typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Base styles and custom scrollbar */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+        }
+        
+        /* Smooth transitions for interactive elements */
+        .transition-all {
+            transition-property: all;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 300ms;
+        }
+
+        /* Hide number input arrows for a cleaner look */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        /* Focus ring styling for accessibility */
+        .focus-ring:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
+            border-color: #10b981;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 antialiased text-slate-800 bg-[#f1f5f9] dark:bg-slate-900 transition-colors duration-300">
+
+    <main class="w-full max-w-4xl bg-white dark:bg-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row transition-colors duration-300">
+        
+        <!-- Left Section: Input Area -->
+        <section class="w-full md:w-1/2 p-8 md:p-10 space-y-8">
+            <header class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-slate-900 dark:text-white tracking-tight transition-colors">Split the Bill</h1>
+                    <p class="text-slate-500 dark:text-slate-400 mt-2 text-sm transition-colors">Calculate individual costs and tips easily.</p>
+                </div>
+                <!-- Theme Toggle Button -->
+                <button id="theme-toggle" class="p-2 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all focus-ring">
+                    <!-- Sun icon (shows in dark mode) -->
+                    <svg id="theme-toggle-light-icon" class="hidden w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4.22 3.22a1 1 0 011.415 0l.708.708a1 1 0 01-1.414 1.414l-.708-.708a1 1 0 010-1.414zM16 10a1 1 0 011 1h1a1 1 0 110-2h-1a1 1 0 01-1 1zm-3.22 4.22a1 1 0 010 1.415l-.708.708a1 1 0 01-1.414-1.414l.708-.708a1 1 0 011.414 0zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4.22-3.22a1 1 0 01-1.415 0l-.708-.708a1 1 0 011.414-1.414l.708.708a1 1 0 010 1.414zM4 10a1 1 0 01-1 1H2a1 1 0 110-2h1a1 1 0 011 1zm3.22-4.22a1 1 0 010-1.415l.708-.708a1 1 0 011.414 1.414l-.708.708a1 1 0 01-1.414 0zM10 5a5 5 0 100 10 5 5 0 000-10z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                    <!-- Moon icon (shows in light mode) -->
+                    <svg id="theme-toggle-dark-icon" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                </button>
+            </header>
+
+            <form id="calculator-form" class="space-y-6">
+                <!-- Bill Amount Input -->
+                <div>
+                    <label for="bill-amount" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 transition-colors">Bill Amount</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <span class="text-slate-400 dark:text-slate-500 font-medium">$</span>
+                        </div>
+                        <input type="number" id="bill-amount" placeholder="0.00" min="0" step="0.01" required
+                            class="block w-full pl-8 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-medium text-slate-900 dark:text-white focus-ring transition-all placeholder-slate-400 dark:placeholder-slate-500">
+                    </div>
+                </div>
+
+                <!-- Tip Selection -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 transition-colors">Select Tip % (Optional)</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <button type="button" class="tip-btn py-3 bg-slate-100 dark:bg-slate-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 hover:text-emerald-700 dark:hover:text-emerald-400 text-slate-700 dark:text-slate-200 rounded-xl font-bold transition-all border border-transparent" data-tip="5">5%</button>
+                        <button type="button" class="tip-btn py-3 bg-slate-100 dark:bg-slate-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 hover:text-emerald-700 dark:hover:text-emerald-400 text-slate-700 dark:text-slate-200 rounded-xl font-bold transition-all border border-transparent" data-tip="10">10%</button>
+                        <button type="button" class="tip-btn py-3 bg-slate-100 dark:bg-slate-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 hover:text-emerald-700 dark:hover:text-emerald-400 text-slate-700 dark:text-slate-200 rounded-xl font-bold transition-all border border-transparent" data-tip="15">15%</button>
+                        <button type="button" class="tip-btn py-3 bg-slate-100 dark:bg-slate-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 hover:text-emerald-700 dark:hover:text-emerald-400 text-slate-700 dark:text-slate-200 rounded-xl font-bold transition-all border border-transparent" data-tip="25">25%</button>
+                        <button type="button" class="tip-btn py-3 bg-slate-100 dark:bg-slate-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 hover:text-emerald-700 dark:hover:text-emerald-400 text-slate-700 dark:text-slate-200 rounded-xl font-bold transition-all border border-transparent" data-tip="50">50%</button>
+                        <input type="number" id="custom-tip" placeholder="Custom" min="0" max="100"
+                            class="py-3 px-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-center font-bold text-slate-700 dark:text-white focus-ring transition-all placeholder-slate-400 dark:placeholder-slate-500">
+                    </div>
+                </div>
+
+                <!-- Number of People Input -->
+                <div>
+                    <div class="flex justify-between mb-2">
+                        <label for="num-people" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 transition-colors">Number of People</label>
+                        <span id="error-msg" class="text-sm text-red-500 dark:text-red-400 font-medium hidden">Can't be zero</span>
+                    </div>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <!-- User Icon SVG -->
+                            <svg class="h-5 w-5 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </div>
+                        <input type="number" id="num-people" placeholder="1" min="1" step="1" value="1" required
+                            class="block w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-medium text-slate-900 dark:text-white focus-ring transition-all">
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <!-- Right Section: Results Area -->
+        <section class="w-full md:w-1/2 p-8 md:p-10 bg-dark dark:bg-slate-900 text-white flex flex-col justify-between rounded-t-3xl md:rounded-l-none md:rounded-r-3xl m-0 md:m-4 md:ml-0 shadow-inner transition-colors">
+                        <span class="text-2xl mr-1">$</span>
+                        <span id="tip-amount-display">0.00</span>
+                    </div>
+                </div>
+
+                <!-- Total per person -->
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="font-bold text-lg">Total</h2>
+                        <p class="text-slate-400 text-sm">/ person</p>
+                    </div>
+                    <div class="text-4xl md:text-5xl font-bold text-primary tracking-tighter flex items-center">
+                        <span class="text-2xl mr-1">$</span>
+                        <span id="total-amount-display">0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-12 space-y-4">
+                 <!-- Total Bill Summary -->
+                 <div class="flex items-center justify-between pt-4 border-t border-slate-700">
+                    <p class="text-slate-400 text-sm font-medium">Total Bill + Tip:</p>
+                    <p class="text-lg font-bold text-white tracking-tight flex items-center">
+                        <span class="text-sm mr-1">$</span>
+                        <span id="grand-total-display">0.00</span>
+                    </p>
+                </div>
+
+                <button id="reset-btn" disabled
+                    class="w-full py-4 bg-primary hover:bg-secondary text-dark font-bold text-lg rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed uppercase tracking-wider">
+                    Reset
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Theme Toggle Logic
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            const darkIcon = document.getElementById('theme-toggle-dark-icon');
+            const lightIcon = document.getElementById('theme-toggle-light-icon');
+
+            // Check if user previously enabled dark mode or prefers it
+            if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                lightIcon.classList.remove('hidden');
+                darkIcon.classList.add('hidden');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+
+            // Handle switch button clicks
+            themeToggleBtn.addEventListener('click', function() {
+                darkIcon.classList.toggle('hidden');
+                lightIcon.classList.toggle('hidden');
+
+                if (localStorage.getItem('color-theme')) {
+                    if (localStorage.getItem('color-theme') === 'light') {
+                        document.documentElement.classList.add('dark');
+                        localStorage.setItem('color-theme', 'dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                        localStorage.setItem('color-theme', 'light');
+                    }
+                } else {
+                    if (document.documentElement.classList.contains('dark')) {
+                        document.documentElement.classList.remove('dark');
+                        localStorage.setItem('color-theme', 'light');
+                    } else {
+                        document.documentElement.classList.add('dark');
+                        localStorage.setItem('color-theme', 'dark');
+                    }
+                }
+            });
+
+            // DOM Elements
+            const billInput = document.getElementById('bill-amount');
+            const numPeopleInput = document.getElementById('num-people');
+            const customTipInput = document.getElementById('custom-tip');
+            const tipButtons = document.querySelectorAll('.tip-btn');
+            
+            const tipAmountDisplay = document.getElementById('tip-amount-display');
+            const totalAmountDisplay = document.getElementById('total-amount-display');
+            const grandTotalDisplay = document.getElementById('grand-total-display');
+            
+            const errorMsg = document.getElementById('error-msg');
+            const resetBtn = document.getElementById('reset-btn');
+
+            // State variables
+            let billValue = 0.0;
+            let tipPercentage = 0; // Default tip is now 0 (optional)
+            let numPeople = 1;
+
+            // --- Core Calculation Function ---
+            function calculate() {
+                // Determine if we should enable the reset button
+                if (billValue > 0 || numPeople > 1 || tipPercentage !== 0 || customTipInput.value !== '') {
+                    resetBtn.disabled = false;
+                } else {
+                    resetBtn.disabled = true;
+                }
+
+                // Validation for number of people
+                if (numPeople <= 0) {
+                    errorMsg.classList.remove('hidden');
+                    numPeopleInput.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+                    tipAmountDisplay.textContent = '0.00';
+                    totalAmountDisplay.textContent = '0.00';
+                    grandTotalDisplay.textContent = '0.00';
+                    return;
+                } else {
+                    errorMsg.classList.add('hidden');
+                    numPeopleInput.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+                }
+
+                // Perform calculations
+                const totalTip = (billValue * tipPercentage) / 100;
+                const tipPerPerson = totalTip / numPeople;
+                const totalPerPerson = (billValue + totalTip) / numPeople;
+                const grandTotal = billValue + totalTip;
+
+                // Update UI with formatted numbers
+                tipAmountDisplay.textContent = formatCurrency(tipPerPerson);
+                totalAmountDisplay.textContent = formatCurrency(totalPerPerson);
+                grandTotalDisplay.textContent = formatCurrency(grandTotal);
+            }
+
+            // Helper to format numbers cleanly
+            function formatCurrency(num) {
+                return (Math.round(num * 100) / 100).toFixed(2);
+            }
+
+            // --- Event Listeners ---
+
+            // Bill Input Listener
+            billInput.addEventListener('input', (e) => {
+                billValue = parseFloat(e.target.value) || 0;
+                calculate();
+            });
+
+            // Number of People Input Listener
+            numPeopleInput.addEventListener('input', (e) => {
+                // Ensure it's treated as an integer
+                let val = parseInt(e.target.value);
+                if (isNaN(val)) val = 0;
+                numPeople = val;
+                calculate();
+            });
+
+            // Tip Buttons Logic
+            tipButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    // Clear custom tip input
+                    customTipInput.value = '';
+                    
+                    const selectedTip = parseFloat(e.target.dataset.tip);
+
+                    // If clicking the already active button, toggle it off (set tip to 0)
+                    if (tipPercentage === selectedTip && e.target.classList.contains('bg-primary')) {
+                        tipPercentage = 0;
+                        e.target.classList.remove('bg-primary', 'text-white', 'shadow-md', 'shadow-emerald-200', 'dark:shadow-none');
+                        e.target.classList.add('bg-slate-100', 'dark:bg-slate-700', 'text-slate-700', 'dark:text-slate-200', 'hover:bg-emerald-100', 'dark:hover:bg-emerald-900/40', 'hover:text-emerald-700', 'dark:hover:text-emerald-400');
+                    } else {
+                        // Update state to the new selection
+                        tipPercentage = selectedTip;
+
+                        // Reset styling for all buttons
+                        tipButtons.forEach(b => {
+                            b.classList.remove('bg-primary', 'text-white', 'shadow-md', 'shadow-emerald-200', 'dark:shadow-none');
+                            b.classList.add('bg-slate-100', 'dark:bg-slate-700', 'text-slate-700', 'dark:text-slate-200', 'hover:bg-emerald-100', 'dark:hover:bg-emerald-900/40', 'hover:text-emerald-700', 'dark:hover:text-emerald-400');
+                        });
+                        
+                        // Style the newly clicked button
+                        e.target.classList.remove('bg-slate-100', 'dark:bg-slate-700', 'text-slate-700', 'dark:text-slate-200', 'hover:bg-emerald-100', 'dark:hover:bg-emerald-900/40', 'hover:text-emerald-700', 'dark:hover:text-emerald-400');
+                        e.target.classList.add('bg-primary', 'text-white', 'shadow-md', 'shadow-emerald-200', 'dark:shadow-none');
+                    }
+
+                    calculate();
+                });
+            });
+
+            // Custom Tip Input Listener
+            customTipInput.addEventListener('input', (e) => {
+                // Remove active styling from all predefined buttons
+                tipButtons.forEach(b => {
+                    b.classList.remove('bg-primary', 'text-white', 'shadow-md', 'shadow-emerald-200', 'dark:shadow-none');
+                    b.classList.add('bg-slate-100', 'dark:bg-slate-700', 'text-slate-700', 'dark:text-slate-200', 'hover:bg-emerald-100', 'dark:hover:bg-emerald-900/40', 'hover:text-emerald-700', 'dark:hover:text-emerald-400');
+                });
+
+                let val = parseFloat(e.target.value);
+                // Handle empty or invalid input by defaulting to 0 for calculations
+                if (isNaN(val) || val < 0) {
+                    tipPercentage = 0;
+                } else {
+                    tipPercentage = val;
+                }
+                calculate();
+            });
+
+            // Reset Button Logic
+            resetBtn.addEventListener('click', () => {
+                // Reset state
+                billValue = 0.0;
+                tipPercentage = 0; // Reset to 0
+                numPeople = 1;
+
+                // Reset inputs
+                billInput.value = '';
+                numPeopleInput.value = '1';
+                customTipInput.value = '';
+
+                // Reset Tip button styling to default (unselected)
+                tipButtons.forEach(b => {
+                    b.classList.remove('bg-primary', 'text-white', 'shadow-md', 'shadow-emerald-200', 'dark:shadow-none');
+                    b.classList.add('bg-slate-100', 'dark:bg-slate-700', 'text-slate-700', 'dark:text-slate-200', 'hover:bg-emerald-100', 'dark:hover:bg-emerald-900/40', 'hover:text-emerald-700', 'dark:hover:text-emerald-400');
+                });
+
+                // Clear errors
+                errorMsg.classList.add('hidden');
+                numPeopleInput.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+
+                // Recalculate (will zero out displays and disable button)
+                calculate();
+            });
+
+            // Initial calculation to set default state
+            calculate();
+        });
+    </script>
+</body>
+</html>

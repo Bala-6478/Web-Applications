@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Split the Bill</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #080c14;
+            --surface: rgba(255,255,255,0.04);
+            --surface-hover: rgba(255,255,255,0.07);
+            --border: rgba(255,255,255,0.08);
+            --border-active: rgba(99,255,180,0.5);
+            --accent: #3dffa0;
+            --accent-dim: rgba(61,255,160,0.15);
+            --accent-glow: rgba(61,255,160,0.3);
+            --text-primary: #f0f4f8;
+            --text-secondary: rgba(240,244,248,0.45);
+            --text-muted: rgba(240,244,248,0.25);
+            --red: #ff5b5b;
+            --red-dim: rgba(255,91,91,0.15);
+            --panel-bg: rgba(13,20,35,0.95);
+            --result-bg: linear-gradient(145deg, #0a1628 0%, #0e1f3a 50%, #081428 100%);
+            --font-display: 'Syne', sans-serif;
+            --font-body: 'DM Sans', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* Ambient background glow */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -20%;
+            left: -10%;
+            width: 60%;
+            height: 60%;
+            background: radial-gradient(ellipse, rgba(61,255,160,0.06) 0%, transparent 65%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -20%;
+            right: -10%;
+            width: 50%;
+            height: 50%;
+            background: radial-gradient(ellipse, rgba(100,120,255,0.06) 0%, transparent 65%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .app {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: 0 40px 120px rgba(0,0,0,0.7), 0 0 0 1px var(--border);
+            animation: appIn 0.6s cubic-bezier(0.16,1,0.3,1) both;
+        }
+        @keyframes appIn {
+            from { opacity: 0; transform: translateY(28px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* ── LEFT PANEL ── */
+        .left {
+            background: var(--panel-bg);
+            padding: 48px 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 36px;
+            backdrop-filter: blur(40px);
+            border-right: 1px solid var(--border);
+        }
+
+        .header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .brand-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--accent-dim);
+            border: 1px solid rgba(61,255,160,0.2);
+            border-radius: 100px;
+            padding: 4px 12px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+        .brand-tag::before { content: '●'; font-size: 8px; }
+
+        h1 {
+            font-family: var(--font-display);
+            font-size: 34px;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+        }
+        h1 span { color: var(--accent); }
+        .subtitle { color: var(--text-secondary); font-size: 13.5px; margin-top: 6px; font-weight: 400; }
+
+        /* Theme toggle */
+        .theme-btn {
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        .theme-btn:hover { background: var(--surface-hover); color: var(--text-primary); border-color: rgba(255,255,255,0.15); }
+
+        /* Field group */
+        .field { display: flex; flex-direction: column; gap: 10px; }
+        .field-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        /* Inputs */
+        .input-wrap { position: relative; }
+        .input-prefix {
+            position: absolute;
+            left: 16px; top: 50%;
+            transform: translateY(-50%);
+            font-family: var(--font-mono);
+            font-size: 15px;
+            color: var(--text-muted);
+            pointer-events: none;
+            transition: color 0.2s;
+        }
+        input[type=number] {
+            width: 100%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 18px;
+            font-weight: 600;
+            padding: 14px 18px;
+            outline: none;
+            transition: all 0.25s ease;
+            -moz-appearance: textfield;
+        }
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+        input[type=number].has-prefix { padding-left: 34px; }
+        input[type=number]::placeholder { color: var(--text-muted); font-weight: 400; }
+        input[type=number]:focus {
+            border-color: var(--border-active);
+            background: rgba(61,255,160,0.04);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+        input[type=number]:focus + .input-prefix,
+        .input-wrap:focus-within .input-prefix { color: var(--accent); }
+        input[type=number].error-input {
+            border-color: var(--red);
+            box-shadow: 0 0 0 3px var(--red-dim);
+        }
+
+        .error-msg {
+            font-size: 12px;
+            color: var(--red);
+            font-weight: 500;
+            display: none;
+            align-items: center;
+            gap: 5px;
+        }
+        .error-msg.show { display: flex; }
+        .error-msg::before { content: '⚠'; font-size: 11px; }
+
+        .people-row { display: flex; justify-content: space-between; align-items: center; }
+
+        /* Stepper */
+        .stepper {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        .step-btn {
+            width: 44px; height: 52px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .step-btn:hover { background: var(--surface-hover); color: var(--accent); }
+        .step-btn:active { transform: scale(0.92); }
+        .step-divider { width: 1px; height: 28px; background: var(--border); }
+        #num-people {
+            width: 70px;
+            border: none;
+            border-radius: 0;
+            background: transparent;
+            text-align: center;
+            padding: 14px 8px;
+            font-size: 18px;
+        }
+        #num-people:focus { box-shadow: none; background: transparent; }
+
+        /* Tip grid */
+        .tip-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        .tip-btn {
+            padding: 12px 8px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            letter-spacing: 0.01em;
+        }
+        .tip-btn:hover { background: var(--surface-hover); color: var(--text-primary); border-color: rgba(255,255,255,0.15); transform: translateY(-1px); }
+        .tip-btn.active {
+            background: var(--accent);
+            color: #020c09;
+            border-color: var(--accent);
+            box-shadow: 0 4px 20px var(--accent-glow);
+            transform: translateY(-1px);
+        }
+        #custom-tip {
+            font-size: 13px;
+            padding: 12px 8px;
+            text-align: center;
+        }
+        #custom-tip::placeholder { font-family: var(--font-body); font-size: 12px; }
+
+        /* ── RIGHT PANEL ── */
+        .right {
+            background: var(--result-bg);
+            padding: 48px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* decorative orb */
+        .right::before {
+            content: '';
+            position: absolute;
+            top: -60px; right: -60px;
+            width: 200px; height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(61,255,160,0.12) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .results-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 32px;
+        }
+
+        .result-cards { display: flex; flex-direction: column; gap: 12px; }
+
+        .result-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 22px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        .result-card.highlight {
+            background: var(--accent-dim);
+            border-color: rgba(61,255,160,0.25);
+        }
+        .result-card:hover { background: rgba(255,255,255,0.06); }
+        .result-card.highlight:hover { background: rgba(61,255,160,0.12); }
+
+        .result-card-label { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+        .result-card-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+
+        .result-value {
+            display: flex;
+            align-items: baseline;
+            gap: 3px;
+        }
+        .currency-sign { font-family: var(--font-mono); font-size: 16px; color: var(--text-muted); }
+        .amount {
+            font-family: var(--font-mono);
+            font-size: 36px;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+            transition: all 0.3s ease;
+        }
+        .result-card.highlight .currency-sign { color: var(--accent); opacity: 0.7; }
+        .result-card.highlight .amount { color: var(--accent); }
+
+        /* Divider */
+        .result-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 16px 0;
+        }
+
+        /* Grand total row */
+        .grand-total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 4px;
+        }
+        .grand-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+        .grand-value {
+            font-family: var(--font-mono);
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        .grand-value .cur { font-size: 12px; margin-right: 2px; }
+
+        /* Reset button */
+        .reset-btn {
+            width: 100%;
+            padding: 16px;
+            margin-top: 24px;
+            border-radius: 14px;
+            border: none;
+            background: var(--accent);
+            color: #020c09;
+            font-family: var(--font-display);
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .reset-btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%);
+            transform: translateX(-100%);
+            transition: transform 0.5s ease;
+        }
+        .reset-btn:not(:disabled):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px var(--accent-glow);
+        }
+        .reset-btn:not(:disabled):hover::after { transform: translateX(100%); }
+        .reset-btn:not(:disabled):active { transform: translateY(0); }
+        .reset-btn:disabled {
+            opacity: 0.2;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Light mode */
+        body.light {
+            --bg: #eef3f7;
+            --surface: rgba(255,255,255,0.85);
+            --surface-hover: rgba(255,255,255,1);
+            --border: rgba(16,68,44,0.1);
+            --border-active: rgba(4,120,87,0.55);
+            --accent: #047857;
+            --accent-dim: rgba(4,120,87,0.09);
+            --accent-glow: rgba(4,120,87,0.2);
+            --text-primary: #0a1f14;
+            --text-secondary: #3d5a4a;
+            --text-muted: #7a9e8e;
+            --red: #b91c1c;
+            --red-dim: rgba(185,28,28,0.1);
+            --panel-bg: rgba(255,255,255,0.97);
+            --result-bg: linear-gradient(145deg, #d4f0e5 0%, #c8eadb 60%, #d0ecdf 100%);
+        }
+
+        /* Light background orbs */
+        body.light::before {
+            background: radial-gradient(ellipse, rgba(4,120,87,0.09) 0%, transparent 65%);
+        }
+        body.light::after {
+            background: radial-gradient(ellipse, rgba(56,189,248,0.07) 0%, transparent 65%);
+        }
+
+        /* Light panel overrides */
+        body.light .app {
+            box-shadow: 0 24px 80px rgba(4,120,87,0.1), 0 0 0 1px rgba(4,120,87,0.08);
+        }
+        body.light .left {
+            background: var(--panel-bg);
+            border-right: 1px solid rgba(4,120,87,0.1);
+        }
+        body.light .right {
+            background: var(--result-bg);
+        }
+        body.light .right::before {
+            background: radial-gradient(circle, rgba(4,120,87,0.13) 0%, transparent 70%);
+        }
+
+        /* Light brand tag */
+        body.light .brand-tag {
+            background: rgba(4,120,87,0.08);
+            border-color: rgba(4,120,87,0.18);
+            color: #047857;
+            font-weight: 700;
+        }
+
+        /* Light heading & subtitle */
+        body.light h1 { color: #0a1f14; }
+        body.light h1 span { color: #047857; }
+        body.light .subtitle { color: #4a6b58; font-weight: 500; }
+
+        /* Light field labels */
+        body.light .field-label { color: #2e4d3c; font-weight: 700; letter-spacing: 0.07em; }
+
+        /* Light stepper text */
+        body.light .step-btn { color: #2e4d3c; font-weight: 600; }
+        body.light #num-people { color: #0a1f14; }
+
+        /* Light theme btn */
+        body.light .theme-btn { color: #4a6b58; border-color: rgba(4,120,87,0.15); }
+        body.light .theme-btn:hover {
+            border-color: rgba(4,120,87,0.3);
+            color: var(--accent);
+        }
+
+        /* Light inputs */
+        body.light input[type=number] {
+            background: rgba(255,255,255,0.9);
+            border-color: rgba(4,120,87,0.13);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            color: var(--text-primary);
+        }
+        body.light input[type=number]:focus {
+            background: #fff;
+            border-color: var(--border-active);
+            box-shadow: 0 0 0 3px var(--accent-glow), 0 1px 4px rgba(0,0,0,0.05);
+        }
+        body.light input[type=number].error-input {
+            border-color: var(--red);
+            box-shadow: 0 0 0 3px var(--red-dim);
+        }
+
+        /* Light stepper */
+        body.light .stepper {
+            background: rgba(255,255,255,0.9);
+            border-color: rgba(4,120,87,0.13);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        }
+        body.light .step-btn:hover {
+            background: rgba(4,120,87,0.07);
+            color: var(--accent);
+        }
+
+        /* Light tip buttons */
+        body.light .tip-btn {
+            background: rgba(255,255,255,0.85);
+            border-color: rgba(4,120,87,0.13);
+            color: #2e4d3c;
+            font-weight: 700;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        body.light .tip-btn:hover {
+            background: #fff;
+            border-color: rgba(4,120,87,0.3);
+            color: #047857;
+            box-shadow: 0 3px 10px rgba(4,120,87,0.1);
+        }
+        body.light .tip-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(4,120,87,0.3);
+        }
+
+        /* Light result cards */
+        body.light .result-card {
+            background: rgba(255,255,255,0.55);
+            border-color: rgba(4,120,87,0.1);
+            box-shadow: 0 2px 10px rgba(4,120,87,0.06);
+        }
+        body.light .result-card:hover {
+            background: rgba(255,255,255,0.75);
+        }
+        body.light .result-card.highlight {
+            background: rgba(4,120,87,0.1);
+            border-color: rgba(4,120,87,0.22);
+            box-shadow: 0 4px 20px rgba(4,120,87,0.12);
+        }
+        body.light .result-card.highlight:hover {
+            background: rgba(4,120,87,0.14);
+        }
+        body.light .result-card.highlight .amount { color: var(--accent); }
+        body.light .result-card.highlight .currency-sign { color: var(--accent); opacity: 0.65; }
+
+        body.light .amount { color: #0a1f14; }
+        body.light .currency-sign { color: #7a9e8e; }
+        body.light .result-card-label { color: #2e4d3c; font-weight: 600; }
+        body.light .result-card-sub { color: #7a9e8e; }
+        body.light .results-label { color: #7a9e8e; letter-spacing: 0.12em; }
+        body.light .result-divider { background: rgba(4,120,87,0.12); }
+
+        body.light .grand-total-row .grand-label { color: #7a9e8e; font-weight: 500; }
+        body.light .grand-value { color: #0a1f14; font-weight: 700; }
+
+        /* Light reset button */
+        body.light .reset-btn {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(4,120,87,0.25);
+        }
+        body.light .reset-btn:not(:disabled):hover {
+            box-shadow: 0 8px 28px rgba(4,120,87,0.35);
+        }
+
+        /* Light dev footer */
+        body.light .dev-footer {
+            background: rgba(255,255,255,0.82);
+            border-color: rgba(4,120,87,0.15);
+            box-shadow: 0 4px 20px rgba(4,120,87,0.08);
+        }
+        body.light .dev-footer:hover {
+            background: rgba(255,255,255,0.97);
+            border-color: rgba(4,120,87,0.4);
+            box-shadow: 0 8px 32px rgba(4,120,87,0.18);
+        }
+        body.light .dev-badge {
+            background: rgba(4,120,87,0.1);
+            border-color: rgba(4,120,87,0.2);
+        }
+        body.light .dev-badge svg { fill: var(--accent); }
+        body.light .dev-team { color: #047857; font-weight: 700; }
+        body.light .dev-text { color: #4a6b58; font-weight: 500; }
+
+        /* Animated number flash */
+        @keyframes numPop {
+            0%   { transform: scale(1); }
+            40%  { transform: scale(1.06); color: var(--accent); }
+            100% { transform: scale(1); }
+        }
+        .pop { animation: numPop 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+
+        /* Responsive */
+        @media (max-width: 680px) {
+            .app { grid-template-columns: 1fr; border-radius: 20px; }
+            .left { padding: 36px 28px; }
+            .right { padding: 36px 28px; border-top: 1px solid var(--border); }
+            h1 { font-size: 28px; }
+            .amount { font-size: 28px; }
+        }
+
+        /* Developer footer */
+        .dev-footer {
+            position: fixed;
+            bottom: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.09);
+            backdrop-filter: blur(20px);
+            border-radius: 100px;
+            padding: 7px 16px 7px 10px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-muted);
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+            animation: footerIn 0.8s 0.4s cubic-bezier(0.16,1,0.3,1) both;
+            z-index: 10;
+            transition: all 0.25s ease;
+        }
+        .dev-footer:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: var(--border-active);
+            color: var(--accent);
+            transform: translateX(-50%) translateY(-2px);
+            box-shadow: 0 8px 30px var(--accent-glow);
+        }
+        .dev-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--accent-dim);
+            border: 1px solid rgba(61,255,160,0.25);
+            flex-shrink: 0;
+        }
+        .dev-badge svg { width: 11px; height: 11px; fill: var(--accent); }
+        .dev-text { color: var(--text-muted); transition: color 0.25s; }
+        .dev-footer:hover .dev-text { color: var(--text-secondary); }
+        .dev-team {
+            color: var(--accent);
+            font-weight: 600;
+            letter-spacing: 0.06em;
+        }
+        body.light .dev-footer {
+            background: rgba(0,0,0,0.04);
+            border-color: rgba(0,0,0,0.09);
+        }
+        body.light .dev-footer:hover { background: rgba(0,0,0,0.08); }
+        @keyframes footerIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app">
+    <!-- LEFT PANEL -->
+    <div class="left">
+        <div class="header">
+            <div>
+                <div class="brand-tag">Bill Splitter</div>
+                <h1>Split the <span>Bill</span></h1>
+                <p class="subtitle">Calculate individual costs and tips easily.</p>
+            </div>
+            <button class="theme-btn" id="theme-toggle" title="Toggle theme">
+                <svg id="icon-sun" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                <svg id="icon-moon" width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+            </button>
+        </div>
+
+        <!-- Bill Amount -->
+        <div class="field">
+            <div class="field-label">Bill Amount</div>
+            <div class="input-wrap">
+                <input type="number" id="bill-amount" placeholder="0.00" min="0" step="0.01" class="has-prefix">
+                <span class="input-prefix">$</span>
+            </div>
+        </div>
+
+        <!-- Tip -->
+        <div class="field">
+            <div class="field-label">Select Tip % <span style="opacity:.5;font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
+            <div class="tip-grid">
+                <button class="tip-btn" data-tip="5">5%</button>
+                <button class="tip-btn" data-tip="10">10%</button>
+                <button class="tip-btn" data-tip="15">15%</button>
+                <button class="tip-btn" data-tip="25">25%</button>
+                <button class="tip-btn" data-tip="50">50%</button>
+                <input type="number" id="custom-tip" placeholder="Custom %" min="0" max="100">
+            </div>
+        </div>
+
+        <!-- People -->
+        <div class="field">
+            <div class="people-row">
+                <div class="field-label">Number of People</div>
+                <div class="error-msg" id="error-msg">Can't be zero</div>
+            </div>
+            <div class="stepper">
+                <button class="step-btn" id="dec-btn" title="Decrease">−</button>
+                <div class="step-divider"></div>
+                <input type="number" id="num-people" value="1" min="1" step="1">
+                <div class="step-divider"></div>
+                <button class="step-btn" id="inc-btn" title="Increase">+</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right">
+        <div>
+            <div class="results-label">Results</div>
+            <div class="result-cards">
+                <!-- Tip per person -->
+                <div class="result-card">
+                    <div>
+                        <div class="result-card-label">Tip Amount</div>
+                        <div class="result-card-sub">/ person</div>
+                    </div>
+                    <div class="result-value">
+                        <span class="currency-sign">$</span>
+                        <span class="amount" id="tip-amount-display">0.00</span>
+                    </div>
+                </div>
+
+                <!-- Total per person (highlighted) -->
+                <div class="result-card highlight">
+                    <div>
+                        <div class="result-card-label">Total</div>
+                        <div class="result-card-sub">/ person</div>
+                    </div>
+                    <div class="result-value">
+                        <span class="currency-sign">$</span>
+                        <span class="amount" id="total-amount-display">0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="result-divider"></div>
+
+            <div class="grand-total-row">
+                <span class="grand-label">Total Bill + Tip</span>
+                <span class="grand-value"><span class="cur">$</span><span id="grand-total-display">0.00</span></span>
+            </div>
+        </div>
+
+        <button class="reset-btn" id="reset-btn" disabled>Reset</button>
+    </div>
+</div>
+
+<!-- Developer Footer -->
+<div class="dev-footer">
+    <div class="dev-badge">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm-1 14.5v-9l7 4.5-7 4.5z"/>
+        </svg>
+    </div>
+    <span class="dev-text">Developed by</span>
+    <span class="dev-team">✦ BEST_TEAM</span>
+</div>
+
+<script>
+    const body = document.body;
+    const themeBtn = document.getElementById('theme-toggle');
+    const iconSun  = document.getElementById('icon-sun');
+    const iconMoon = document.getElementById('icon-moon');
+
+    // Init theme — default to light
+    const savedTheme = localStorage.getItem('bill-theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const initLight = savedTheme ? savedTheme === 'light' : !prefersDark;
+    if (initLight) { body.classList.add('light'); iconSun.style.display='block'; iconMoon.style.display='none'; }
+
+    themeBtn.addEventListener('click', () => {
+        body.classList.toggle('light');
+        const isLight = body.classList.contains('light');
+        iconSun.style.display  = isLight ? 'block' : 'none';
+        iconMoon.style.display = isLight ? 'none'  : 'block';
+        localStorage.setItem('bill-theme', isLight ? 'light' : 'dark');
+    });
+
+    // DOM
+    const billInput      = document.getElementById('bill-amount');
+    const numPeopleInput = document.getElementById('num-people');
+    const customTipInput = document.getElementById('custom-tip');
+    const tipButtons     = document.querySelectorAll('.tip-btn');
+    const tipDisplay     = document.getElementById('tip-amount-display');
+    const totalDisplay   = document.getElementById('total-amount-display');
+    const grandDisplay   = document.getElementById('grand-total-display');
+    const errorMsg       = document.getElementById('error-msg');
+    const resetBtn       = document.getElementById('reset-btn');
+    const decBtn         = document.getElementById('dec-btn');
+    const incBtn         = document.getElementById('inc-btn');
+
+    // State
+    let billValue     = 0;
+    let tipPercentage = 0;
+    let numPeople     = 1;
+
+    // Animate number change
+    function animateUpdate(el, val) {
+        el.textContent = val;
+        el.classList.remove('pop');
+        void el.offsetWidth;
+        el.classList.add('pop');
+    }
+
+    function fmt(n) { return (Math.round(n * 100) / 100).toFixed(2); }
+
+    function calculate() {
+        const active = billValue > 0 || numPeople > 1 || tipPercentage !== 0 || customTipInput.value !== '';
+        resetBtn.disabled = !active;
+
+        if (numPeople <= 0) {
+            errorMsg.classList.add('show');
+            numPeopleInput.classList.add('error-input');
+            animateUpdate(tipDisplay, '0.00');
+            animateUpdate(totalDisplay, '0.00');
+            animateUpdate(grandDisplay, '0.00');
+            return;
+        }
+        errorMsg.classList.remove('show');
+        numPeopleInput.classList.remove('error-input');
+
+        const totalTip    = (billValue * tipPercentage) / 100;
+        const tipPer      = totalTip / numPeople;
+        const totalPer    = (billValue + totalTip) / numPeople;
+        const grandTotal  = billValue + totalTip;
+
+        animateUpdate(tipDisplay,   fmt(tipPer));
+        animateUpdate(totalDisplay, fmt(totalPer));
+        animateUpdate(grandDisplay, fmt(grandTotal));
+    }
+
+    function resetTipButtons() {
+        tipButtons.forEach(b => b.classList.remove('active'));
+    }
+
+    // Bill input
+    billInput.addEventListener('input', e => {
+        billValue = parseFloat(e.target.value) || 0;
+        calculate();
+    });
+
+    // People input
+    numPeopleInput.addEventListener('input', e => {
+        let v = parseInt(e.target.value);
+        if (isNaN(v)) v = 0;
+        numPeople = v;
+        calculate();
+    });
+
+    // Stepper
+    decBtn.addEventListener('click', () => {
+        let v = parseInt(numPeopleInput.value) || 1;
+        if (v > 1) { v--; numPeopleInput.value = v; numPeople = v; calculate(); }
+    });
+    incBtn.addEventListener('click', () => {
+        let v = parseInt(numPeopleInput.value) || 0;
+        v++; numPeopleInput.value = v; numPeople = v; calculate();
+    });
+
+    // Tip buttons
+    tipButtons.forEach(btn => {
+        btn.addEventListener('click', e => {
+            customTipInput.value = '';
+            const sel = parseFloat(e.target.dataset.tip);
+            if (tipPercentage === sel && e.target.classList.contains('active')) {
+                tipPercentage = 0;
+                e.target.classList.remove('active');
+            } else {
+                tipPercentage = sel;
+                resetTipButtons();
+                e.target.classList.add('active');
+            }
+            calculate();
+        });
+    });
+
+    // Custom tip
+    customTipInput.addEventListener('input', e => {
+        resetTipButtons();
+        const v = parseFloat(e.target.value);
+        tipPercentage = (isNaN(v) || v < 0) ? 0 : v;
+        calculate();
+    });
+
+    // Reset
+    resetBtn.addEventListener('click', () => {
+        billValue = 0; tipPercentage = 0; numPeople = 1;
+        billInput.value = '';
+        numPeopleInput.value = '1';
+        customTipInput.value = '';
+        resetTipButtons();
+        errorMsg.classList.remove('show');
+        numPeopleInput.classList.remove('error-input');
+        calculate();
+    });
+
+    calculate();
+</script>
+</body>
+</html>
