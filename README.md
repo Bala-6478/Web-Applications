@@ -14,7 +14,7 @@
 - 🔥 Real-time functionality  
 - 🧠 Practical real-world projects  
 ---
-
+  
 ## 🙌 Author
 
 **Balavignesh A**
