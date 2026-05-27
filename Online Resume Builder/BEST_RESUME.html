@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Add html2pdf library for direct PDF downloading -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Add html2canvas library for PNG downloading -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -24,20 +26,30 @@
             font-family: 'Playfair Display', serif;
         }
 
-        /* Custom Scrollbar */
+        /* Modern PC-style Custom Scrollbar */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 #f8fafc;
+        }
+        
         ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+            width: 12px;
+            height: 12px;
         }
+        
         ::-webkit-scrollbar-track {
-            background: #f1f1f1;
+            background: #f8fafc;
         }
+        
         ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
+            background-color: #cbd5e1;
+            border-radius: 10px;
+            /* Creates an inset padding effect around the scrollbar thumb */
+            border: 3px solid #f8fafc; 
         }
+        
         ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
+            background-color: #94a3b8;
         }
 
         /* Print Styles - crucial for exporting to PDF */
@@ -129,13 +141,23 @@
             border-bottom-color: var(--theme-color) !important;
         }
 
-        /* Hide scrollbar for mobile tabs */
-        .scrollbar-hide::-webkit-scrollbar {
-            display: none;
+        /* Custom Thin Scrollbar for the Tabs (Subtitle bar) */
+        .tab-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 transparent;
         }
-        .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+        .tab-scrollbar::-webkit-scrollbar {
+            height: 4px; /* Thin horizontal scrollbar */
+        }
+        .tab-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .tab-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 4px;
+        }
+        .tab-scrollbar::-webkit-scrollbar-thumb:hover {
+            background-color: var(--theme-color);
         }
         
         .template-card.active {
@@ -158,6 +180,10 @@
                 <svg class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 <span class="hidden sm:inline">Word</span>
             </button>
+            <button id="png-btn" onclick="downloadPNG()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-xs md:text-sm font-medium transition flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <span class="hidden sm:inline">PNG</span>
+            </button>
             <button id="pdf-btn" onclick="downloadPDF()" class="bg-[var(--theme-color)] hover:opacity-90 text-white px-3 py-1.5 rounded text-xs md:text-sm font-medium transition flex items-center gap-1.5">
                 <svg class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                 <span class="hidden sm:inline">PDF</span>
@@ -172,12 +198,13 @@
         <section id="editor-panel" class="w-full md:w-[450px] shrink-0 bg-white border-r border-gray-200 flex flex-col z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)] h-full overflow-hidden">
             
             <!-- Tabs -->
-            <div class="flex border-b border-gray-200 text-[11px] font-bold text-gray-400 uppercase overflow-x-auto whitespace-nowrap scrollbar-hide shrink-0">
+            <div class="flex border-b border-gray-200 text-[11px] font-bold text-gray-400 uppercase overflow-x-auto whitespace-nowrap tab-scrollbar shrink-0 pb-1">
                 <button onclick="switchTab('templates')" id="tab-templates" class="tab-btn px-4 py-4 border-b-2 border-transparent hover:text-gray-700 transition flex-1">Templates</button>
                 <button onclick="switchTab('basics')" id="tab-basics" class="tab-btn tab-active px-4 py-4 border-b-2 border-transparent hover:text-gray-700 transition flex-1">Basics</button>
                 <button onclick="switchTab('experience')" id="tab-experience" class="tab-btn px-4 py-4 border-b-2 border-transparent hover:text-gray-700 transition flex-1">Experience</button>
                 <button onclick="switchTab('education')" id="tab-education" class="tab-btn px-4 py-4 border-b-2 border-transparent hover:text-gray-700 transition flex-1">Education</button>
                 <button onclick="switchTab('projects')" id="tab-projects" class="tab-btn px-4 py-4 border-b-2 border-transparent hover:text-gray-700 transition flex-1">Projects</button>
+                <button onclick="switchTab('achievements')" id="tab-achievements" class="tab-btn px-4 py-4 border-b-2 border-transparent hover:text-gray-700 transition flex-1">Achievements</button>
                 <button onclick="switchTab('skills')" id="tab-skills" class="tab-btn px-4 py-4 border-b-2 border-transparent hover:text-gray-700 transition flex-1">Skills</button>
             </div>
 
@@ -380,6 +407,15 @@
                     <div id="projects-editor-container" class="space-y-4"></div>
                 </div>
 
+                <!-- TAB: Achievements -->
+                <div id="content-achievements" class="tab-content hidden space-y-6">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-xs font-bold text-gray-500 uppercase tracking-wide">Achievements</h2>
+                        <button onclick="addAchievement()" class="text-xs text-[var(--theme-color)] hover:opacity-75 font-bold flex items-center gap-1">+ Add New</button>
+                    </div>
+                    <div id="achievements-editor-container" class="space-y-4"></div>
+                </div>
+
                 <!-- TAB: Skills -->
                 <div id="content-skills" class="tab-content hidden space-y-6">
                     <h2 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-4">Skills & Additional</h2>
@@ -466,7 +502,8 @@
             educations: [],
             skills: '',
             additionals: [],
-            projects: []
+            projects: [],
+            achievements: []
         };
 
         // --- Mobile View Toggle Logic ---
@@ -642,6 +679,30 @@
             });
         }
 
+        function downloadPNG() {
+            const element = document.getElementById('resume-preview');
+            const btn = document.getElementById('png-btn');
+            const originalText = btn.innerHTML;
+            
+            // Temporarily remove shadow for clean PNG
+            element.classList.remove('shadow-md');
+            // Show loading state
+            btn.innerHTML = '<svg class="animate-spin w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span class="hidden sm:inline">Saving...</span>';
+
+            html2canvas(element, { scale: 2, useCORS: true }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                const fileName = state.firstName ? `${state.firstName}_Resume.png` : 'Resume.png';
+                link.download = fileName;
+                link.href = imgData;
+                link.click();
+                
+                // Restore shadow and original button text
+                element.classList.add('shadow-md');
+                btn.innerHTML = originalText;
+            });
+        }
+
         // --- Core Data Functions ---
         function updateState(key, value) {
             state[key] = value;
@@ -664,6 +725,10 @@
         function addProject() { state.projects.push({ title: '', link: '', description: '' }); renderProjectEditor(); renderPreview(); }
         function removeProject(index) { state.projects.splice(index, 1); renderProjectEditor(); renderPreview(); }
 
+        function updateAchievement(index, key, value) { state.achievements[index][key] = value; renderPreview(); }
+        function addAchievement() { state.achievements.push({ title: '', date: '', description: '' }); renderAchievementEditor(); renderPreview(); }
+        function removeAchievement(index) { state.achievements.splice(index, 1); renderAchievementEditor(); renderPreview(); }
+
         // --- Editor Rendering ---
         function initEditor() {
             document.getElementById('inp-color').value = state.themeColor;
@@ -682,6 +747,7 @@
             renderExpEditor();
             renderEduEditor();
             renderProjectEditor();
+            renderAchievementEditor();
             renderAdditionalEditor();
         }
 
@@ -729,6 +795,22 @@
                         <input type="text" placeholder="Project Title" oninput="updateProject(${index}, 'title', this.value)" value="${proj.title}" class="w-full p-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-[var(--theme-color)] focus:border-[var(--theme-color)] outline-none">
                         <input type="text" placeholder="Project Link / URL" oninput="updateProject(${index}, 'link', this.value)" value="${proj.link}" class="w-full p-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-[var(--theme-color)] focus:border-[var(--theme-color)] outline-none">
                         <textarea placeholder="Description (Line breaks become bullet points)" oninput="updateProject(${index}, 'description', this.value)" rows="3" class="w-full p-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-[var(--theme-color)] focus:border-[var(--theme-color)] outline-none resize-none">${proj.description}</textarea>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderAchievementEditor() {
+            const container = document.getElementById('achievements-editor-container');
+            container.innerHTML = state.achievements.map((ach, index) => `
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 relative group transition-all">
+                    <button onclick="removeAchievement(${index})" class="absolute top-2 right-2 text-red-500 hover:bg-red-100 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity" title="Remove">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                    <div class="grid grid-cols-1 gap-3">
+                        <input type="text" placeholder="Achievement / Award Title" oninput="updateAchievement(${index}, 'title', this.value)" value="${ach.title}" class="w-full p-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-[var(--theme-color)] focus:border-[var(--theme-color)] outline-none">
+                        <input type="text" placeholder="Date / Year" oninput="updateAchievement(${index}, 'date', this.value)" value="${ach.date}" class="w-full p-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-[var(--theme-color)] focus:border-[var(--theme-color)] outline-none">
+                        <textarea placeholder="Description / Details" oninput="updateAchievement(${index}, 'description', this.value)" rows="2" class="w-full p-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-[var(--theme-color)] focus:border-[var(--theme-color)] outline-none resize-none">${ach.description}</textarea>
                     </div>
                 </div>
             `).join('');
@@ -802,6 +884,16 @@
                 </div>
             `).join('');
 
+            const blockAch = state.achievements.filter(ach => ach.title).map(ach => `
+                <div class="mb-4">
+                    <div class="flex justify-between items-baseline mb-1">
+                        <h3 class="font-bold text-gray-800 text-[14px] md:text-[15px]">${ach.title}</h3>
+                        <span class="text-gray-600 font-medium text-xs whitespace-nowrap ml-2">${ach.date}</span>
+                    </div>
+                    ${ach.description ? `<p class="text-[13px] text-gray-700 leading-relaxed">${ach.description}</p>` : ''}
+                </div>
+            `).join('');
+
             const skillsArr = state.skills.split(',').filter(s => s.trim() !== '');
             const blockSkillsTags = skillsArr.length > 0 ? `<div class="flex flex-wrap gap-2 mt-2">` + skillsArr.map(s => `<span class="bg-gray-100 text-gray-800 border border-gray-200 px-2 py-1 rounded text-[11px] font-medium">${s.trim()}</span>`).join('') + `</div>` : '';
             const blockSkillsText = skillsArr.length > 0 ? `<div class="text-[13px] text-gray-800 leading-relaxed">${state.skills}</div>` : '';
@@ -839,6 +931,7 @@
                     ${blockExp ? `<div class="mb-7"><h2 class="section-title">Experience</h2>${blockExp}</div>` : ''}
                     ${blockEdu ? `<div class="mb-7"><h2 class="section-title">Education</h2>${blockEdu}</div>` : ''}
                     ${blockProj ? `<div class="mb-7"><h2 class="section-title">Projects</h2>${blockProj}</div>` : ''}
+                    ${blockAch ? `<div class="mb-7"><h2 class="section-title">Achievements</h2>${blockAch}</div>` : ''}
                     ${blockSkillsTags ? `<div class="mb-7"><h2 class="section-title">Skills</h2>${blockSkillsTags}</div>` : ''}
                     ${blockAddt ? `<div class="mb-7"><h2 class="section-title">Additional Information</h2>${blockAddt}</div>` : ''}
                 `;
@@ -866,6 +959,7 @@
                             ${state.summary ? `<div><h2 class="section-title">Summary</h2><p class="text-[13px] text-gray-700 leading-relaxed text-justify">${state.summary}</p></div>` : ''}
                             ${blockExp ? `<div><h2 class="section-title">Experience</h2>${blockExp}</div>` : ''}
                             ${blockProj ? `<div><h2 class="section-title">Projects</h2>${blockProj}</div>` : ''}
+                            ${blockAch ? `<div><h2 class="section-title">Achievements</h2>${blockAch}</div>` : ''}
                             ${blockAddt ? `<div><h2 class="section-title">Additional Info</h2>${blockAddt}</div>` : ''}
                         </div>
                     </div>
@@ -890,6 +984,7 @@
                         ${blockExp ? `<div><h2 class="section-title">Experience</h2>${blockExp}</div>` : ''}
                         ${blockEdu ? `<div><h2 class="section-title">Education</h2>${blockEdu}</div>` : ''}
                         ${blockProj ? `<div><h2 class="section-title">Projects</h2>${blockProj}</div>` : ''}
+                        ${blockAch ? `<div><h2 class="section-title">Achievements</h2>${blockAch}</div>` : ''}
                         ${blockSkillsTags ? `<div><h2 class="section-title">Skills</h2>${blockSkillsText}</div>` : ''}
                         ${blockAddt ? `<div><h2 class="section-title">Additional Info</h2>${blockAddt}</div>` : ''}
                     </div>
@@ -921,6 +1016,7 @@
                                 ${state.summary ? `<div><h2 class="section-title">Profile</h2><p class="text-[13px] text-gray-700 leading-relaxed text-justify">${state.summary}</p></div>` : ''}
                                 ${blockExp ? `<div><h2 class="section-title">Experience</h2>${blockExp}</div>` : ''}
                                 ${blockProj ? `<div><h2 class="section-title">Projects</h2>${blockProj}</div>` : ''}
+                                ${blockAch ? `<div><h2 class="section-title">Achievements</h2>${blockAch}</div>` : ''}
                                 ${blockAddt ? `<div><h2 class="section-title">Additional Info</h2>${blockAddt}</div>` : ''}
                             </div>
                         </div>
