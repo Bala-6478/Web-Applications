@@ -50,7 +50,7 @@
 🔗 https://balavignesh2025.neocities.org/Project/VS%20Code/best_team_editor
 ---
 ###  8. Fruit Ninja Game
-🔗 https://balavignesh2025.neocities.org/Project/fruit%20ninja/game
+🔗 https://balavignesh2025.neocities.org/Project/fruit%20ninja/slice_rush_mobile
 ---
 ###  9. Rotate & Flip Image Tool
 🔗 https://balavignesh2025.neocities.org/Project/Rotate%20&%20Flip%20Image/in
