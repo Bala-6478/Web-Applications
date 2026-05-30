@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Flappy Bird - Deluxe Vector Edition</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1a1a2e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            max-width: 500px;
+            max-height: 750px;
+            aspect-ratio: 2 / 3;
+            background: #000;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+        }
+
+        @media (min-width: 501px), (min-height: 751px) {
+            #game-container {
+                border-radius: 20px;
+                border: 4px solid rgba(255, 255, 255, 0.05);
+            }
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            touch-action: none;
+        }
+
+        .ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .top-hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            z-index: 50;
+        }
+
+        .pill-badge {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            color: #fff;
+            font-weight: 900;
+            font-size: 18px;
+            padding: 8px 20px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .combo-display {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 50px;
+            font-weight: 900;
+            color: #F4D03F;
+            text-shadow: 0 5px 15px rgba(0,0,0,0.5), 0 0 20px rgba(244, 208, 63, 0.6);
+            pointer-events: none;
+            animation: comboPopup 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            z-index: 200;
+            text-align: center;
+            line-height: 1.1;
+            text-transform: uppercase;
+        }
+
+        @keyframes comboPopup {
+            0% { opacity: 0; transform: translate(-50%, 10%) scale(0.5); }
+            30% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            70% { opacity: 1; transform: translate(-50%, -55%) scale(1.1); }
+            100% { opacity: 0; transform: translate(-50%, -100%) scale(0.9); }
+        }
+
+        .menu-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 1;
+            transition: opacity 0.4s ease;
+        }
+
+        .menu-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .menu-panel {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 35px 25px;
+            border-radius: 24px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 90%;
+            width: 340px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .menu-title {
+            font-size: 46px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #F4D03F, #F39C12);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0 0 5px 0;
+            letter-spacing: 1px;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+        }
+
+        .menu-subtitle {
+            color: #AAB7B8;
+            font-size: 16px;
+            font-weight: 800;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .difficulty-selector {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 25px;
+            background: rgba(0,0,0,0.3);
+            padding: 6px;
+            border-radius: 12px;
+        }
+
+        .diff-btn {
+            background: transparent;
+            border: none;
+            color: #AAB7B8;
+            padding: 10px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 13px;
+            flex: 1;
+            transition: all 0.3s;
+        }
+
+        .diff-btn.active {
+            background: #FFF;
+            color: #1a1a2e;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .stats-table {
+            background: rgba(0,0,0,0.3);
+            padding: 15px 20px;
+            border-radius: 16px;
+            margin: 20px 0;
+            color: #ECF0F1;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 15px;
+            font-weight: 700;
+        }
+        .stat-row:last-child { border-bottom: none; }
+
+        .stat-val {
+            color: #F4D03F;
+            font-weight: 900;
+        }
+
+        .menu-btn {
+            background: #FFF;
+            color: #1a1a2e;
+            border: none;
+            padding: 16px 20px;
+            font-size: 16px;
+            font-weight: 900;
+            border-radius: 14px;
+            cursor: pointer;
+            margin: 8px 0;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .menu-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .btn-shop {
+            background: rgba(255,255,255,0.1);
+            color: #FFF;
+            border: 1px solid rgba(255,255,255,0.3);
+            box-shadow: none;
+        }
+
+        .shop-bird-canvas {
+            display: block;
+            margin: 0 auto 10px auto;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
+        }
+
+        #skins-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 20px 0;
+            max-height: 50vh;
+            overflow-y: auto;
+            padding: 5px;
+        }
+
+        /* Custom Scrollbar for shop */
+        #skins-container::-webkit-scrollbar { width: 6px; }
+        #skins-container::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 10px; }
+        #skins-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div class="ui-layer" id="ui-layer">
+            <div class="top-hud">
+                <div class="pill-badge">🏆 <span id="score-hud" style="color: #F4D03F;">0</span></div>
+                <div class="pill-badge" style="background: rgba(0,0,0,0.2);">🪙 <span id="coins-hud" style="color: #F4D03F;">0</span></div>
+            </div>
+            <!-- Giant center score is drawn on canvas -->
+        </div>
+
+        <!-- Start Menu -->
+        <div id="start-menu" class="menu-overlay">
+            <div class="menu-panel">
+                <h1 class="menu-title">FLAPPY</h1>
+                <p class="menu-subtitle">Deluxe Edition</p>
+                
+                <div class="difficulty-selector">
+                    <button class="diff-btn" id="btn-easy" onclick="setDifficulty('easy')">EASY</button>
+                    <button class="diff-btn active" id="btn-normal" onclick="setDifficulty('normal')">NORMAL</button>
+                    <button class="diff-btn" id="btn-hard" onclick="setDifficulty('hard')">HARD</button>
+                </div>
+
+                <div class="stats-table">
+                    <div class="stat-row">
+                        <span>Best (<span id="menu-diff-label">Normal</span>)</span>
+                        <span class="stat-val" id="menu-best">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Best Combo</span>
+                        <span class="stat-val" id="menu-best-combo">0x</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Total Coins</span>
+                        <span class="stat-val" id="menu-coins">0</span>
+                    </div>
+                </div>
+
+                <button class="menu-btn" onclick="startGame()">TAP TO FLY</button>
+                <button class="menu-btn btn-shop" onclick="openShop()">🛒 SKIN SHOP</button>
+            </div>
+        </div>
+
+        <!-- Shop Menu -->
+        <div id="shop-menu" class="menu-overlay hidden">
+            <div class="menu-panel" style="width: 380px;">
+                <h1 class="menu-title" style="font-size: 36px;">THE SHOP</h1>
+                <p style="color: #AAB7B8; font-size: 16px; font-weight: bold; margin-bottom: 10px;">Your Coins: <span id="shop-coins-display" style="color: #F4D03F; font-size: 20px;">0</span></p>
+                
+                <div id="skins-container">
+                    <!-- Dynamically populated canvases -->
+                </div>
+                
+                <button class="menu-btn btn-shop" onclick="closeShop()">BACK TO MENU</button>
+            </div>
+        </div>
+
+        <!-- Game Over Menu -->
+        <div id="gameover-menu" class="menu-overlay hidden">
+            <div class="menu-panel">
+                <h1 class="menu-title" id="gameover-title" style="background: linear-gradient(135deg, #FF416C, #FF4B2B); -webkit-background-clip: text;">CRASHED!</h1>
+                
+                <div class="stats-table">
+                    <div class="stat-row">
+                        <span>Score</span>
+                        <span class="stat-val" id="gameover-score">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Max Combo</span>
+                        <span class="stat-val" id="gameover-combo">0x</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>New Coins</span>
+                        <span class="stat-val" id="gameover-coins" style="color: #48C9B0;">+0</span>
+                    </div>
+                </div>
+
+                <button class="menu-btn" onclick="startGame()">PLAY AGAIN</button>
+                <button class="menu-btn btn-shop" onclick="goToMenu()">MAIN MENU</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== GAME SETUP ====================
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 500; 
+        canvas.height = 750;
+        // Revert to smooth rendering for vector graphics
+        ctx.imageSmoothingEnabled = true;
+
+        // ==================== SMUG BIRD VECTOR ENGINE ====================
+        function drawSmugBird(renderCtx, flapPhase, skin) {
+            renderCtx.lineWidth = 2.5;
+            renderCtx.strokeStyle = '#000';
+            renderCtx.lineJoin = 'round';
+            renderCtx.lineCap = 'round';
+
+            // 1. Black Tail Feathers
+            renderCtx.fillStyle = '#000';
+            renderCtx.beginPath();
+            renderCtx.moveTo(-12, -2);
+            renderCtx.lineTo(-24, -8);
+            renderCtx.lineTo(-24, -3);
+            renderCtx.lineTo(-16, 0);
+            renderCtx.lineTo(-26, 2);
+            renderCtx.lineTo(-26, 7);
+            renderCtx.lineTo(-14, 6);
+            renderCtx.lineTo(-22, 12);
+            renderCtx.lineTo(-20, 16);
+            renderCtx.lineTo(-10, 8);
+            renderCtx.fill();
+
+            // 2. Main Body
+            renderCtx.fillStyle = skin.c; 
+            renderCtx.beginPath();
+            renderCtx.arc(0, 0, 16, 0, Math.PI * 2);
+            renderCtx.fill();
+
+            // 3. Darker Wavy Belly
+            renderCtx.save();
+            renderCtx.beginPath();
+            renderCtx.arc(0, 0, 16, 0, Math.PI * 2);
+            renderCtx.clip();
+            renderCtx.fillStyle = skin.belly;
+            renderCtx.beginPath();
+            renderCtx.moveTo(-20, 6);
+            renderCtx.quadraticCurveTo(-10, 2, 0, 7);
+            renderCtx.quadraticCurveTo(10, 12, 20, 6);
+            renderCtx.lineTo(20, 20);
+            renderCtx.lineTo(-20, 20);
+            renderCtx.fill();
+            renderCtx.restore();
+
+            // Body Outline
+            renderCtx.beginPath();
+            renderCtx.arc(0, 0, 16, 0, Math.PI * 2);
+            renderCtx.stroke();
+
+            // 4. Back Eye
+            renderCtx.fillStyle = '#FFF';
+            renderCtx.fillRect(5, -9, 5, 5);
+            renderCtx.strokeRect(5, -9, 5, 5);
+            renderCtx.fillStyle = '#000'; 
+            renderCtx.fillRect(5, -9, 5, 2.5);
+
+            // 5. Front Eye
+            renderCtx.fillStyle = '#FFF';
+            renderCtx.fillRect(-3, -11, 7, 7);
+            renderCtx.strokeRect(-3, -11, 7, 7);
+            renderCtx.fillStyle = '#000'; 
+            renderCtx.fillRect(-3, -11, 7, 3.5);
+
+            // 6. Smirk
+            renderCtx.beginPath();
+            renderCtx.moveTo(-5, 4);
+            renderCtx.quadraticCurveTo(-6, 9, -2, 11);
+            renderCtx.stroke();
+
+            // 7. Bottom Beak
+            renderCtx.fillStyle = skin.r; 
+            renderCtx.beginPath();
+            renderCtx.ellipse(11, 8, 8, 3, 10 * Math.PI/180, 0, Math.PI*2);
+            renderCtx.fill();
+            renderCtx.stroke();
+
+            // 8. Top Beak
+            renderCtx.fillStyle = skin.o; 
+            renderCtx.beginPath();
+            renderCtx.ellipse(13, 3, 10, 4, 0, 0, Math.PI*2);
+            renderCtx.fill();
+            renderCtx.stroke();
+            
+            // Beak shine
+            renderCtx.fillStyle = 'rgba(255,255,255,0.6)';
+            renderCtx.beginPath();
+            renderCtx.ellipse(13, 1, 4, 1.5, 0, 0, Math.PI*2);
+            renderCtx.fill();
+
+            // 9. Bowler Hat
+            renderCtx.save();
+            renderCtx.translate(2, -14);
+            renderCtx.rotate(15 * Math.PI/180);
+            
+            renderCtx.fillStyle = '#000';
+            renderCtx.beginPath();
+            renderCtx.ellipse(0, 0, 15, 2.5, 0, 0, Math.PI*2);
+            renderCtx.fill();
+            renderCtx.stroke();
+            
+            renderCtx.fillStyle = skin.hat;
+            renderCtx.beginPath();
+            renderCtx.moveTo(-10, -1);
+            renderCtx.lineTo(-10, -6);
+            renderCtx.quadraticCurveTo(-10, -15, 0, -15);
+            renderCtx.quadraticCurveTo(10, -15, 10, -6);
+            renderCtx.lineTo(10, -1);
+            renderCtx.fill();
+            renderCtx.stroke();
+            
+            renderCtx.fillStyle = '#000';
+            renderCtx.beginPath();
+            renderCtx.moveTo(-10, -1);
+            renderCtx.lineTo(-10, -4);
+            renderCtx.quadraticCurveTo(0, -6, 10, -4);
+            renderCtx.lineTo(10, -1);
+            renderCtx.fill();
+            
+            renderCtx.fillStyle = 'rgba(255,255,255,0.5)';
+            renderCtx.beginPath();
+            renderCtx.ellipse(4, -10, 3, 1.5, -20*Math.PI/180, 0, Math.PI*2);
+            renderCtx.fill();
+            renderCtx.restore();
+
+            // 10. Flapping Wing
+            let wingAngle = Math.sin(flapPhase) * 0.6; 
+            renderCtx.save();
+            renderCtx.translate(-4, 2);
+            renderCtx.rotate(wingAngle);
+            
+            renderCtx.fillStyle = skin.c; 
+            renderCtx.beginPath();
+            renderCtx.moveTo(6, 2); 
+            renderCtx.quadraticCurveTo(-4, 8, -12, 4); 
+            renderCtx.lineTo(-16, 2); 
+            renderCtx.lineTo(-12, -2); 
+            renderCtx.lineTo(-18, -6); 
+            renderCtx.lineTo(-11, -8);
+            renderCtx.lineTo(-14, -15); 
+            renderCtx.quadraticCurveTo(-2, -8, 6, 2); 
+            renderCtx.fill();
+            renderCtx.stroke();
+            
+            renderCtx.strokeStyle = 'rgba(255,255,255,0.6)';
+            renderCtx.lineWidth = 1.5;
+            renderCtx.beginPath();
+            renderCtx.moveTo(2, 0);
+            renderCtx.quadraticCurveTo(-4, -2, -8, -10);
+            renderCtx.stroke();
+            
+            renderCtx.restore();
+        }
+
+        // ==================== VECTOR THEMES ====================
+        const THEMES = [
+            { 
+                id: 'morning', skyTop: '#AEE1FF', skyBot: '#D4F0FF', cloud: '#FFFFFF',
+                hillBack: '#89D3DF', hillFront: '#A1E3CA', dirt: '#D19A62', grass: '#7ECA4D', pipe: '#5ED067', pipeCap: '#4BBA54'
+            },
+            { 
+                id: 'evening', skyTop: '#FF8A66', skyBot: '#FFC482', cloud: '#FFE0E0',
+                hillBack: '#E87D6C', hillFront: '#F5A97F', dirt: '#9E5D43', grass: '#E58E26', pipe: '#E67E22', pipeCap: '#D35400'
+            },
+            { 
+                id: 'night', skyTop: '#1A1A2E', skyBot: '#2D3561', cloud: '#4A5B8C',
+                hillBack: '#152243', hillFront: '#233863', dirt: '#2F2622', grass: '#2A7A4F', pipe: '#3498DB', pipeCap: '#2980B9'
+            }
+        ];
+
+        let currentThemeIdx = 0;
+        let nextThemeIdx = 0;
+        let themeT = 0; 
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : {r:0,g:0,b:0};
+        }
+
+        function lerpColor(c1, c2, t) {
+            const r1 = hexToRgb(c1), r2 = hexToRgb(c2);
+            const r = Math.round(r1.r + (r2.r - r1.r) * t);
+            const g = Math.round(r1.g + (r2.g - r1.g) * t);
+            const b = Math.round(r1.b + (r2.b - r1.b) * t);
+            return `rgb(${r},${g},${b})`;
+        }
+
+        function getColor(key) {
+            if (currentThemeIdx === nextThemeIdx || themeT >= 1) return THEMES[currentThemeIdx][key];
+            return lerpColor(THEMES[currentThemeIdx][key], THEMES[nextThemeIdx][key], themeT);
+        }
+
+        // ==================== CONFIG & SKINS ====================
+        const SKINS = [
+            { id: 'classic', name: 'Smug Duck', cost: 0, c: '#5BC0EB', belly: '#1FA1D1', hat: '#8B5A2B', o: '#F39C12', r: '#D35400' },
+            { id: 'ninja', name: 'Ninja Duck', cost: 100, c: '#2C3E50', belly: '#1A252F', hat: '#000000', o: '#E74C3C', r: '#C0392B' },
+            { id: 'gold', name: 'Golden Hat', cost: 250, c: '#F4D03F', belly: '#D4AC0D', hat: '#FFF', o: '#E67E22', r: '#D35400' },
+            { id: 'zombie', name: 'Toxic Duck', cost: 500, c: '#2ECC71', belly: '#27AE60', hat: '#8E44AD', o: '#2C3E50', r: '#1A252F' }
+        ];
+
+        let unlockedSkins = JSON.parse(localStorage.getItem('flappySkins_vec') || '["classic"]');
+        let currentSkinId = localStorage.getItem('flappyCurrentSkin_vec') || 'classic';
+
+        function getActiveSkin() { return SKINS.find(s => s.id === currentSkinId) || SKINS[0]; }
+
+        let currentDifficulty = 'normal';
+        let diffConfig = {
+            gravity: 0.45, jump: -8.5, speedMult: 1.0, gapBase: 160, gapMin: 120,
+            moveScoreThreshold: 300, moveChance: 0.5, pipeSpeedBase: 4.5
+        };
+
+        function setDifficulty(level) {
+            currentDifficulty = level;
+            document.querySelectorAll('.diff-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`btn-${level}`).classList.add('active');
+            
+            if (level === 'easy') {
+                diffConfig = { gravity: 0.35, jump: -7.5, speedMult: 0.8, gapBase: 190, gapMin: 150, moveScoreThreshold: 800, moveChance: 0.2, pipeSpeedBase: 3.5 };
+                document.getElementById('menu-diff-label').innerText = 'Easy';
+            } else if (level === 'normal') {
+                diffConfig = { gravity: 0.45, jump: -8.5, speedMult: 1.0, gapBase: 160, gapMin: 120, moveScoreThreshold: 300, moveChance: 0.5, pipeSpeedBase: 4.5 };
+                document.getElementById('menu-diff-label').innerText = 'Normal';
+            } else if (level === 'hard') {
+                diffConfig = { gravity: 0.6, jump: -10, speedMult: 1.25, gapBase: 140, gapMin: 100, moveScoreThreshold: 100, moveChance: 0.8, pipeSpeedBase: 5.5 };
+                document.getElementById('menu-diff-label').innerText = 'Hard';
+            }
+            updateMenuStats();
+        }
+
+        // ==================== GAME STATE ====================
+        let gameState = {
+            mode: 'menu', score: 0, combo: 0, coins: 0,
+            totalCoins: parseInt(localStorage.getItem('flappyTotalCoins_vec')) || 0,
+            shakeIntensity: 0, speedMultiplier: 1, shield: 0
+        };
+
+        function getBestScore() { return parseInt(localStorage.getItem(`flappyBestScore_vec_${currentDifficulty}`)) || 0; }
+        function getMaxCombo() { return parseInt(localStorage.getItem(`flappyMaxCombo_vec_${currentDifficulty}`)) || 0; }
+        function saveBestStats(score, combo) {
+            if (score > getBestScore()) localStorage.setItem(`flappyBestScore_vec_${currentDifficulty}`, score);
+            if (combo > getMaxCombo()) localStorage.setItem(`flappyMaxCombo_vec_${currentDifficulty}`, combo);
+        }
+
+        // ==================== BIRD (Player Object) ====================
+        const bird = {
+            x: canvas.width / 3, y: canvas.height / 2, velY: 0, rotation: 0, wingFlap: 0,
+
+            update() {
+                this.velY += diffConfig.gravity;
+                this.y += this.velY;
+                
+                // Smooth rotation
+                this.rotation = Math.min((this.velY * 3), 90);
+                if (this.rotation < -25) this.rotation = -25;
+                
+                // Flap wing based on movement
+                if (this.rotation < 45) {
+                    this.wingFlap += 0.3;
+                } else {
+                    this.wingFlap = 0; 
+                }
+                
+                if (this.y < 0) this.y = 0;
+                if (this.y > canvas.height) this.y = canvas.height;
+            },
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate((this.rotation * Math.PI) / 180);
+                
+                // Scale the vector bird slightly
+                ctx.scale(1.3, 1.3); 
+                drawSmugBird(ctx, this.wingFlap, getActiveSkin());
+                
+                if (gameState.shield > 0) {
+                    ctx.strokeStyle = `rgba(52, 152, 219, 0.8)`;
+                    ctx.lineWidth = 3; 
+                    ctx.beginPath(); 
+                    ctx.arc(0, 0, 26, 0, Math.PI*2); 
+                    ctx.stroke();
+                    ctx.fillStyle = `rgba(52, 152, 219, 0.2)`;
+                    ctx.fill();
+                }
+                ctx.restore();
+            },
+
+            flap() {
+                this.velY = diffConfig.jump;
+                createParticles(this.x, this.y, 'flap');
+            }
+        };
+
+        // ==================== VECTOR ENVIRONMENT ====================
+        let bgOffset = 0;
+        
+        function drawBackground() {
+            // Smooth Sky Gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, getColor('skyTop'));
+            gradient.addColorStop(1, getColor('skyBot'));
+            ctx.fillStyle = gradient; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            if (gameState.mode === 'playing') {
+                bgOffset = (bgOffset + (0.5 * gameState.speedMultiplier)) % canvas.width;
+            }
+
+            const groundY = canvas.height * 0.82;
+
+            // Parallax Clouds (Smooth overlapping circles)
+            ctx.fillStyle = getColor('cloud');
+            ctx.globalAlpha = 0.8;
+            for(let i=0; i<2; i++){
+                const offset = i * canvas.width - (bgOffset * 0.4);
+                
+                ctx.beginPath();
+                ctx.arc(offset + 100, groundY - 250, 40, 0, Math.PI*2);
+                ctx.arc(offset + 140, groundY - 230, 50, 0, Math.PI*2);
+                ctx.arc(offset + 70, groundY - 220, 30, 0, Math.PI*2);
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.arc(offset + 350, groundY - 150, 60, 0, Math.PI*2);
+                ctx.arc(offset + 420, groundY - 130, 45, 0, Math.PI*2);
+                ctx.arc(offset + 300, groundY - 120, 35, 0, Math.PI*2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1.0;
+
+            // Parallax Hills Back
+            ctx.fillStyle = getColor('hillBack');
+            ctx.beginPath();
+            ctx.moveTo(0, groundY);
+            let hx = -(bgOffset * 0.6) % 300;
+            while(hx < canvas.width + 300) {
+                ctx.bezierCurveTo(hx + 100, groundY - 150, hx + 200, groundY - 150, hx + 300, groundY);
+                hx += 300;
+            }
+            ctx.lineTo(canvas.width, groundY);
+            ctx.fill();
+
+            // Parallax Hills Front
+            ctx.fillStyle = getColor('hillFront');
+            ctx.beginPath();
+            ctx.moveTo(0, groundY);
+            hx = -bgOffset % 400;
+            while(hx < canvas.width + 400) {
+                ctx.bezierCurveTo(hx + 150, groundY - 100, hx + 250, groundY - 100, hx + 400, groundY);
+                hx += 400;
+            }
+            ctx.lineTo(canvas.width, groundY);
+            ctx.fill();
+        }
+
+        let groundOffset = 0;
+        function drawGround() {
+            const groundY = canvas.height * 0.82;
+            const groundHeight = canvas.height * 0.18;
+
+            if (gameState.mode === 'playing') {
+                groundOffset = (groundOffset + (diffConfig.pipeSpeedBase * gameState.speedMultiplier)) % 40;
+            }
+
+            // Dirt
+            ctx.fillStyle = getColor('dirt');
+            ctx.fillRect(0, groundY, canvas.width, groundHeight);
+
+            // Dirt zigzag texture
+            ctx.fillStyle = 'rgba(0,0,0,0.1)';
+            ctx.beginPath();
+            for (let i = -40; i < canvas.width + 40; i += 40) {
+                const sx = i - groundOffset;
+                ctx.moveTo(sx, groundY + 30);
+                ctx.lineTo(sx + 20, groundY + 50);
+                ctx.lineTo(sx + 40, groundY + 30);
+            }
+            ctx.fill();
+
+            // Grass
+            ctx.fillStyle = getColor('grass');
+            ctx.fillRect(0, groundY, canvas.width, 15);
+            
+            // Grass bottom wave
+            ctx.beginPath();
+            for (let i = -40; i < canvas.width + 40; i += 40) {
+                const sx = i - groundOffset;
+                ctx.moveTo(sx, groundY + 15);
+                ctx.quadraticCurveTo(sx + 20, groundY + 25, sx + 40, groundY + 15);
+            }
+            ctx.fill();
+            
+            // Top highlight
+            ctx.fillStyle = 'rgba(255,255,255,0.2)';
+            ctx.fillRect(0, groundY, canvas.width, 3);
+        }
+
+        // ==================== PIPES & ITEMS ====================
+        const pipes = [];
+        const powerups = [];
+        const coins = [];
+        
+        let GAP_SIZE = 160;
+        const PIPE_WIDTH = 70;
+        const CAP_HEIGHT = 30;
+
+        function spawnPipe() {
+            const currentSpeedMultiplier = diffConfig.speedMult + Math.floor(gameState.score / 20) * 0.05;
+            gameState.speedMultiplier = Math.min(currentSpeedMultiplier, diffConfig.speedMult + 0.6);
+            
+            GAP_SIZE = Math.max(diffConfig.gapMin, diffConfig.gapBase - Math.floor(gameState.score / 30) * 5);
+
+            const minY = 80;
+            const maxY = (canvas.height * 0.82) - GAP_SIZE - 80;
+            const topY = Math.random() * (maxY - minY) + minY;
+            
+            const isMoving = gameState.score >= diffConfig.moveScoreThreshold && Math.random() < diffConfig.moveChance;
+
+            const pipe = {
+                x: canvas.width, startY: topY, topY: topY, bottomY: topY + GAP_SIZE,
+                scored: false, isMoving: isMoving, moveOffset: Math.random() * Math.PI * 2
+            };
+            pipes.push(pipe);
+
+            if (Math.random() > 0.4) {
+                coins.push({x: pipe.x + PIPE_WIDTH/2, y: pipe.topY + GAP_SIZE/2, collected: false, startY: pipe.topY + GAP_SIZE/2});
+            } else if (Math.random() > 0.8) {
+                powerups.push({
+                    x: pipe.x + PIPE_WIDTH/2, y: pipe.topY + GAP_SIZE/2,
+                    type: 'shield', osc: Math.random() * Math.PI, startY: pipe.topY + GAP_SIZE/2
+                });
+            }
+        }
+
+        function updatePipes() {
+            const speed = diffConfig.pipeSpeedBase * gameState.speedMultiplier;
+            
+            for (let i = pipes.length - 1; i >= 0; i--) {
+                const pipe = pipes[i];
+                pipe.x -= speed;
+                
+                if (pipe.isMoving) {
+                    pipe.topY = pipe.startY + Math.sin(frameCount * 0.04 + pipe.moveOffset) * 40;
+                    pipe.bottomY = pipe.topY + GAP_SIZE;
+                }
+                
+                if (checkCollision(pipe)) {
+                    if (gameState.shield > 0) {
+                        gameState.shield = 0; createParticles(bird.x, bird.y, 'shield-break'); playSound(300, 0.1); pipe.scored = true;
+                    } else { endGame(); }
+                }
+                
+                if (!pipe.scored && pipe.x + PIPE_WIDTH < bird.x) {
+                    gameState.score += 1 * gameState.combo;
+                    gameState.combo++;
+                    
+                    if (gameState.combo % 5 === 0) {
+                        createParticles(bird.x, bird.y, 'combo'); playSound(800, 0.2); 
+                        triggerComboPopup(gameState.combo);
+                    } else { playSound(600, 0.1); }
+                    pipe.scored = true;
+                }
+                if (pipe.x < -PIPE_WIDTH - 20) pipes.splice(i, 1);
+            }
+        }
+
+        function drawPipes() {
+            for (const pipe of pipes) {
+                drawSingleVectorPipe(pipe.x, pipe.topY, true);
+                drawSingleVectorPipe(pipe.x, pipe.bottomY, false);
+            }
+        }
+
+        // Draw smooth, rounded pill-style pipes
+        function drawSingleVectorPipe(x, y, isTop) {
+            const h = isTop ? y : (canvas.height * 0.82) - y;
+            const yStart = isTop ? 0 : y;
+            const capY = isTop ? y - CAP_HEIGHT : y;
+
+            const pColor = getColor('pipe');
+            const cColor = getColor('pipeCap');
+
+            // Shaft
+            ctx.fillStyle = pColor; 
+            ctx.fillRect(x, yStart, PIPE_WIDTH, h);
+            
+            // Shaft Highlight
+            const grad = ctx.createLinearGradient(x, 0, x + PIPE_WIDTH, 0);
+            grad.addColorStop(0, 'rgba(255,255,255,0.3)');
+            grad.addColorStop(0.2, 'rgba(255,255,255,0)');
+            grad.addColorStop(0.8, 'rgba(0,0,0,0)');
+            grad.addColorStop(1, 'rgba(0,0,0,0.3)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(x, yStart, PIPE_WIDTH, h);
+
+            // Cap (Pill Shape)
+            const capW = PIPE_WIDTH + 12;
+            const capX = x - 6;
+            
+            ctx.fillStyle = cColor;
+            ctx.beginPath();
+            if(ctx.roundRect) {
+                ctx.roundRect(capX, capY, capW, CAP_HEIGHT, 8);
+            } else {
+                ctx.rect(capX, capY, capW, CAP_HEIGHT);
+            }
+            ctx.fill();
+            
+            // Cap Highlight
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            ctx.beginPath();
+            if(ctx.roundRect) {
+                ctx.roundRect(capX + 4, capY + 4, capW - 8, 4, 4);
+            } else {
+                ctx.rect(capX + 4, capY + 4, capW - 8, 4);
+            }
+            ctx.fill();
+            
+            // Dark Outline
+            ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            if(ctx.roundRect) {
+                ctx.roundRect(capX, capY, capW, CAP_HEIGHT, 8);
+            } else {
+                ctx.rect(capX, capY, capW, CAP_HEIGHT);
+            }
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(x, isTop ? 0 : capY + CAP_HEIGHT);
+            ctx.lineTo(x, isTop ? capY : canvas.height);
+            ctx.moveTo(x + PIPE_WIDTH, isTop ? 0 : capY + CAP_HEIGHT);
+            ctx.lineTo(x + PIPE_WIDTH, isTop ? capY : canvas.height);
+            ctx.stroke();
+        }
+
+        function updateItems() {
+            const speed = diffConfig.pipeSpeedBase * gameState.speedMultiplier;
+            for (let i = coins.length - 1; i >= 0; i--) {
+                const coin = coins[i]; 
+                coin.x -= speed;
+                coin.y = coin.startY + Math.sin(frameCount * 0.1) * 10; // Float
+                if (Math.hypot(coin.x - bird.x, coin.y - bird.y) < 30 && !coin.collected) {
+                    gameState.coins++; gameState.score += 2 * gameState.combo;
+                    createParticles(coin.x, coin.y, 'coin'); playSound(1000, 0.1);
+                    coins.splice(i, 1);
+                } else if (coin.x < -30) coins.splice(i, 1);
+            }
+            for (let i = powerups.length - 1; i >= 0; i--) {
+                const p = powerups[i]; 
+                p.x -= speed; 
+                p.y = p.startY + Math.sin(frameCount * 0.1 + p.osc) * 15;
+                if (Math.hypot(p.x - bird.x, p.y - bird.y) < 30) {
+                    if (p.type === 'shield') {
+                        gameState.shield = 100; createParticles(p.x, p.y, 'shield-break'); playSound(700, 0.3);
+                    }
+                    powerups.splice(i, 1);
+                } else if (p.x < -30) powerups.splice(i, 1);
+            }
+        }
+
+        function drawItems() {
+            for (const c of coins) {
+                ctx.save();
+                ctx.translate(c.x, c.y);
+                ctx.scale(Math.max(0.2, Math.abs(Math.cos(frameCount * 0.08))), 1); // Smooth 3D spin
+                
+                // Vector Coin
+                ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI*2);
+                ctx.fillStyle = '#F39C12'; ctx.fill();
+                
+                ctx.beginPath(); ctx.arc(0, 0, 11, 0, Math.PI*2);
+                ctx.fillStyle = '#F1C40F'; ctx.fill();
+                
+                ctx.fillStyle = '#FFF';
+                ctx.fillRect(-2, -6, 4, 12);
+                
+                ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI*2); ctx.stroke();
+                
+                ctx.restore();
+            }
+            
+            for (const p of powerups) {
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                
+                // Vector Shield Orb
+                ctx.beginPath(); ctx.arc(0, 0, 16, 0, Math.PI*2);
+                const grd = ctx.createRadialGradient(-4, -4, 2, 0, 0, 16);
+                grd.addColorStop(0, '#5DADE2');
+                grd.addColorStop(1, '#2874A6');
+                ctx.fillStyle = grd;
+                ctx.fill();
+                
+                ctx.strokeStyle = '#FFF'; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.arc(0, 0, 12, 0, Math.PI*2); ctx.stroke();
+                
+                ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                ctx.beginPath(); ctx.arc(-6, -6, 4, 0, Math.PI*2); ctx.fill();
+                
+                ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.arc(0, 0, 16, 0, Math.PI*2); ctx.stroke();
+
+                ctx.restore();
+            }
+        }
+
+        // ==================== PARTICLES ====================
+        const particles = [];
+        function createParticles(x, y, type) {
+            let count = 5, color = '#F4D03F', speed = 3;
+            if (type === 'flap') { count = 3; color = 'rgba(255,255,255,0.6)'; speed = 1.5; }
+            else if (type === 'combo') { count = 10; color = '#FF416C'; speed = 4; }
+            else if (type === 'shield-break') { count = 12; color = '#5DADE2'; speed = 5; }
+            
+            for (let i = 0; i < count; i++) {
+                const angle = (Math.PI * 2 * i) / count + Math.random();
+                particles.push({
+                    x: x, y: y, velX: Math.cos(angle) * speed * Math.random(), velY: Math.sin(angle) * speed * Math.random(),
+                    life: 40, maxLife: 40, color: color, size: Math.random() * 4 + 3 
+                });
+            }
+        }
+        function updateParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i]; p.x += p.velX; p.y += p.velY; p.velY += 0.1; p.life--;
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+        }
+        function drawParticles() {
+            for (const p of particles) {
+                ctx.globalAlpha = p.life / p.maxLife; 
+                ctx.fillStyle = p.color;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        function triggerComboPopup(combo) {
+            const uiLayer = document.getElementById('ui-layer');
+            const el = document.createElement('div');
+            el.className = 'combo-display';
+            el.innerHTML = `${combo}x<br><span style="font-size:24px">COMBO!</span>`;
+            uiLayer.appendChild(el);
+            setTimeout(() => el.remove(), 800);
+        }
+
+        // ==================== COLLISION ====================
+        function checkCollision(pipe) {
+            // Hitbox tuned for the vector bird scaling
+            const radius = 18; 
+            const birdLeft = bird.x - radius, birdRight = bird.x + radius;
+            const birdTop = bird.y - radius, birdBottom = bird.y + radius;
+            
+            if (birdRight > pipe.x && birdLeft < pipe.x + PIPE_WIDTH) {
+                if (birdTop < pipe.topY || birdBottom > pipe.bottomY) return true;
+            }
+            if (birdBottom > canvas.height * 0.82) return true; 
+            return false;
+        }
+
+        // ==================== AUDIO ====================
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(freq, duration) {
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const now = audioCtx.currentTime; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+                osc.type = 'sine'; // Smooth modern sound
+                osc.frequency.value = freq; osc.connect(gain); gain.connect(audioCtx.destination);
+                gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+                osc.start(now); osc.stop(now + duration);
+            } catch (e) {}
+        }
+
+        // ==================== MENUS & LOGIC ====================
+        let pipeSpawnCounter = 0;
+
+        function openShop() {
+            document.getElementById('start-menu').classList.add('hidden');
+            document.getElementById('shop-menu').classList.remove('hidden');
+            document.getElementById('shop-coins-display').textContent = gameState.totalCoins;
+            renderShop();
+        }
+
+        function closeShop() {
+            document.getElementById('shop-menu').classList.add('hidden');
+            document.getElementById('start-menu').classList.remove('hidden');
+            updateMenuStats();
+        }
+
+        function renderShop() {
+            const container = document.getElementById('skins-container');
+            container.innerHTML = '';
+            
+            SKINS.forEach((skin, idx) => {
+                const isUnlocked = unlockedSkins.includes(skin.id);
+                const isEquipped = currentSkinId === skin.id;
+                const btnText = isEquipped ? 'EQUIPPED' : (isUnlocked ? 'EQUIP' : `BUY (${skin.cost})`);
+                const btnColor = isEquipped ? '#2ECC71' : (isUnlocked ? '#F4D03F' : (gameState.totalCoins >= skin.cost ? '#F4D03F' : '#95A5A6'));
+                
+                container.innerHTML += `
+                    <div style="background: rgba(0,0,0,0.4); padding: 15px; border-radius: 16px; border: 2px solid ${isEquipped ? '#2ECC71' : 'transparent'}; text-align: center;">
+                        <canvas class="shop-bird-canvas" id="shop-canvas-${idx}" width="80" height="80"></canvas>
+                        <h3 style="color: #ECF0F1; font-size: 14px; margin: 0 0 10px 0; font-weight: 800;">${skin.name}</h3>
+                        <button class="menu-btn" style="background: ${btnColor}; color: ${isEquipped ? '#FFF' : '#1a1a2e'}; padding: 8px; font-size: 13px; margin:0; box-shadow:none;" onclick="buyOrEquipSkin('${skin.id}')" ${isEquipped ? 'disabled' : ''}>${btnText}</button>
+                    </div>
+                `;
+            });
+
+            setTimeout(() => {
+                SKINS.forEach((skin, idx) => {
+                    const c = document.getElementById(`shop-canvas-${idx}`);
+                    if (c) {
+                        const sCtx = c.getContext('2d');
+                        sCtx.translate(40, 40); 
+                        sCtx.scale(1.5, 1.5);   
+                        drawSmugBird(sCtx, 0, skin);
+                    }
+                });
+            }, 0);
+        }
+
+        function buyOrEquipSkin(id) {
+            const skin = SKINS.find(s => s.id === id);
+            if (unlockedSkins.includes(id)) {
+                currentSkinId = id; localStorage.setItem('flappyCurrentSkin_vec', id); playSound(600, 0.1);
+            } else if (gameState.totalCoins >= skin.cost) {
+                gameState.totalCoins -= skin.cost; localStorage.setItem('flappyTotalCoins_vec', gameState.totalCoins);
+                unlockedSkins.push(id); localStorage.setItem('flappySkins_vec', JSON.stringify(unlockedSkins));
+                currentSkinId = id; localStorage.setItem('flappyCurrentSkin_vec', id);
+                playSound(1000, 0.3); createParticles(canvas.width/2, canvas.height/2, 'combo');
+            } else { playSound(200, 0.2); return; }
+            document.getElementById('shop-coins-display').textContent = gameState.totalCoins;
+            renderShop();
+        }
+
+        function startGame() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            gameState.mode = 'playing';
+            gameState.score = 0; gameState.combo = 1;
+            gameState.coins = 0; gameState.shield = 0;
+            gameState.speedMultiplier = diffConfig.speedMult;
+            
+            bird.x = canvas.width / 3; bird.y = canvas.height / 2; bird.velY = 0; bird.wingFlap = 0;
+            
+            pipes.length = 0; coins.length = 0; powerups.length = 0; particles.length = 0;
+            pipeSpawnCounter = 60; 
+            
+            currentThemeIdx = 0; nextThemeIdx = 0; themeT = 0;
+            
+            document.getElementById('start-menu').classList.add('hidden');
+            document.getElementById('gameover-menu').classList.add('hidden');
+        }
+
+        function endGame() {
+            gameState.mode = 'gameover';
+            gameState.totalCoins += gameState.coins;
+            saveBestStats(gameState.score, gameState.combo);
+            localStorage.setItem('flappyTotalCoins_vec', gameState.totalCoins);
+            
+            gameState.shakeIntensity = 15; playSound(150, 0.4);
+            
+            setTimeout(() => {
+                document.getElementById('gameover-score').textContent = gameState.score;
+                document.getElementById('gameover-combo').textContent = gameState.combo + 'x';
+                document.getElementById('gameover-coins').textContent = "+" + gameState.coins;
+                document.getElementById('gameover-menu').classList.remove('hidden');
+            }, 500);
+        }
+
+        function goToMenu() {
+            gameState.mode = 'menu';
+            document.getElementById('gameover-menu').classList.add('hidden');
+            document.getElementById('start-menu').classList.remove('hidden');
+            updateMenuStats();
+        }
+
+        function updateMenuStats() {
+            document.getElementById('menu-best').textContent = getBestScore();
+            document.getElementById('menu-best-combo').textContent = getMaxCombo() + 'x';
+            document.getElementById('menu-coins').textContent = gameState.totalCoins;
+        }
+
+        // ==================== INPUT ====================
+        function handleInput(e) {
+            if (e.type === 'touchstart') e.preventDefault();
+            if (gameState.mode === 'playing') {
+                bird.flap(); playSound(500, 0.1);
+            } else if (gameState.mode === 'menu' && !document.getElementById('start-menu').classList.contains('hidden') && e.target.tagName !== 'BUTTON') {
+                startGame();
+            }
+        }
+        window.addEventListener('keydown', (e) => { if (e.code === 'Space' || e.code === 'ArrowUp') handleInput(e); });
+        canvas.addEventListener('mousedown', (e) => { if(e.target.tagName !== 'BUTTON') handleInput(e); });
+        canvas.addEventListener('touchstart', (e) => { if(e.target.tagName !== 'BUTTON') handleInput(e); }, { passive: false });
+
+        // ==================== MAIN LOOP ====================
+        let frameCount = 0;
+
+        function update() {
+            if (gameState.mode === 'menu') {
+                bird.y = (canvas.height / 2) + Math.sin(frameCount * 0.05) * 15;
+                bird.rotation = 0;
+                bird.wingFlap += 0.2;
+                return;
+            }
+            if (gameState.mode !== 'playing') return;
+            
+            // Theme Logic: Change theme every 10 points
+            const targetIdx = Math.floor(gameState.score / 10) % THEMES.length;
+            if (nextThemeIdx !== targetIdx) { nextThemeIdx = targetIdx; themeT = 0; }
+            if (themeT < 1) {
+                themeT += 0.005; 
+                if (themeT > 1) { themeT = 1; currentThemeIdx = nextThemeIdx; }
+            }
+
+            bird.update(); updatePipes(); updateItems(); updateParticles();
+            
+            pipeSpawnCounter++;
+            const spawnRate = Math.max(50, 90 - gameState.speedMultiplier * 15);
+            if (pipeSpawnCounter > spawnRate) { spawnPipe(); pipeSpawnCounter = 0; }
+            
+            document.getElementById('score-hud').textContent = gameState.score;
+            document.getElementById('coins-hud').textContent = gameState.coins;
+        }
+
+        function draw() {
+            drawBackground();
+            
+            ctx.save();
+            if (gameState.shakeIntensity > 0) {
+                const shake = (Math.random() - 0.5) * gameState.shakeIntensity;
+                ctx.translate(shake, shake); gameState.shakeIntensity *= 0.9;
+            }
+            
+            // Draw smooth Giant Background Score
+            if (gameState.mode === 'playing' || gameState.mode === 'gameover') {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.font = '900 160px "Nunito", "Segoe UI", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(gameState.score, canvas.width / 2, canvas.height * 0.45);
+            }
+            
+            drawPipes(); 
+            drawGround(); 
+            drawItems(); 
+            drawParticles(); 
+            bird.draw();
+            
+            ctx.restore();
+        }
+
+        function gameLoop() {
+            update(); draw(); frameCount++; requestAnimationFrame(gameLoop);
+        }
+
+        updateMenuStats();
+        gameLoop();
+    </script>
+</body>
+</html>
