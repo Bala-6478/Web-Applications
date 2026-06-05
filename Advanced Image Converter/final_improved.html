@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Image Converter</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0d0f14;
+            --surface: #13161d;
+            --surface2: #1a1e28;
+            --border: #252933;
+            --border-active: #4f7fff;
+            --accent: #4f7fff;
+            --accent2: #7c9fff;
+            --text: #e8eaf0;
+            --text-muted: #5a6070;
+            --text-mid: #8892a4;
+            --error: #ff5c5c;
+            --success: #4fcf8a;
+            --warning: #f0b429;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+            background-image:
+                radial-gradient(ellipse 60% 40% at 70% 20%, rgba(79,127,255,0.06) 0%, transparent 60%),
+                radial-gradient(ellipse 40% 30% at 20% 80%, rgba(124,159,255,0.04) 0%, transparent 60%);
+        }
+
+        .card {
+            width: 100%;
+            max-width: 480px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        /* ---- Header ---- */
+        .header {
+            padding: 28px 32px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .header-icon {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, #2a3c70, #4f7fff33);
+            border: 1px solid #4f7fff44;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .header-icon svg { width: 20px; height: 20px; color: var(--accent2); }
+        .header-text h1 {
+            font-size: 17px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            color: var(--text);
+        }
+        .header-text p {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+            font-family: 'DM Mono', monospace;
+        }
+
+        /* ---- Body ---- */
+        .body { padding: 24px 28px; }
+
+        /* ---- Upload Zone ---- */
+        #upload-box {
+            border: 1.5px dashed var(--border);
+            border-radius: 14px;
+            padding: 36px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+            background: var(--surface2);
+            position: relative;
+        }
+        #upload-box:hover, #upload-box.drag-over {
+            border-color: var(--border-active);
+            background: rgba(79,127,255,0.04);
+        }
+        #upload-box.drag-over::after {
+            content: 'Drop it!';
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; font-weight: 600;
+            color: var(--accent2);
+            background: rgba(79,127,255,0.08);
+            border-radius: 14px;
+            letter-spacing: -0.01em;
+        }
+        .upload-icon {
+            width: 48px; height: 48px;
+            margin: 0 auto 14px;
+            background: #1e2433;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .upload-icon svg { width: 22px; height: 22px; color: var(--text-mid); }
+        #file-name { font-size: 14px; font-weight: 500; color: var(--text); display: block; }
+        .upload-hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; font-family: 'DM Mono', monospace; }
+        #file-upload { display: none; }
+
+        /* ---- Editor Panel ---- */
+        #editor-panel { display: none; }
+        #editor-panel.visible {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            animation: fadeUp 0.25s ease forwards;
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Preview */
+        .preview-wrap {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .preview-wrap img {
+            width: 64px; height: 64px;
+            object-fit: contain;
+            border-radius: 8px;
+            background: #0d0f14;
+            flex-shrink: 0;
+        }
+        .preview-meta { flex: 1; overflow: hidden; }
+        .preview-filename {
+            font-size: 13px; font-weight: 500;
+            color: var(--text);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .preview-info {
+            font-size: 11px; color: var(--text-muted);
+            font-family: 'DM Mono', monospace;
+            margin-top: 3px;
+        }
+        .btn-reset-sm {
+            flex-shrink: 0;
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-muted);
+            font-size: 12px;
+            padding: 6px 10px;
+            cursor: pointer;
+            transition: border-color 0.15s, color 0.15s;
+            font-family: 'DM Sans', sans-serif;
+        }
+        .btn-reset-sm:hover { border-color: var(--text-mid); color: var(--text); }
+
+        /* Section labels */
+        .field-label {
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-family: 'DM Mono', monospace;
+        }
+
+        /* Format select */
+        select {
+            width: 100%;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 13px;
+            font-family: 'DM Sans', sans-serif;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235a6070' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        select:focus { border-color: var(--border-active); }
+
+        /* Size options */
+        .size-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+        .size-option input { display: none; }
+        .size-option label {
+            display: block;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 4px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 11px;
+            font-family: 'DM Mono', monospace;
+            color: var(--text-mid);
+            transition: border-color 0.15s, background 0.15s, color 0.15s;
+            user-select: none;
+        }
+        .size-option label:hover { border-color: var(--text-mid); color: var(--text); }
+        .size-option input:checked + label {
+            border-color: var(--accent);
+            background: rgba(79,127,255,0.1);
+            color: var(--accent2);
+        }
+
+        /* Quality slider */
+        #quality-control { display: none; }
+        #quality-control.visible { display: block; }
+        .quality-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+        .quality-val {
+            font-family: 'DM Mono', monospace;
+            font-size: 13px;
+            color: var(--accent2);
+        }
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            appearance: none;
+            background: var(--border);
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px; height: 16px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 0 3px rgba(79,127,255,0.2);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 16px; height: 16px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        /* Convert button */
+        .btn-convert {
+            width: 100%;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 11px;
+            padding: 13px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer;
+            letter-spacing: -0.01em;
+            transition: background 0.15s, transform 0.1s, opacity 0.15s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-convert:hover { background: #3d6ee0; }
+        .btn-convert:active { transform: scale(0.98); }
+        .btn-convert:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        /* Result / feedback */
+        #result-container { display: none; }
+        #result-container.visible { display: block; }
+
+        .spinner {
+            width: 20px; height: 20px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .message {
+            font-size: 13px;
+            border-radius: 10px;
+            padding: 11px 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .message.error   { background: rgba(255,92,92,0.08); color: var(--error); border: 1px solid rgba(255,92,92,0.2); }
+        .message.success { background: rgba(79,207,138,0.08); color: var(--success); border: 1px solid rgba(79,207,138,0.2); }
+        .message.loading { background: var(--surface2); color: var(--text-mid); border: 1px solid var(--border); font-family: 'DM Mono', monospace; font-size: 12px; }
+        .message svg { width: 15px; height: 15px; flex-shrink: 0; }
+        .ico-notice {
+            font-size: 11px;
+            color: var(--warning);
+            font-family: 'DM Mono', monospace;
+            margin-top: 8px;
+            opacity: 0.85;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 16px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .footer-brand { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+        .footer-copy  { font-size: 11px; font-family: 'DM Mono', monospace; color: #2d3240; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+            </svg>
+        </div>
+        <div class="header-text">
+            <h1>Image Converter</h1>
+            <p>PNG · JPG · WEBP → ICO / PNG / JPEG / WEBP</p>
+        </div>
+    </div>
+
+    <!-- Body -->
+    <div class="body">
+
+        <!-- Upload Zone -->
+        <div id="upload-box">
+            <label for="file-upload" style="cursor:pointer; display:block;">
+                <div class="upload-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+                    </svg>
+                </div>
+                <span id="file-name">Click or drag & drop an image</span>
+                <span class="upload-hint">PNG, JPG, WEBP — max 5 MB</span>
+            </label>
+            <input id="file-upload" type="file" accept="image/png, image/jpeg, image/webp">
+        </div>
+
+        <!-- Editor Panel -->
+        <div id="editor-panel">
+
+            <!-- Preview row -->
+            <div class="preview-wrap">
+                <img id="image-preview" src="#" alt="Preview">
+                <div class="preview-meta">
+                    <div class="preview-filename" id="preview-filename">—</div>
+                    <div class="preview-info" id="preview-info">—</div>
+                </div>
+                <button class="btn-reset-sm" id="reset-btn">✕ New</button>
+            </div>
+
+            <!-- Output Format -->
+            <div>
+                <div class="field-label">Output Format</div>
+                <select id="format-select">
+                    <option value="ico">ICO — Favicon</option>
+                    <option value="png">PNG — Lossless</option>
+                    <option value="jpeg">JPEG — Compressed</option>
+                    <option value="webp">WEBP — Modern</option>
+                </select>
+            </div>
+
+            <!-- Image Size -->
+            <div>
+                <div class="field-label">Output Size</div>
+                <div class="size-grid">
+                    <div class="size-option">
+                        <input type="radio" id="size-orig" name="size" value="original" checked>
+                        <label for="size-orig">Original</label>
+                    </div>
+                    <div class="size-option">
+                        <input type="radio" id="size-256" name="size" value="256">
+                        <label for="size-256">256×256</label>
+                    </div>
+                    <div class="size-option">
+                        <input type="radio" id="size-64" name="size" value="64">
+                        <label for="size-64">64×64</label>
+                    </div>
+                    <div class="size-option">
+                        <input type="radio" id="size-32" name="size" value="32">
+                        <label for="size-32">32×32</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quality -->
+            <div id="quality-control">
+                <div class="quality-header">
+                    <div class="field-label" style="margin-bottom:0">Quality</div>
+                    <span class="quality-val" id="quality-value">92%</span>
+                </div>
+                <input id="quality-slider" type="range" min="1" max="100" step="1" value="92">
+            </div>
+
+            <!-- Convert -->
+            <button id="convert-btn" class="btn-convert">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+                </svg>
+                Convert & Download
+            </button>
+
+            <!-- Result / feedback -->
+            <div id="result-container"></div>
+
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <span class="footer-brand">Best Team</span>
+        <span class="footer-copy">© MR.BEST</span>
+    </footer>
+</div>
+
+<script>
+    const fileUpload   = document.getElementById('file-upload');
+    const uploadBox    = document.getElementById('upload-box');
+    const editorPanel  = document.getElementById('editor-panel');
+    const imagePreview = document.getElementById('image-preview');
+    const previewFilename = document.getElementById('preview-filename');
+    const previewInfo  = document.getElementById('preview-info');
+    const formatSelect = document.getElementById('format-select');
+    const qualityControl = document.getElementById('quality-control');
+    const qualitySlider  = document.getElementById('quality-slider');
+    const qualityValue   = document.getElementById('quality-value');
+    const convertBtn   = document.getElementById('convert-btn');
+    const resetBtn     = document.getElementById('reset-btn');
+    const resultContainer = document.getElementById('result-container');
+
+    let selectedFile = null;
+    let originalImage = new Image();
+
+    // ---- Drag & Drop ----
+    uploadBox.addEventListener('dragover', e => { e.preventDefault(); uploadBox.classList.add('drag-over'); });
+    uploadBox.addEventListener('dragleave', () => uploadBox.classList.remove('drag-over'));
+    uploadBox.addEventListener('drop', e => {
+        e.preventDefault();
+        uploadBox.classList.remove('drag-over');
+        const file = e.dataTransfer.files[0];
+        if (file) loadFile(file);
+    });
+
+    fileUpload.addEventListener('change', e => { if (e.target.files[0]) loadFile(e.target.files[0]); });
+    formatSelect.addEventListener('change', toggleQualitySlider);
+    qualitySlider.addEventListener('input', () => { qualityValue.textContent = qualitySlider.value + '%'; });
+    convertBtn.addEventListener('click', processImageConversion);
+    resetBtn.addEventListener('click', resetApp);
+
+    // ---- File Loading ----
+    function loadFile(file) {
+        const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) { showResult('error', 'Please upload a PNG, JPG, or WEBP file.'); return; }
+        if (file.size > 5 * 1024 * 1024)       { showResult('error', 'File size exceeds 5 MB.'); return; }
+
+        selectedFile = file;
+        const reader = new FileReader();
+        reader.onload = e => {
+            originalImage = new Image();
+            originalImage.onload = () => {
+                imagePreview.src = e.target.result;
+                previewFilename.textContent = file.name;
+                previewInfo.textContent = `${originalImage.naturalWidth}×${originalImage.naturalHeight}  ·  ${formatBytes(file.size)}`;
+                uploadBox.style.display = 'none';
+                editorPanel.classList.add('visible');
+                resultContainer.innerHTML = '';
+                resultContainer.classList.remove('visible');
+            };
+            originalImage.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // ---- Format Toggle ----
+    function toggleQualitySlider() {
+        const f = formatSelect.value;
+        qualityControl.classList.toggle('visible', f === 'jpeg' || f === 'webp');
+    }
+
+    // ---- Conversion ----
+    function processImageConversion() {
+        showResult('loading', 'Converting…');
+        convertBtn.disabled = true;
+
+        setTimeout(() => {
+            try {
+                const sizeValue = document.querySelector('input[name="size"]:checked').value;
+                const format    = formatSelect.value;
+
+                let tw, th;
+                if (sizeValue === 'original') {
+                    tw = originalImage.naturalWidth;
+                    th = originalImage.naturalHeight;
+                } else {
+                    tw = th = parseInt(sizeValue, 10);
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width  = tw;
+                canvas.height = th;
+                const ctx = canvas.getContext('2d');
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.drawImage(originalImage, 0, 0, tw, th);
+
+                const mimeType = format === 'jpeg' ? 'image/jpeg'
+                               : format === 'webp' ? 'image/webp'
+                               : 'image/png';
+                const quality  = parseFloat(qualitySlider.value) / 100;
+                const dataUrl  = canvas.toDataURL(mimeType, mimeType !== 'image/png' ? quality : undefined);
+
+                const filename = getOutputFilename(format);
+                triggerDownload(dataUrl, filename);
+
+                // Estimate output size
+                const byteStr = atob(dataUrl.split(',')[1]);
+                const outSize = formatBytes(byteStr.length);
+
+                let notice = format === 'ico'
+                    ? `<div class="ico-notice">⚠ ICO exported as PNG data. For a true multi-size .ico, use a dedicated tool.</div>` : '';
+
+                showResult('success',
+                    `✓ Downloaded <strong>${filename}</strong> — ${tw}×${th}, ~${outSize}` + notice);
+
+            } catch (err) {
+                console.error(err);
+                showResult('error', 'Something went wrong during conversion.');
+            } finally {
+                convertBtn.disabled = false;
+            }
+        }, 60);
+    }
+
+    function triggerDownload(dataUrl, filename) {
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    // ---- Reset ----
+    function resetApp() {
+        selectedFile = null;
+        fileUpload.value = '';
+        originalImage = new Image();
+        editorPanel.classList.remove('visible');
+        uploadBox.style.display = '';
+        resultContainer.innerHTML = '';
+        resultContainer.classList.remove('visible');
+        document.getElementById('size-orig').checked = true;
+        formatSelect.value = 'ico';
+        qualitySlider.value = '92';
+        qualityValue.textContent = '92%';
+        toggleQualitySlider();
+    }
+
+    // ---- Helpers ----
+    function showResult(type, html) {
+        const icons = {
+            error:   `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+            success: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>`,
+            loading: `<span class="spinner"></span>`
+        };
+        resultContainer.innerHTML = `<div class="message ${type}">${icons[type] || ''}<span>${html}</span></div>`;
+        resultContainer.classList.add('visible');
+    }
+
+    function formatBytes(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    }
+
+    function getOutputFilename(format) {
+        const base = selectedFile.name.replace(/\.[^/.]+$/, '') || 'converted';
+        return `${base}.${format === 'ico' ? 'ico' : format}`;
+    }
+</script>
+</body>
+</html>
