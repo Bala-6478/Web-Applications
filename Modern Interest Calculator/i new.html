@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Interest Calculator</title>
+    
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Load Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Load jsPDF and html2canvas for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: { 50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8' },
+                        brand: { light: '#89f7fe', dark: '#66a6ff' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* Smooth transitions for theme toggle */
+        * {
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        /* Hide number input arrows */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col selection:bg-primary-500 selection:text-white">
+
+    <!-- Header Navigation -->
+    <header class="w-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md sticky top-0 z-40 border-b border-slate-200 dark:border-slate-700 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-light to-brand-dark flex items-center justify-center text-white font-bold text-lg shadow-md">
+                    %
+                </div>
+                <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-dark to-primary-600 dark:from-brand-light dark:to-primary-400">
+                    Interest Calculator
+                </h1>
+            </div>
+            <button id="themeToggle" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 shadow-inner" aria-label="Toggle Dark Mode">
+                <!-- Sun Icon (Hidden in Light Mode) -->
+                <svg id="sunIcon" class="w-5 h-5 hidden text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <!-- Moon Icon (Hidden in Dark Mode) -->
+                <svg id="moonIcon" class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Layout -->
+    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 flex flex-col lg:flex-row gap-6 md:gap-8 lg:gap-10">
+        
+        <!-- Left Column: Input Form -->
+        <div class="w-full lg:w-[45%] flex flex-col gap-5">
+            <div class="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-700">
+                <h2 class="text-2xl font-bold mb-6 text-slate-800 dark:text-white flex items-center gap-2">
+                    <svg class="w-6 h-6 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                    Investment Details
+                </h2>
+
+                <form id="calcForm" class="space-y-5" onsubmit="event.preventDefault();">
+                    
+                    <!-- Principal Input -->
+                    <div>
+                        <label for="principal" class="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">Principal Amount (₹)</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-500 font-medium">₹</span>
+                            <input type="number" id="principal" placeholder="100000" required
+                                class="w-full pl-10 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all text-lg">
+                        </div>
+                    </div>
+
+                    <!-- Rate and Time Row -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label for="rate" class="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">Annual Rate (%)</label>
+                            <div class="relative">
+                                <input type="number" id="rate" placeholder="6.5" step="0.1" required
+                                    class="w-full pl-4 pr-10 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all text-lg">
+                                <span class="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-500 font-medium">%</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="time" class="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">Time Period (Years)</label>
+                            <input type="number" id="time" placeholder="5" step="0.5" required
+                                class="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all text-lg">
+                        </div>
+                    </div>
+
+                    <!-- Interest Type -->
+                    <div>
+                        <label for="type" class="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">Interest Type</label>
+                        <div class="relative">
+                            <select id="type" class="w-full appearance-none pl-4 pr-10 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all text-lg cursor-pointer">
+                                <option value="simple">Simple Interest</option>
+                                <option value="compound">Compound Interest</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Compounding Frequency (Hidden by default) -->
+                    <div id="compoundFreqContainer" class="hidden animate-fade-in-down">
+                        <label for="frequency" class="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">Compounding Frequency</label>
+                        <div class="relative">
+                            <select id="frequency" class="w-full appearance-none pl-4 pr-10 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all text-lg cursor-pointer">
+                                <option value="1">Annually (1/yr)</option>
+                                <option value="2">Semi-Annually (2/yr)</option>
+                                <option value="4">Quarterly (4/yr)</option>
+                                <option value="12">Monthly (12/yr)</option>
+                                <option value="365">Daily (365/yr)</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                        <button type="button" id="resetBtn" class="w-full sm:w-1/3 py-4 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-lg transition-transform active:scale-95 shadow-sm">
+                            Reset
+                        </button>
+                        <button type="button" id="calculateBtn" class="w-full sm:w-2/3 py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold text-lg transition-transform active:scale-95 shadow-lg shadow-primary-600/30">
+                            Calculate Now
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Column: Results & Visualization -->
+        <div class="w-full lg:w-[55%] flex flex-col">
+            <div class="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-700 h-full flex flex-col relative overflow-hidden" id="exportContainer">
+                
+                <h2 class="text-2xl font-bold mb-6 text-slate-800 dark:text-white flex items-center gap-2">
+                    <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg>
+                    Summary & Projection
+                </h2>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="flex-grow flex flex-col items-center justify-center text-slate-400 py-10 md:py-0">
+                    <svg class="w-20 h-20 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <p class="text-lg text-center font-medium px-4">Enter details and hit calculate to see your investment projection.</p>
+                </div>
+
+                <!-- Result Container (Hidden initially) -->
+                <div id="resultContainer" class="hidden flex-col h-full opacity-0 transition-opacity duration-500">
+                    
+                    <!-- Result Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+                        <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-2xl border border-blue-100 dark:border-blue-800/50">
+                            <p class="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">Principal</p>
+                            <p class="text-xl font-bold text-slate-800 dark:text-slate-100 truncate" id="resPrincipal">₹0</p>
+                        </div>
+                        <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-2xl border border-green-100 dark:border-green-800/50">
+                            <p class="text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wider mb-1">Total Interest</p>
+                            <p class="text-xl font-bold text-slate-800 dark:text-slate-100 truncate" id="resInterest">₹0</p>
+                        </div>
+                        <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-2xl border border-purple-100 dark:border-purple-800/50 sm:col-span-3 lg:col-span-1">
+                            <p class="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider mb-1">Total Value</p>
+                            <p class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100 truncate" id="resTotal">₹0</p>
+                        </div>
+                    </div>
+
+                    <!-- Chart Container -->
+                    <div class="flex-grow relative min-h-[250px] md:min-h-[300px] w-full flex items-center justify-center">
+                        <canvas id="interestChart"></canvas>
+                    </div>
+
+                    <!-- Export Buttons (Responsive Stack/Row) -->
+                    <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-6 justify-center pt-4 border-t border-slate-100 dark:border-slate-700" id="exportBtnGroup">
+                        <button id="downloadPdfBtn" class="flex-1 sm:flex-none flex justify-center items-center gap-2 px-6 py-3.5 sm:py-2.5 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-800/50 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800/50 rounded-xl transition-all duration-200 text-sm md:text-base font-semibold shadow-sm active:scale-95">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            Save PDF
+                        </button>
+                        <button id="downloadWordBtn" class="flex-1 sm:flex-none flex justify-center items-center gap-2 px-6 py-3.5 sm:py-2.5 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-800/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/50 rounded-xl transition-all duration-200 text-sm md:text-base font-semibold shadow-sm active:scale-95">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            Save Word
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full py-6 text-center text-slate-500 dark:text-slate-400 text-sm mt-auto">
+        <p>Developed by : <span class="font-bold text-primary-600 dark:text-primary-400 tracking-wide">BEST_TEAM</span></p>
+    </footer>
+
+    <!-- Custom Toast Notification (Replaces native alerts for mobile-friendliness) -->
+    <div id="toast" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 px-6 py-3.5 rounded-2xl shadow-2xl transition-all duration-300 translate-y-24 opacity-0 z-50 flex items-center gap-3 w-[90%] max-w-sm pointer-events-none">
+        <svg class="w-6 h-6 text-red-400 dark:text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span id="toastMsg" class="font-medium text-sm md:text-base"></span>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- Elements ---
+            const themeToggleBtn = document.getElementById('themeToggle');
+            const sunIcon = document.getElementById('sunIcon');
+            const moonIcon = document.getElementById('moonIcon');
+            const htmlEl = document.documentElement;
+            
+            const typeSelect = document.getElementById('type');
+            const freqContainer = document.getElementById('compoundFreqContainer');
+            
+            const calculateBtn = document.getElementById('calculateBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            
+            const emptyState = document.getElementById('emptyState');
+            const resultContainer = document.getElementById('resultContainer');
+            const exportBtnGroup = document.getElementById('exportBtnGroup');
+            
+            const resPrincipal = document.getElementById('resPrincipal');
+            const resInterest = document.getElementById('resInterest');
+            const resTotal = document.getElementById('resTotal');
+            
+            let chartInstance = null;
+
+            
+            // --- Toast Notification System ---
+            function showToast(message) {
+                const toast = document.getElementById('toast');
+                document.getElementById('toastMsg').innerText = message;
+                toast.classList.remove('translate-y-24', 'opacity-0');
+                // Hide after 3 seconds
+                setTimeout(() => {
+                    toast.classList.add('translate-y-24', 'opacity-0');
+                }, 3000);
+            }
+
+            // --- Theme Toggling ---
+            function updateThemeUI(isDark) {
+                if (isDark) {
+                    htmlEl.classList.add('dark');
+                    sunIcon.classList.remove('hidden');
+                    moonIcon.classList.add('hidden');
+                } else {
+                    htmlEl.classList.remove('dark');
+                    sunIcon.classList.add('hidden');
+                    moonIcon.classList.remove('hidden');
+                }
+                updateChartTheme(isDark);
+            }
+
+            // Init Theme
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            updateThemeUI(prefersDark);
+
+            themeToggleBtn.addEventListener('click', () => {
+                const isDarkNow = htmlEl.classList.contains('dark');
+                updateThemeUI(!isDarkNow);
+            });
+
+            // --- Toggle Compounding Frequency Field ---
+            typeSelect.addEventListener('change', (e) => {
+                if (e.target.value === 'compound') {
+                    freqContainer.classList.remove('hidden');
+                } else {
+                    freqContainer.classList.add('hidden');
+                }
+            });
+
+            // --- Formatting Helper ---
+            const formatCurrency = (amount) => {
+                return new Intl.NumberFormat('en-IN', {
+                    style: 'currency',
+                    currency: 'INR',
+                    maximumFractionDigits: 0
+                }).format(amount);
+            };
+
+            
+            // --- Calculation Logic ---
+            calculateBtn.addEventListener('click', () => {
+                // Get values
+                const p = parseFloat(document.getElementById('principal').value);
+                const r = parseFloat(document.getElementById('rate').value);
+                const t = parseFloat(document.getElementById('time').value);
+                const type = document.getElementById('type').value;
+                const n = parseFloat(document.getElementById('frequency').value);
+
+                // Validation
+                if (isNaN(p) || isNaN(r) || isNaN(t) || p <= 0 || r <= 0 || t <= 0) {
+                    showToast("Please enter valid positive numbers for all fields.");
+                    return;
+                }
+
+                let interest = 0;
+                let totalAmount = 0;
+
+                if (type === 'simple') {
+                    interest = (p * r * t) / 100;
+                    totalAmount = p + interest;
+                } else if (type === 'compound') {
+                    // A = P(1 + r/n)^(nt)
+                    const rateDecimal = r / 100;
+                    totalAmount = p * Math.pow((1 + rateDecimal / n), n * t);
+                    interest = totalAmount - p;
+                }
+
+                // Update UI Results
+                resPrincipal.innerText = formatCurrency(p);
+                resInterest.innerText = formatCurrency(interest);
+                resTotal.innerText = formatCurrency(totalAmount);
+
+                // Transition UI
+                emptyState.classList.add('hidden');
+                resultContainer.classList.remove('hidden');
+                
+                // Allow CSS transition to trigger
+                setTimeout(() => {
+                    resultContainer.classList.remove('opacity-0');
+                    resultContainer.classList.add('opacity-100');
+                }, 50);
+
+                // Render Chart
+                renderChart(p, interest);
+            });
+
+            // --- Reset Logic ---
+            resetBtn.addEventListener('click', () => {
+                document.getElementById('calcForm').reset();
+                freqContainer.classList.add('hidden');
+                
+                resultContainer.classList.remove('opacity-100');
+                resultContainer.classList.add('opacity-0');
+                
+                setTimeout(() => {
+                    resultContainer.classList.add('hidden');
+                    emptyState.classList.remove('hidden');
+                    if (chartInstance) {
+                        chartInstance.destroy();
+                        chartInstance = null;
+                    }
+                }, 300);
+            });
+
+            // --- Charting Logic ---
+            function renderChart(principal, interest) {
+                const ctx = document.getElementById('interestChart').getContext('2d');
+                const isDark = htmlEl.classList.contains('dark');
+                const textColor = isDark ? '#e5e7eb' : '#374151';
+
+                if (chartInstance) {
+                    chartInstance.destroy();
+                }
+
+                // Maintain aspect ratio false for full responsive sizing based on parent container
+                chartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Principal Amount', 'Total Interest'],
+                        datasets: [{
+                            data: [principal, interest],
+                            backgroundColor: [
+                                '#3b82f6', // blue-500
+                                '#22c55e'  // green-500
+                            ],
+                            hoverBackgroundColor: [
+                                '#2563eb', // blue-600
+                                '#16a34a'  // green-600
+                            ],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    color: textColor,
+                                    font: { family: 'Inter', size: 14, weight: '500' },
+                                    padding: 20
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        if (label) label += ': ';
+                                        label += formatCurrency(context.raw);
+                                        return label;
+                                    }
+                                },
+                                backgroundColor: isDark ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+                                titleColor: isDark ? '#fff' : '#000',
+                                bodyColor: isDark ? '#cbd5e1' : '#334155',
+                                borderColor: isDark ? '#475569' : '#e2e8f0',
+                                borderWidth: 1,
+                                padding: 12,
+                                boxPadding: 6
+                            }
+                        },
+                        cutout: '65%'
+                    }
+                });
+            }
+
+            function updateChartTheme(isDark) {
+                if (chartInstance) {
+                    const textColor = isDark ? '#e5e7eb' : '#374151';
+                    chartInstance.options.plugins.legend.labels.color = textColor;
+                    chartInstance.options.plugins.tooltip.backgroundColor = isDark ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.9)';
+                    chartInstance.options.plugins.tooltip.titleColor = isDark ? '#fff' : '#000';
+                    chartInstance.options.plugins.tooltip.bodyColor = isDark ? '#cbd5e1' : '#334155';
+                    chartInstance.options.plugins.tooltip.borderColor = isDark ? '#475569' : '#e2e8f0';
+                    chartInstance.update();
+                }
+            }
+
+            
+            // --- Export to PDF ---
+            document.getElementById('downloadPdfBtn').addEventListener('click', () => {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+                    
+                    // 1. Header Section
+                    pdf.setFont("helvetica", "bold");
+                    pdf.setFontSize(22);
+                    pdf.setTextColor(37, 99, 235); // Tailwind primary-600
+                    pdf.text("Investment Summary", 105, 20, { align: "center" });
+                    
+                    pdf.setFontSize(10);
+                    pdf.setFont("helvetica", "normal");
+                    pdf.setTextColor(100, 100, 100);
+                    pdf.text(`Generated on: ${new Date().toLocaleString()}`, 105, 28, { align: "center" });
+                    
+                    // Line separator
+                    pdf.setDrawColor(220, 220, 220);
+                    pdf.line(20, 35, 190, 35);
+                    
+                    // 2. Data Section (Vector Text instead of Image Capture)
+                    const startY = 50;
+                    const lineHeight = 12;
+                    
+                    pdf.setFontSize(14);
+                    pdf.setFont("helvetica", "bold");
+                    pdf.setTextColor(30, 41, 59); // slate-800
+                    pdf.text("Investment Details", 20, startY - 5);
+                    
+                    pdf.setFontSize(12);
+                    pdf.setFont("helvetica", "normal");
+                    
+                    // Principal
+                    pdf.text("Principal Amount:", 20, startY + lineHeight);
+                    pdf.text(resPrincipal.innerText, 90, startY + lineHeight);
+                    
+                    // Interest
+                    pdf.text("Total Interest Earned:", 20, startY + lineHeight * 2);
+                    pdf.text(resInterest.innerText, 90, startY + lineHeight * 2);
+                    
+                    // Total Value Highlight Background
+                    pdf.setFillColor(240, 253, 244); // light green bg
+                    pdf.rect(18, startY + lineHeight * 3 - 8, 174, 12, 'F');
+                    
+                    // Total Value Text
+                    pdf.setFont("helvetica", "bold");
+                    pdf.setTextColor(22, 163, 74); // green-600
+                    pdf.text("Total Maturity Value:", 20, startY + lineHeight * 3);
+                    pdf.text(resTotal.innerText, 90, startY + lineHeight * 3);
+                    
+                    // 3. Add Chart Image
+                    if (chartInstance) {
+                        // Create a temporary canvas to apply a white background
+                        // This prevents transparent PNGs from rendering black on the PDF
+                        const originalCanvas = document.getElementById('interestChart');
+                        const tempCanvas = document.createElement('canvas');
+                        tempCanvas.width = originalCanvas.width;
+                        tempCanvas.height = originalCanvas.height;
+                        const ctx = tempCanvas.getContext('2d');
+                        
+                        // Fill solid white background
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                        
+                        // Draw the chart over the white background
+                        ctx.drawImage(originalCanvas, 0, 0);
+                        
+                        const chartImg = tempCanvas.toDataURL('image/png', 1.0);
+                        
+                        // Calculate dimensions (Width 120mm, keeping aspect ratio)
+                        const imgWidth = 120;
+                        const imgHeight = (originalCanvas.height / originalCanvas.width) * imgWidth;
+                        
+                        // Center the image horizontally
+                        pdf.addImage(chartImg, 'PNG', (210 - imgWidth) / 2, startY + lineHeight * 4 + 10, imgWidth, imgHeight);
+                    }
+                    
+                    // 4. Footer
+                    pdf.setFontSize(10);
+                    pdf.setFont("helvetica", "italic");
+                    pdf.setTextColor(150, 150, 150);
+                    pdf.text("Developed by BEST_TEAM", 105, 285, { align: "center" });
+                    
+                    pdf.save('Investment-Summary.pdf');
+                    showToast("PDF Downloaded successfully!");
+                } catch (error) {
+                    console.error("Error generating PDF:", error);
+                    showToast("Could not generate PDF. Please try again.");
+                }
+            });
+
+            // --- Export to Word ---
+            document.getElementById('downloadWordBtn').addEventListener('click', () => {
+                const principal = resPrincipal.innerText;
+                const interest = resInterest.innerText;
+                const total = resTotal.innerText;
+                const date = new Date().toLocaleDateString();
+                
+                const htmlContent = `
+                    <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                    <head>
+                        <meta charset='utf-8'>
+                        <title>Investment Summary</title>
+                        <style>
+                            body { font-family: 'Arial', sans-serif; color: #333; line-height: 1.6; }
+                            .header { color: #2563eb; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 20px;}
+                            table { width: 100%; max-width: 600px; border-collapse: collapse; margin-top: 20px; }
+                            th, td { border: 1px solid #e5e7eb; padding: 12px 15px; text-align: left; }
+                            th { background-color: #f8fafc; color: #1e293b; font-weight: bold;}
+                            .total-row td { background-color: #f0fdf4; font-weight: bold; font-size: 1.1em;}
+                            .footer { margin-top: 30px; font-size: 11px; color: #94a3b8; text-align: center;}
+                        </style>
+                    </head>
+                    <body>
+                        <h2 class="header">Investment Summary</h2>
+                        <p><strong>Date Generated:</strong> ${date}</p>
+                        <p>Here are the details of your calculated investment projection:</p>
+                        
+                        <table>
+                            <tr>
+                                <td><strong>Principal Amount</strong></td>
+                                <td>${principal}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total Interest Earned</strong></td>
+                                <td>${interest}</td>
+                            </tr>
+                            <tr class="total-row">
+                                <td><strong>Total Maturity Value</strong></td>
+                                <td>${total}</td>
+                            </tr>
+                        </table>
+                        
+                        <div class="footer">
+                            <p>Generated by Interest Calculator App<br>Developed by BEST_TEAM</p>
+                        </div>
+                    </body>
+                    </html>
+                `;
+                
+                try {
+                    const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = 'Investment-Summary.doc';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                    showToast("Word Document downloaded successfully!");
+                } catch (error) {
+                    console.error("Error generating Word doc:", error);
+                    showToast("Could not generate Word doc. Please try again.");
+                }
+            });
+        });
+    </script>
+</body>
+</html>
