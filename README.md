@@ -70,7 +70,7 @@ www.neocities.org
 🔗 https://balavignesh2025.neocities.org/web%20apps%20/Best%20team%20image%20toolkit/Best_team_Image_Toolkit%20-%20Copy
 ---
 ### 12. Bill Splitter
-🔗  https://balavignesh2025.neocities.org/web%20apps%20/Bill%20Splitter/bill-splitter-pro
+🔗  
 ---
 ### 13. SharedWallet
 🔗 https://balavignesh2025.neocities.org/web%20apps%20/SharedWallet/SharedWallet%20New
