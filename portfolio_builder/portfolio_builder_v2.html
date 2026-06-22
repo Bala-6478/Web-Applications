@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -66,6 +67,19 @@
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
+        /* Font Size Scaling — zoom scales font-size + spacing together,
+           which plays correctly with Tailwind's rem-based utility classes
+           (unlike font-size:inherit, which would flatten heading sizes) */
+        :root { --font-scale: 1; }
+        #preview-content, #preview-content-mobile {
+            zoom: var(--font-scale, 1);
+        }
+
+        /* Custom font (Google Fonts loaded dynamically) */
+        .font-custom { font-family: var(--custom-font-family, 'Inter'), sans-serif; }
+
+        .font-size-btn.active { background-color: var(--accent); color: white; border-color: var(--accent); }
+
         /* Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -83,69 +97,6 @@
         
         /* Drag & Drop */
         .drag-over { border-color: var(--accent) !important; background-color: rgba(var(--accent-rgb), 0.1) !important; }
-
-        /* Mobile App Layout: bottom EDIT / PREVIEW tab bar */
-        #mobile-view-tabbar { display: none; }
-
-        @media (max-width: 767px) {
-            body { display: block !important; height: 100vh; overflow: hidden; }
-
-            #editor-sidebar, #preview-pane {
-                width: 100% !important;
-                height: calc(100vh - 64px) !important;
-                position: absolute;
-                top: 0; left: 0;
-                display: none;
-            }
-            body.mobile-view-edit #editor-sidebar { display: flex; }
-            body.mobile-view-preview #preview-pane { display: flex; }
-
-            .sidebar-scroll { height: calc(100vh - 64px - 120px); }
-
-            #mobile-view-tabbar {
-                display: flex;
-                position: fixed;
-                bottom: 0; left: 0; right: 0;
-                height: 64px;
-                background: var(--sidebar-bg);
-                border-top: 1px solid var(--sidebar-border);
-                z-index: 100;
-                align-items: center;
-                justify-content: space-around;
-                padding-bottom: env(safe-area-inset-bottom, 0);
-            }
-            .mobile-tab-btn {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 4px;
-                color: var(--text-muted);
-                background: none;
-                border: none;
-                font-size: 11px;
-                font-weight: 700;
-                letter-spacing: 0.05em;
-                text-transform: uppercase;
-                cursor: pointer;
-                flex: 1;
-                padding: 8px 0;
-            }
-            .mobile-tab-btn i { font-size: 22px; }
-            .mobile-tab-btn.active { color: var(--accent); }
-            .mobile-tab-bar-handle {
-                position: fixed;
-                bottom: 6px;
-                left: 50%;
-                transform: translateX(-50%);
-                width: 100px;
-                height: 4px;
-                border-radius: 2px;
-                background: var(--text-muted);
-                opacity: 0.4;
-                z-index: 101;
-                pointer-events: none;
-            }
-        }
 
         /* Animations for Preview */
         .reveal, .reveal-left, .reveal-right, .reveal-scale {
@@ -261,6 +212,7 @@
         @keyframes shimmer-beam {
             100% { transform: translateX(100%); }
         }
+        /* --- END PROFILE ANIMATIONS --- */
 
         /* Special Components */
         .typing-cursor::after {
@@ -275,40 +227,7 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* Font size slider styling */
-        input[type=range]#font-size-slider {
-            -webkit-appearance: none;
-            appearance: none;
-            height: 6px;
-            border-radius: 4px;
-            outline: none;
-            cursor: pointer;
-        }
-        input[type=range]#font-size-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: var(--accent);
-            cursor: pointer;
-            border: 2px solid var(--sidebar-bg);
-            box-shadow: 0 0 0 2px var(--accent);
-            transition: transform 0.2s;
-        }
-        input[type=range]#font-size-slider::-webkit-slider-thumb:hover {
-            transform: scale(1.2);
-        }
-        input[type=range]#font-size-slider::-moz-range-thumb {
-            width: 18px; height: 18px; border-radius: 50%;
-            background: var(--accent); cursor: pointer;
-            border: 2px solid var(--sidebar-bg);
-        }
-        /* Active font size preset button highlight */
-        .font-size-preset.active, .line-height-btn.active, .letter-spacing-btn.active {
-            border-color: var(--accent) !important;
-            color: var(--accent) !important;
-        }
+        /* Toast */
         #toast-container {
             position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;
         }
@@ -320,307 +239,143 @@
         }
         .toast.show { transform: translateX(0); }
 
-        /* Device Preview Styles (mobile / tablet / laptop) */
-        .device-preview-active {
-            background: radial-gradient(ellipse at center, #1a1a2e 0%, #0f0f1a 100%) !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            padding: 2rem !important;
-            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .device-preview-active::-webkit-scrollbar { display: none; }
-
-        /* Phone shell — sits around the preview-wrapper */
-        #phone-shell {
+        /* ── Mobile bottom tab bar ── */
+        #mobile-tab-bar {
             display: none;
-            position: relative;
-            width: 393px;
-            flex-shrink: 0;
-            margin: auto;
         }
-        .device-mode-mobile #phone-shell { display: flex; flex-direction: column; }
+        @media (max-width: 767px) {
+            body { overflow: hidden; }
 
-        /* Tablet shell */
-        #tablet-shell {
-            display: none;
-            position: relative;
-            width: 480px;
-            flex-shrink: 0;
-            margin: auto;
-        }
-        .device-mode-tablet #tablet-shell { display: flex; flex-direction: column; }
-        .tablet-body {
-            position: relative;
-            background: linear-gradient(145deg, #2a2a2a 0%, #1a1a1a 50%, #111 100%);
-            border-radius: 32px;
-            padding: 16px;
-            box-shadow:
-                0 0 0 1px #444,
-                0 0 0 2px #222,
-                0 40px 80px -10px rgba(0,0,0,0.8),
-                inset 0 1px 0 rgba(255,255,255,0.08),
-                inset 0 -1px 0 rgba(0,0,0,0.5);
-        }
-        .tablet-screen {
-            background: var(--bg-main);
-            border-radius: 18px;
-            overflow: hidden;
-            position: relative;
-            height: 680px;
-            display: flex;
-            flex-direction: column;
-        }
-        .tablet-content {
-            flex: 1;
-            overflow-y: auto;
-            overflow-x: hidden;
-            position: relative;
-        }
-        .tablet-content::-webkit-scrollbar { display: none; }
-        .tablet-camera {
-            position: absolute;
-            top: 8px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #000;
-            box-shadow: 0 0 0 2px #1a1a1a;
-            z-index: 200;
-        }
+            #editor-sidebar {
+                position: fixed; inset: 0; bottom: 60px;
+                width: 100% !important;
+                z-index: 40;
+                transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+            #editor-sidebar.mobile-hidden {
+                transform: translateX(-100%);
+                pointer-events: none;
+            }
 
-        /* Laptop shell */
-        #laptop-shell {
-            display: none;
-            position: relative;
-            width: 900px;
-            flex-shrink: 0;
-            margin: auto;
-        }
-        .device-mode-laptop #laptop-shell { display: flex; flex-direction: column; }
-        .laptop-lid {
-            position: relative;
-            background: linear-gradient(145deg, #2a2a2a 0%, #1a1a1a 60%, #0d0d0d 100%);
-            border-radius: 14px 14px 0 0;
-            padding: 14px 14px 0 14px;
-            box-shadow:
-                0 0 0 1px #444,
-                0 0 0 2px #222,
-                inset 0 1px 0 rgba(255,255,255,0.08);
-        }
-        .laptop-notch {
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90px;
-            height: 14px;
-            background: #1a1a1a;
-            border-radius: 0 0 8px 8px;
-            z-index: 200;
-        }
-        .laptop-screen {
-            background: var(--bg-main);
-            border-radius: 6px;
-            overflow: hidden;
-            position: relative;
-            height: 540px;
-            display: flex;
-            flex-direction: column;
-        }
-        .laptop-content {
-            flex: 1;
-            overflow-y: auto;
-            overflow-x: hidden;
-            position: relative;
-        }
-        .laptop-content::-webkit-scrollbar { display: none; }
-        .laptop-base {
-            position: relative;
-            height: 18px;
-            background: linear-gradient(180deg, #d4d4d8 0%, #b8b8bd 40%, #9a9aa0 100%);
-            border-radius: 0 0 16px 16px;
-            box-shadow:
-                0 0 0 1px #888,
-                0 6px 12px -4px rgba(0,0,0,0.5);
-        }
-        .laptop-base::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 120px;
-            height: 6px;
-            background: #88888c;
-            border-radius: 0 0 8px 8px;
-        }
+            /* Right preview panel — full screen on mobile */
+            main.preview-panel {
+                position: fixed; inset: 0; bottom: 60px;
+                width: 100% !important;
+                z-index: 40;
+                display: none;
+                background: var(--bg-main);
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-start;
+                overflow: hidden;
+            }
+            main.preview-panel.mobile-visible {
+                display: flex;
+            }
 
-        /* Phone outer body */
-        .phone-body {
-            position: relative;
-            background: linear-gradient(145deg, #2a2a2a 0%, #1a1a1a 50%, #111 100%);
-            border-radius: 52px;
-            padding: 14px;
-            box-shadow:
-                0 0 0 1px #444,
-                0 0 0 2px #222,
-                0 40px 80px -10px rgba(0,0,0,0.8),
-                inset 0 1px 0 rgba(255,255,255,0.08),
-                inset 0 -1px 0 rgba(0,0,0,0.5);
-        }
+            /* Phone mockup frame */
+            .phone-frame-wrap {
+                display: flex;
+                align-items: flex-start;
+                justify-content: center;
+                width: 100%;
+                height: 100%;
+                padding: 12px 16px 8px;
+                overflow: hidden;
+            }
+            .phone-frame {
+                width: 100%;
+                max-width: 390px;
+                height: 100%;
+                border-radius: 40px;
+                border: 8px solid #2a2d36;
+                box-shadow:
+                    0 0 0 2px #3a3d48,
+                    0 30px 80px rgba(0,0,0,0.6),
+                    inset 0 0 0 1px rgba(255,255,255,0.05);
+                overflow: hidden;
+                background: var(--bg-main);
+                position: relative;
+                display: flex;
+                flex-direction: column;
+            }
+            /* Notch */
+            .phone-frame::before {
+                content: '';
+                position: absolute;
+                top: 0; left: 50%; transform: translateX(-50%);
+                width: 110px; height: 26px;
+                background: #2a2d36;
+                border-radius: 0 0 20px 20px;
+                z-index: 10;
+            }
+            /* Side buttons */
+            .phone-frame::after {
+                content: '';
+                position: absolute;
+                right: -12px; top: 100px;
+                width: 4px; height: 60px;
+                background: #3a3d48;
+                border-radius: 0 2px 2px 0;
+                box-shadow: 0 70px 0 #3a3d48;
+            }
+            .phone-frame-inner {
+                flex: 1;
+                overflow-y: auto;
+                overflow-x: hidden;
+                padding-top: 30px; /* clear the notch */
+                scroll-behavior: smooth;
+                -webkit-overflow-scrolling: touch;
+            }
+            .phone-frame-inner::-webkit-scrollbar { display: none; }
 
-        /* Side buttons */
-        .phone-body::before {
-            content: '';
-            position: absolute;
-            left: -3px;
-            top: 110px;
-            width: 3px;
-            height: 34px;
-            background: #333;
-            border-radius: 2px 0 0 2px;
-            box-shadow: 0 48px 0 #333, 0 90px 0 #333;
-        }
-        .phone-body::after {
-            content: '';
-            position: absolute;
-            right: -3px;
-            top: 160px;
-            width: 3px;
-            height: 70px;
-            background: #333;
-            border-radius: 0 2px 2px 0;
-        }
+            /* Mobile bottom bar */
+            #mobile-tab-bar {
+                display: flex;
+                position: fixed; bottom: 0; left: 0; right: 0;
+                height: 60px;
+                background: var(--sidebar-bg);
+                border-top: 1px solid var(--sidebar-border);
+                z-index: 100;
+            }
+            .mobile-tab-btn {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 3px;
+                font-size: 10px;
+                font-weight: 700;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: var(--text-muted);
+                cursor: pointer;
+                transition: color 0.2s;
+                border: none;
+                background: transparent;
+            }
+            .mobile-tab-btn.active {
+                color: var(--accent);
+            }
+            .mobile-tab-btn i {
+                font-size: 20px;
+            }
 
-        /* Screen bezel */
-        .phone-screen {
-            background: var(--bg-main);
-            border-radius: 40px;
-            overflow: hidden;
-            position: relative;
-            height: 780px;
-            display: flex;
-            flex-direction: column;
-        }
+            /* Hide desktop fullscreen button on mobile */
+            main.preview-panel > .absolute { display: none; }
 
-        /* Status bar */
-        .phone-status-bar {
-            flex-shrink: 0;
-            height: 52px;
-            background: var(--bg-main);
-            display: flex;
-            align-items: flex-end;
-            justify-content: space-between;
-            padding: 0 24px 8px;
-            position: relative;
-            z-index: 100;
-        }
-        .phone-status-bar .status-time {
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--text-main);
-            letter-spacing: -0.3px;
-            font-family: 'Inter', sans-serif;
-        }
-        .phone-status-bar .status-icons {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            color: var(--text-main);
-        }
-        .phone-status-bar .status-icons svg { width: 16px; height: 16px; fill: currentColor; }
+            /* Toast adjust for mobile */
+            #toast-container { bottom: 72px; right: 12px; }
 
-        /* Dynamic Island */
-        .dynamic-island {
-            position: absolute;
-            top: 12px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 120px;
-            height: 34px;
-            background: #000;
-            border-radius: 20px;
-            z-index: 200;
-            box-shadow: 0 0 0 1px #222;
+            /* Sidebar scroll height accounting for bottom bar */
+            .sidebar-scroll { height: calc(100vh - 180px); }
         }
-
-        /* Scrollable content */
-        .phone-content {
-            flex: 1;
-            overflow-y: auto;
-            overflow-x: hidden;
-            position: relative;
-        }
-        .phone-content::-webkit-scrollbar { display: none; }
-        .phone-content #preview-wrapper,
-        .tablet-content #preview-wrapper,
-        .laptop-content #preview-wrapper {
-            width: 100% !important;
-            min-height: 100% !important;
-        }
-
-        /* Home indicator */
-        .phone-home-indicator {
-            flex-shrink: 0;
-            height: 28px;
-            background: var(--bg-main);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .phone-home-indicator::after {
-            content: '';
-            width: 120px;
-            height: 4px;
-            background: var(--text-main);
-            border-radius: 2px;
-            opacity: 0.3;
-        }
-
-        /* Preview size toggle tabs */
-        #preview-size-tabs {
-            display: none;
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--card-bg);
-            border: 1px solid var(--sidebar-border);
-            border-radius: 20px;
-            padding: 4px;
-            gap: 2px;
-            z-index: 60;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-        }
-        .device-preview-active #preview-size-tabs { display: flex; }
-        #preview-size-tabs .size-tab-group { display: none; gap: 2px; }
-        .device-mode-mobile #preview-size-tabs .size-tab-group.group-mobile { display: flex; }
-        .device-mode-tablet #preview-size-tabs .size-tab-group.group-tablet { display: flex; }
-        .device-mode-laptop #preview-size-tabs .size-tab-group.group-laptop { display: flex; }
-        .size-tab {
-            padding: 6px 14px;
-            border-radius: 16px;
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--text-muted);
-            cursor: pointer;
-            transition: all 0.2s;
-            border: none;
-            background: transparent;
-        }
-        .size-tab.active {
-            background: var(--accent);
-            color: white;
-        }
-
-        /* Font size preview CSS variable */
-        #preview-content { font-size: var(--preview-font-size, 16px); }
     </style>
 </head>
 <body class="flex h-screen w-full font-sans text-sm antialiased transition-colors duration-300">
+
+    <!-- App Header (Hidden in builder, but conceptually part of UI) -->
 
     <!-- Left Sidebar (Editor) -->
     <aside id="editor-sidebar" class="w-full md:w-[400px] h-full bg-sidebarBg border-r border-sidebarBorder flex flex-col shrink-0 transition-all duration-300 relative z-50">
@@ -723,12 +478,14 @@
                     </p>
                 </div>
                 
+                <!-- Resume Link -->
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-textMuted"><i class="ph-bold ph-file-pdf text-lg"></i></div>
                     <input type="url" id="link-resume" placeholder="Link to Resume/CV (PDF)" class="w-full bg-bgMain border border-sidebarBorder rounded-lg pl-10 pr-4 py-2.5 text-textMain focus:outline-none focus:border-accent transition-colors">
                 </div>
                 <hr class="border-sidebarBorder my-4">
 
+                <!-- Socials -->
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-textMuted"><i class="ph-bold ph-github-logo text-lg"></i></div>
                     <input type="url" id="link-github" placeholder="GitHub URL" class="w-full bg-bgMain border border-sidebarBorder rounded-lg pl-10 pr-4 py-2.5 text-textMain focus:outline-none focus:border-accent transition-colors">
@@ -753,6 +510,7 @@
 
             <!-- TAB: SECTIONS -->
             <div id="tab-sections" class="tab-content space-y-8">
+                
                 <!-- Work Experience -->
                 <div class="section-manager">
                     <div class="flex items-center justify-between mb-3">
@@ -808,10 +566,12 @@
                     <p class="text-[10px] text-textMuted mb-2">Format: Language (e.g., English) | Proficiency 0-100 (e.g., 100)</p>
                     <div id="list-languages" class="space-y-3"></div>
                 </div>
+
             </div>
 
             <!-- TAB: DESIGN -->
             <div id="tab-design" class="tab-content space-y-8 pb-10">
+                
                 <!-- Layout Selection -->
                 <div>
                     <h3 class="text-xs font-bold text-textMuted uppercase tracking-wide mb-3">Profile Layout (16 Options)</h3>
@@ -870,7 +630,32 @@
                             <div class="font-raleway font-bold text-lg text-textMain">Aa Bb</div>
                         </button>
                     </div>
+
+                    <!-- Custom Font (Google Fonts) -->
+                    <div class="mt-4">
+                        <label class="block text-[10px] font-bold text-textMuted mb-1.5 uppercase tracking-wide">Or use a custom Google Font</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="custom-font-input" placeholder="e.g. Poppins, Lora, Oswald..."
+                                onkeydown="if(event.key==='Enter'){event.preventDefault();applyCustomFont();}"
+                                class="flex-1 bg-bgMain border border-sidebarBorder rounded-lg px-3 py-2 text-sm text-textMain placeholder-textMuted focus:outline-none focus:border-accent transition-colors">
+                            <button onclick="applyCustomFont()" class="px-3 py-2 rounded-lg bg-accent text-white text-xs font-bold hover:opacity-90 transition-opacity shrink-0">Use</button>
+                        </div>
+                        <p id="custom-font-status" class="text-[11px] text-textMuted mt-1.5 leading-snug"></p>
+                    </div>
                 </div>
+
+                <!-- Font Size -->
+                <div class="border-t border-sidebarBorder pt-6">
+                    <h3 class="text-xs font-bold text-textMuted uppercase tracking-wide mb-3">Font Size</h3>
+                    <div class="flex gap-2" id="font-size-grid">
+                        <button class="font-size-btn flex-1 py-2 text-xs font-bold rounded-lg border border-sidebarBorder text-textMuted transition-colors" onclick="selectFontSize('sm', this)" data-size="sm">S</button>
+                        <button class="font-size-btn active flex-1 py-2 text-sm font-bold rounded-lg border border-sidebarBorder text-textMuted transition-colors" onclick="selectFontSize('md', this)" data-size="md">M</button>
+                        <button class="font-size-btn flex-1 py-2 text-base font-bold rounded-lg border border-sidebarBorder text-textMuted transition-colors" onclick="selectFontSize('lg', this)" data-size="lg">L</button>
+                        <button class="font-size-btn flex-1 py-2 text-lg font-bold rounded-lg border border-sidebarBorder text-textMuted transition-colors" onclick="selectFontSize('xl', this)" data-size="xl">XL</button>
+                    </div>
+                    <p class="text-[11px] text-textMuted mt-2 leading-snug">Scales all text in your portfolio preview and export.</p>
+                </div>
+
 
                 <!-- Accent Color -->
                 <div class="border-t border-sidebarBorder pt-6">
@@ -890,59 +675,6 @@
                     </div>
                 </div>
 
-                <!-- Font Size Customization -->
-                <div class="border-t border-sidebarBorder pt-6">
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-xs font-bold text-textMuted uppercase tracking-wide">Font Size</h3>
-                        <span class="text-xs font-bold text-accent" id="font-size-label">16px</span>
-                    </div>
-                    <!-- Preset size pills -->
-                    <div class="flex gap-2 mb-4">
-                        <button class="font-size-preset flex-1 py-1.5 text-[10px] font-bold rounded-lg border border-sidebarBorder bg-bgMain text-textMuted hover:border-accent transition-all" data-size="13" onclick="setFontSizePreset(13, this)">XS</button>
-                        <button class="font-size-preset flex-1 py-1.5 text-[10px] font-bold rounded-lg border border-sidebarBorder bg-bgMain text-textMuted hover:border-accent transition-all active" data-size="14" onclick="setFontSizePreset(14, this)">S</button>
-                        <button class="font-size-preset flex-1 py-1.5 text-[10px] font-bold rounded-lg border border-sidebarBorder bg-bgMain text-textMuted hover:border-accent transition-all" data-size="16" onclick="setFontSizePreset(16, this)">M</button>
-                        <button class="font-size-preset flex-1 py-1.5 text-[10px] font-bold rounded-lg border border-sidebarBorder bg-bgMain text-textMuted hover:border-accent transition-all" data-size="18" onclick="setFontSizePreset(18, this)">L</button>
-                        <button class="font-size-preset flex-1 py-1.5 text-[10px] font-bold rounded-lg border border-sidebarBorder bg-bgMain text-textMuted hover:border-accent transition-all" data-size="20" onclick="setFontSizePreset(20, this)">XL</button>
-                    </div>
-                    <!-- Fine-tune slider -->
-                    <div class="relative">
-                        <input type="range" id="font-size-slider" min="11" max="24" value="16" step="1"
-                            class="w-full h-2 rounded-full appearance-none cursor-pointer"
-                            style="background: linear-gradient(to right, var(--accent) 0%, var(--accent) 45.5%, var(--sidebar-border) 45.5%, var(--sidebar-border) 100%);"
-                            oninput="onFontSizeSlider(this)">
-                        <div class="flex justify-between mt-1.5">
-                            <span class="text-[10px] text-textMuted">11px</span>
-                            <span class="text-[10px] text-textMuted">Fine-tune</span>
-                            <span class="text-[10px] text-textMuted">24px</span>
-                        </div>
-                    </div>
-                    <!-- Line height control -->
-                    <div class="mt-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-[11px] text-textMuted font-medium">Line Height</span>
-                            <span class="text-[11px] font-bold text-accent" id="line-height-label">1.6</span>
-                        </div>
-                        <div class="flex gap-2">
-                            <button class="line-height-btn flex-1 py-1 text-[10px] font-bold rounded-lg border border-sidebarBorder bg-bgMain text-textMuted hover:border-accent transition-all" data-lh="1.3" onclick="setLineHeight(1.3, this)">Compact</button>
-                            <button class="line-height-btn flex-1 py-1 text-[10px] font-bold rounded-lg border border-sidebarBorder bg-bgMain text-textMuted hover:border-accent transition-all active" data-lh="1.6" onclick="setLineHeight(1.6, this)">Normal</button>
-                            <button class="line-height-btn flex-1 py-1 text-[10px] font-bold rounded-lg border border-sidebarBorder bg-bgMain text-textMuted hover:border-accent transition-all" data-lh="2.0" onclick="setLineHeight(2.0, this)">Relaxed</button>
-                        </div>
-                    </div>
-                    <!-- Letter spacing control -->
-                    <div class="mt-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-[11px] text-textMuted font-medium">Letter Spacing</span>
-                            <span class="text-[11px] font-bold text-accent" id="letter-spacing-label">0em</span>
-                        </div>
-                        <div class="flex gap-2">
-                            <button class="letter-spacing-btn flex-1 py-1 text-[10px] font-bold rounded-lg border border-sidebarBorder bg-bgMain text-textMuted hover:border-accent transition-all active" data-ls="0" onclick="setLetterSpacing(0, this)">Default</button>
-                            <button class="letter-spacing-btn flex-1 py-1 text-[10px] font-bold rounded-lg border border-sidebarBorder bg-bgMain text-textMuted hover:border-accent transition-all" data-ls="0.05" onclick="setLetterSpacing(0.05, this)">Wide</button>
-                            <button class="letter-spacing-btn flex-1 py-1 text-[10px] font-bold rounded-lg border border-sidebarBorder bg-bgMain text-textMuted hover:border-accent transition-all" data-ls="0.12" onclick="setLetterSpacing(0.12, this)">Wider</button>
-                        </div>
-                    </div>
-                    <p class="text-[10px] text-textMuted mt-3 leading-relaxed">Font size changes are applied to the exported portfolio.</p>
-                </div>
-
             </div>
         </div>
 
@@ -959,7 +691,7 @@
     </aside>
 
     <!-- Right Live Preview -->
-    <main id="preview-pane" class="flex-1 h-full bg-bgMain relative overflow-hidden flex flex-col transition-colors duration-500">
+    <main id="preview-panel" class="preview-panel flex-1 h-full bg-bgMain relative overflow-hidden flex flex-col">
         <!-- Fullscreen Toggle Header -->
         <div class="absolute top-4 right-6 z-50 flex gap-2">
             <button onclick="toggleFullscreen()" class="w-10 h-10 rounded-full bg-cardBg/80 backdrop-blur border border-sidebarBorder shadow-lg flex items-center justify-center text-textMain hover:bg-accent hover:text-white hover:border-accent transition-all group" title="Toggle Fullscreen">
@@ -968,123 +700,32 @@
             </button>
         </div>
 
-        <!-- Device Mode Toggle (bottom) -->
-        <div class="absolute bottom-4 left-6 z-50" id="device-mode-dropdown-wrap">
-            <div class="relative">
-                <div id="device-mode-menu" class="hidden absolute left-0 bottom-full mb-2 w-44 bg-cardBg border border-sidebarBorder rounded-xl shadow-2xl overflow-hidden z-50">
-                    <button onclick="setDeviceMode('desktop')" class="device-mode-option w-full flex items-center gap-3 px-4 py-2.5 text-sm text-textMain hover:bg-accent hover:text-white transition-colors" data-mode="desktop">
-                        <i class="ph-bold ph-desktop text-base"></i> Desktop
-                    </button>
-                    <button onclick="setDeviceMode('laptop')" class="device-mode-option w-full flex items-center gap-3 px-4 py-2.5 text-sm text-textMain hover:bg-accent hover:text-white transition-colors" data-mode="laptop">
-                        <i class="ph-bold ph-laptop text-base"></i> Laptop
-                    </button>
-                    <button onclick="setDeviceMode('tablet')" class="device-mode-option w-full flex items-center gap-3 px-4 py-2.5 text-sm text-textMain hover:bg-accent hover:text-white transition-colors" data-mode="tablet">
-                        <i class="ph-bold ph-device-tablet text-base"></i> Tablet
-                    </button>
-                    <button onclick="setDeviceMode('mobile')" class="device-mode-option w-full flex items-center gap-3 px-4 py-2.5 text-sm text-textMain hover:bg-accent hover:text-white transition-colors" data-mode="mobile">
-                        <i class="ph-bold ph-device-mobile text-base"></i> Mobile
-                    </button>
-                </div>
-                <button onclick="toggleDeviceModeMenu()" id="device-mode-btn" class="h-10 px-3 rounded-full bg-cardBg/80 backdrop-blur border border-sidebarBorder shadow-lg flex items-center gap-2 justify-center text-textMain hover:bg-accent hover:text-white hover:border-accent transition-all" title="Preview Device">
-                    <i class="ph-bold ph-desktop text-lg" id="device-mode-icon"></i>
-                    <span class="text-xs font-bold" id="device-mode-label">Desktop</span>
-                    <i class="ph-bold ph-caret-up text-xs"></i>
-                </button>
-            </div>
+        <!-- Desktop: normal scrollable preview -->
+        <div id="preview-main" class="w-full h-full overflow-y-auto overflow-x-hidden relative scroll-smooth hidden md:block">
+            <div id="preview-content" class="w-full relative transition-all duration-500"></div>
         </div>
 
-        <div id="preview-main" class="w-full h-full overflow-y-auto overflow-x-hidden relative scroll-smooth transition-colors duration-500">
-            
-            <!-- Phone Shell (only visible in mobile preview mode) -->
-            <div id="phone-shell">
-                <div class="phone-body">
-                    <div class="phone-screen">
-                        <!-- Dynamic Island -->
-                        <div class="dynamic-island"></div>
-                        <!-- Status Bar -->
-                        <div class="phone-status-bar">
-                            <span class="status-time" id="phone-clock">9:41</span>
-                            <div class="dynamic-island" style="position:relative;top:auto;left:auto;transform:none;width:120px;height:34px;display:none;"></div>
-                            <div class="status-icons">
-                                <!-- Signal -->
-                                <svg viewBox="0 0 24 24"><rect x="1" y="13" width="3" height="8" rx="1"/><rect x="6" y="9" width="3" height="12" rx="1"/><rect x="11" y="5" width="3" height="16" rx="1"/><rect x="16" y="1" width="3" height="20" rx="1" opacity="0.3"/></svg>
-                                <!-- WiFi -->
-                                <svg viewBox="0 0 24 24"><path d="M1.5 8.5C5.2 4.8 10.3 2.5 12 2.5s6.8 2.3 10.5 6" opacity="0.3" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M5 12.5c1.9-1.9 4.4-3 7-3s5.1 1.1 7 3" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M8.5 16c.9-.9 2.2-1.5 3.5-1.5s2.6.6 3.5 1.5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="12" cy="20" r="1.5"/></svg>
-                                <!-- Battery -->
-                                <svg viewBox="0 0 28 14"><rect x="0.5" y="0.5" width="23" height="13" rx="3.5" stroke="currentColor" fill="none"/><rect x="2" y="2" width="18" height="10" rx="2" fill="currentColor"/><path d="M25 4.5v5a2.5 2.5 0 000-5z" fill="currentColor" opacity="0.4"/></svg>
-                            </div>
-                        </div>
-                        <!-- Scrollable Preview Content -->
-                        <div class="phone-content" id="phone-content-area">
-                        </div>
-                        <!-- Home Indicator -->
-                        <div class="phone-home-indicator"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tablet Shell (only visible in tablet preview mode) -->
-            <div id="tablet-shell">
-                <div class="tablet-body">
-                    <div class="tablet-screen">
-                        <div class="tablet-camera"></div>
-                        <div class="tablet-content" id="tablet-content-area">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Laptop Shell (only visible in laptop preview mode) -->
-            <div id="laptop-shell">
-                <div class="laptop-lid">
-                    <div class="laptop-notch"></div>
-                    <div class="laptop-screen">
-                        <div class="laptop-content" id="laptop-content-area">
-                        </div>
-                    </div>
-                </div>
-                <div class="laptop-base"></div>
-            </div>
-
-            <!-- Desktop preview wrapper (outside device shells, swapped in/out) -->
-            <div id="desktop-preview-wrapper" class="w-full min-h-full transition-all duration-500 ease-in-out" style="display:flex;flex-direction:column;">
-                <div id="preview-wrapper" class="w-full min-h-full transition-all duration-500 ease-in-out">
-                    <div id="preview-content" class="w-full relative transition-all duration-500"></div>
-                </div>
-            </div>
-
-            <!-- Device size switcher tabs -->
-            <div id="preview-size-tabs">
-                <div class="size-tab-group group-mobile">
-                    <button class="size-tab active" onclick="setPhoneSize('iphone')" id="tab-iphone">iPhone 15</button>
-                    <button class="size-tab" onclick="setPhoneSize('android')" id="tab-android">Android</button>
-                    <button class="size-tab" onclick="setPhoneSize('ipad')" id="tab-ipad-phone">iPad Mini</button>
-                </div>
-                <div class="size-tab-group group-tablet">
-                    <button class="size-tab active" onclick="setTabletSize('ipadmini')" id="tab-ipadmini">iPad Mini</button>
-                    <button class="size-tab" onclick="setTabletSize('ipadair')" id="tab-ipadair">iPad Air</button>
-                    <button class="size-tab" onclick="setTabletSize('ipadpro')" id="tab-ipadpro">iPad Pro</button>
-                </div>
-                <div class="size-tab-group group-laptop">
-                    <button class="size-tab active" onclick="setLaptopSize('macbookair')" id="tab-macbookair">MacBook Air</button>
-                    <button class="size-tab" onclick="setLaptopSize('macbookpro')" id="tab-macbookpro">MacBook Pro</button>
-                    <button class="size-tab" onclick="setLaptopSize('laptop1080')" id="tab-laptop1080">1080p Laptop</button>
+        <!-- Mobile: phone mockup frame -->
+        <div class="phone-frame-wrap md:hidden flex-1">
+            <div class="phone-frame">
+                <div class="phone-frame-inner" id="preview-main-mobile">
+                    <div id="preview-content-mobile" class="w-full relative transition-all duration-500"></div>
                 </div>
             </div>
         </div>
-
     </main>
 
-    <!-- Mobile App Layout: bottom EDIT / PREVIEW tab bar (visible on mobile widths only) -->
-    <div id="mobile-view-tabbar">
-        <button class="mobile-tab-btn active" id="mobile-tab-edit" onclick="switchMobileView('edit')">
-            <i class="ph-fill ph-pencil-simple"></i> Edit
+    <!-- Mobile bottom tab bar -->
+    <div id="mobile-tab-bar">
+        <button class="mobile-tab-btn active" id="tab-btn-edit" onclick="switchMobileTab('edit')">
+            <i class="ph-fill ph-pencil-simple"></i>
+            Edit
         </button>
-        <button class="mobile-tab-btn" id="mobile-tab-preview" onclick="switchMobileView('preview')">
-            <i class="ph-bold ph-monitor"></i> Preview
+        <button class="mobile-tab-btn" id="tab-btn-preview" onclick="switchMobileTab('preview')">
+            <i class="ph-fill ph-monitor"></i>
+            Preview
         </button>
     </div>
-    <div class="mobile-tab-bar-handle"></div>
 
     <!-- Toasts Container -->
     <div id="toast-container"></div>
@@ -1098,9 +739,8 @@
             design: {
                 layout: 'bento',
                 font: 'inter',
-                fontSize: 16,
-                lineHeight: 1.6,
-                letterSpacing: 0,
+                customFont: '',
+                fontSize: 'md',
                 theme: 'dark',
                 shape: 'circle',
                 accentHex: '#8b5cf6',
@@ -1132,6 +772,7 @@
             { id: 'grid', name: 'Grid', icon: 'GridFour' }
         ];
 
+        // Ensure we load exact layouts into UI
         function renderLayoutButtons() {
             const grid = document.getElementById('layout-grid');
             grid.innerHTML = availableLayouts.map(l => `
@@ -1151,67 +792,15 @@
             bindDesignToggles();
             renderAllLists();
             applyDesign(); // apply CSS vars and mode
-            initFontSizeUI(); // apply font size controls
             updatePreview();
             
-            // Attach scroll listeners for reveal animations in preview on all containers
+            // Attach scroll listener for reveal animations in preview
             document.getElementById('preview-main').addEventListener('scroll', handleScrollReveal);
-            document.getElementById('desktop-preview-wrapper').addEventListener('scroll', handleScrollReveal);
-            document.getElementById('phone-content-area').addEventListener('scroll', handleScrollReveal);
-            document.getElementById('tablet-content-area').addEventListener('scroll', handleScrollReveal);
-            document.getElementById('laptop-content-area').addEventListener('scroll', handleScrollReveal);
-
-            // If the builder itself is being viewed on a mobile-width screen,
-            // open the device preview dropdown automatically so the user
-            // immediately sees the device-switching options.
-            autoOpenDeviceMenuOnMobile();
-
-            // Default mobile app view: start on the Edit screen
-            document.body.classList.add('mobile-view-edit');
+            const mobileScroll = document.getElementById('preview-main-mobile');
+            if (mobileScroll) mobileScroll.addEventListener('scroll', handleScrollReveal);
             
             showToast("Welcome back! Builder ready.", "success");
         };
-
-        // Mobile app layout: toggle between full-screen Edit and full-screen Preview
-        function switchMobileView(view) {
-            // Clear any leftover inline display style from the desktop
-            // fullscreen toggle, which would otherwise override the
-            // mobile CSS class rules below.
-            document.getElementById('editor-sidebar').style.display = '';
-
-            document.body.classList.remove('mobile-view-edit', 'mobile-view-preview');
-            document.body.classList.add('mobile-view-' + view);
-
-            document.getElementById('mobile-tab-edit').classList.toggle('active', view === 'edit');
-            document.getElementById('mobile-tab-preview').classList.toggle('active', view === 'preview');
-
-            if (view === 'preview') {
-                updatePreview();
-                setTimeout(triggerReveals, 100);
-            }
-        }
-
-        // Keep mobile/desktop layout state consistent when the window
-        // crosses the mobile breakpoint (e.g. rotating a tablet, resizing
-        // a browser window), so a stale inline style never gets stuck.
-        let wasMobileWidth = window.innerWidth <= 767;
-        window.addEventListener('resize', () => {
-            const isMobileWidth = window.innerWidth <= 767;
-            if (isMobileWidth !== wasMobileWidth) {
-                wasMobileWidth = isMobileWidth;
-                if (isMobileWidth) {
-                    // Entering mobile: make sure the editor/preview panes
-                    // aren't stuck hidden by a leftover desktop inline style.
-                    const currentView = document.body.classList.contains('mobile-view-preview') ? 'preview' : 'edit';
-                    switchMobileView(currentView);
-                } else {
-                    // Returning to desktop: ensure both panes are visible
-                    // side-by-side again (clear any inline display override).
-                    document.getElementById('editor-sidebar').style.display = '';
-                    document.querySelector('[title="Toggle Fullscreen"]').classList.remove('is-fs');
-                }
-            }
-        });
 
         function switchTab(tabId) {
             document.querySelectorAll('.nav-item').forEach(el => {
@@ -1238,15 +827,19 @@
                 }
             };
             
+            // Profile
             ['name', 'title', 'status', 'location', 'about'].forEach(k => bind(`input-${k}`, 'profile', k));
             bind('input-contact-heading', 'design', 'customContactHeading');
             bind('input-contact-desc', 'design', 'customContactDesc');
+            // Links
             ['github', 'linkedin', 'twitter', 'website', 'email', 'resume'].forEach(k => bind(`link-${k}`, 'links', k));
 
+            // Image Upload Click
             document.getElementById('avatar-upload').addEventListener('change', handleImageUpload);
         }
 
         function bindDesignToggles() {
+            // Shapes
             document.querySelectorAll('.shape-btn').forEach(btn => {
                 if(btn.dataset.shape === data.design.shape) {
                     document.querySelectorAll('.shape-btn').forEach(b=>b.classList.remove('active'));
@@ -1260,6 +853,7 @@
                 });
             });
 
+            // Themes
             document.querySelectorAll('.theme-btn').forEach(btn => {
                 if(btn.dataset.theme === data.design.theme) {
                     document.querySelectorAll('.theme-btn').forEach(b=>b.classList.remove('active'));
@@ -1283,8 +877,59 @@
 
         function selectFont(fontId, btn) {
             data.design.font = fontId;
+            data.design.customFont = ''; // preset choice overrides any custom font
+            document.getElementById('custom-font-input').value = '';
+            document.getElementById('custom-font-status').innerText = '';
             document.querySelectorAll('#font-grid .layout-btn').forEach(el => el.classList.remove('active', 'border-accent'));
             btn.classList.add('active', 'border-accent');
+            saveToStorage(); applyDesign();
+        }
+
+        function loadGoogleFont(fontName) {
+            const linkId = 'custom-font-link';
+            let link = document.getElementById(linkId);
+            if (!link) {
+                link = document.createElement('link');
+                link.id = linkId;
+                link.rel = 'stylesheet';
+                document.head.appendChild(link);
+            }
+            const family = fontName.trim().replace(/\s+/g, '+');
+            link.href = `https://fonts.googleapis.com/css2?family=${family}:wght@300;400;500;600;700;800;900&display=swap`;
+        }
+
+        function applyCustomFont() {
+            const input = document.getElementById('custom-font-input');
+            const status = document.getElementById('custom-font-status');
+            const fontName = input.value.trim();
+
+            if (!fontName) {
+                status.innerText = 'Enter a font name first (e.g. Poppins).';
+                status.className = 'text-[11px] text-red-500 mt-1.5 leading-snug';
+                return;
+            }
+
+            loadGoogleFont(fontName);
+            data.design.customFont = fontName;
+
+            // Clear preset selection styling since a custom font now applies
+            document.querySelectorAll('#font-grid .layout-btn').forEach(el => el.classList.remove('active', 'border-accent'));
+
+            document.documentElement.style.setProperty('--custom-font-family', `'${fontName}'`);
+
+            status.innerText = `Using "${fontName}" from Google Fonts.`;
+            status.className = 'text-[11px] text-accent mt-1.5 leading-snug';
+
+            saveToStorage(); applyDesign();
+        }
+
+        const fontSizeScaleMap = { sm: 0.9, md: 1, lg: 1.125, xl: 1.25 };
+
+        function selectFontSize(sizeId, btn) {
+            data.design.fontSize = sizeId;
+            document.querySelectorAll('#font-size-grid .font-size-btn').forEach(el => el.classList.remove('active'));
+            btn.classList.add('active');
+            document.documentElement.style.setProperty('--font-scale', fontSizeScaleMap[sizeId] || 1);
             saveToStorage(); applyDesign();
         }
 
@@ -1301,24 +946,31 @@
             root.style.setProperty('--accent', data.design.accentHex);
             root.style.setProperty('--accent-rgb', data.design.accentRgb);
 
+            // Theme Handling (Applies to both Editor and Preview logic)
             let isLight = false;
             if (data.design.theme === 'light') isLight = true;
             else if (data.design.theme === 'system') {
                 isLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
             }
 
-            if (isLight) root.classList.add('light-mode');
-            else root.classList.remove('light-mode');
+            if (isLight) {
+                root.classList.add('light-mode');
+            } else {
+                root.classList.remove('light-mode');
+            }
 
+            // Font Handling in Preview
             updatePreview(); 
         }
 
         function toggleSystemTheme() {
+            // Editor exclusive dark/light toggle
             document.documentElement.classList.toggle('light-mode');
         }
 
         function setupDragAndDrop() {
             const dropzone = document.getElementById('avatar-dropzone');
+            
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                 dropzone.addEventListener(eventName, preventDefaults, false);
             });
@@ -1451,6 +1103,7 @@
             if(saved) {
                 try {
                     const parsed = JSON.parse(saved);
+                    // Merge robustly to not lose new schema fields
                     data = { ...data, ...parsed };
                     data.design = { ...data.design, ...parsed.design };
                     data.sections = { ...data.sections, ...parsed.sections };
@@ -1458,6 +1111,37 @@
                     data.links = { ...data.links, ...parsed.links };
                 } catch(e) { console.error("Could not parse saved data", e); }
             }
+
+            // Restore custom font
+            if (data.design.customFont) {
+                loadGoogleFont(data.design.customFont);
+                document.documentElement.style.setProperty('--custom-font-family', `'${data.design.customFont}'`);
+                const input = document.getElementById('custom-font-input');
+                const status = document.getElementById('custom-font-status');
+                if (input) input.value = data.design.customFont;
+                if (status) {
+                    status.innerText = `Using "${data.design.customFont}" from Google Fonts.`;
+                    status.className = 'text-[11px] text-accent mt-1.5 leading-snug';
+                }
+                document.querySelectorAll('#font-grid .layout-btn').forEach(el => el.classList.remove('active', 'border-accent'));
+            } else {
+                // Restore preset font button active state
+                const fontBtnMap = { inter: 0, playfair: 1, mono: 2, system: 3, syne: 4, raleway: 5 };
+                const idx = fontBtnMap[data.design.font];
+                const fontBtns = document.querySelectorAll('#font-grid .layout-btn');
+                if (idx !== undefined && fontBtns[idx]) {
+                    fontBtns.forEach(el => el.classList.remove('active', 'border-accent'));
+                    fontBtns[idx].classList.add('active', 'border-accent');
+                }
+            }
+
+            // Restore font size
+            const size = data.design.fontSize || 'md';
+            document.documentElement.style.setProperty('--font-scale', fontSizeScaleMap[size] || 1);
+            document.querySelectorAll('#font-size-grid .font-size-btn').forEach(el => {
+                el.classList.toggle('active', el.getAttribute('data-size') === size);
+            });
+
             updateAvatarPreview();
             updateProgress();
         }
@@ -1470,7 +1154,7 @@
         }
 
         function updateProgress() {
-            let totalFields = 5;
+            let totalFields = 5; // Profile basic
             let filled = 0;
             if(data.profile.name) filled++;
             if(data.profile.title) filled++;
@@ -1499,6 +1183,7 @@
             toast.innerHTML = `<i class="ph-fill ${type === 'error' ? 'ph-warning-circle text-red-500' : 'ph-check-circle text-accent'} text-xl"></i> <span class="text-sm font-medium">${msg}</span>`;
             container.appendChild(toast);
             
+            // Trigger animation
             setTimeout(() => toast.classList.add('show'), 10);
             
             setTimeout(() => {
@@ -1507,180 +1192,7 @@
             }, 3000);
         }
 
-        function toggleDeviceModeMenu() {
-            const menu = document.getElementById('device-mode-menu');
-            menu.classList.toggle('hidden');
-        }
-
-        // Auto-open the device mode dropdown when the builder is loaded on
-        // a mobile-width screen, so device-switching options are visible
-        // immediately without an extra tap.
-        const MOBILE_BREAKPOINT = 768;
-        let hasAutoOpenedDeviceMenu = false;
-
-        function autoOpenDeviceMenuOnMobile() {
-            if (window.innerWidth <= MOBILE_BREAKPOINT && !hasAutoOpenedDeviceMenu) {
-                const menu = document.getElementById('device-mode-menu');
-                if (menu) {
-                    menu.classList.remove('hidden');
-                    hasAutoOpenedDeviceMenu = true;
-                }
-            }
-        }
-
-        // Re-check on resize/orientation change in case the window crosses
-        // the mobile breakpoint after initial load (only triggers once).
-        window.addEventListener('resize', autoOpenDeviceMenuOnMobile);
-
-        // Close the device menu when clicking outside it
-        document.addEventListener('click', function(e) {
-            const wrap = document.getElementById('device-mode-dropdown-wrap');
-            const menu = document.getElementById('device-mode-menu');
-            if (wrap && menu && !wrap.contains(e.target)) {
-                menu.classList.add('hidden');
-            }
-        });
-
-        const deviceModeMeta = {
-            desktop: { icon: 'ph-desktop', label: 'Desktop', contentArea: null, shellId: null },
-            laptop: { icon: 'ph-laptop', label: 'Laptop', contentArea: 'laptop-content-area', shellId: 'laptop-shell' },
-            tablet: { icon: 'ph-device-tablet', label: 'Tablet', contentArea: 'tablet-content-area', shellId: 'tablet-shell' },
-            mobile: { icon: 'ph-device-mobile', label: 'Mobile', contentArea: 'phone-content-area', shellId: 'phone-shell' }
-        };
-        let currentDeviceMode = 'desktop';
-
-        function setDeviceMode(mode) {
-            const main = document.getElementById('preview-main');
-            const desktopWrapper = document.getElementById('desktop-preview-wrapper');
-            const previewWrapper = document.getElementById('preview-wrapper');
-            const menu = document.getElementById('device-mode-menu');
-
-            if (menu) menu.classList.add('hidden');
-            if (mode === currentDeviceMode) return;
-
-            // Clear all device-mode classes
-            main.classList.remove('device-preview-active', 'device-mode-mobile', 'device-mode-tablet', 'device-mode-laptop');
-
-            currentDeviceMode = mode;
-            const meta = deviceModeMeta[mode];
-
-            // Update header button
-            const icon = document.getElementById('device-mode-icon');
-            const label = document.getElementById('device-mode-label');
-            icon.className = 'ph-bold ' + meta.icon + ' text-lg';
-            label.textContent = meta.label;
-            document.querySelectorAll('.device-mode-option').forEach(btn => {
-                btn.classList.toggle('bg-accent', btn.dataset.mode === mode);
-                btn.classList.toggle('text-white', btn.dataset.mode === mode);
-            });
-
-            if (mode === 'desktop') {
-                // Move preview-wrapper back into the plain desktop wrapper
-                desktopWrapper.appendChild(previewWrapper);
-                desktopWrapper.style.display = 'flex';
-                desktopWrapper.style.flexDirection = 'column';
-                showToast("Switched to desktop preview");
-            } else {
-                main.classList.add('device-preview-active', 'device-mode-' + mode);
-                desktopWrapper.style.display = 'none';
-
-                const contentArea = document.getElementById(meta.contentArea);
-                contentArea.appendChild(previewWrapper);
-
-                showToast("Switched to " + meta.label.toLowerCase() + " device preview");
-
-                if (mode === 'mobile') startPhoneClock();
-                // Re-apply the active size preset for this device family
-                if (mode === 'mobile') setPhoneSize(currentPhoneSize);
-                if (mode === 'tablet') setTabletSize(currentTabletSize);
-                if (mode === 'laptop') setLaptopSize(currentLaptopSize);
-            }
-
-            setTimeout(triggerReveals, 100);
-        }
-
-        // Phone size presets
-        const phoneSizes = {
-            iphone: { width: 393, height: 780, label: 'iPhone 15', borderRadius: '40px' },
-            android: { width: 360, height: 740, label: 'Android', borderRadius: '36px' },
-            ipad: { width: 480, height: 780, label: 'iPad Mini', borderRadius: '28px' }
-        };
-        let currentPhoneSize = 'iphone';
-
-        function setPhoneSize(sizeKey) {
-            currentPhoneSize = sizeKey;
-            const size = phoneSizes[sizeKey];
-            const phoneShell = document.getElementById('phone-shell');
-            const phoneScreen = phoneShell.querySelector('.phone-screen');
-
-            phoneShell.style.width = (size.width + 28) + 'px';
-            phoneScreen.style.height = size.height + 'px';
-            phoneScreen.style.borderRadius = size.borderRadius;
-
-            document.querySelectorAll('#preview-size-tabs .group-mobile .size-tab').forEach(t => t.classList.remove('active'));
-            const tabId = sizeKey === 'ipad' ? 'tab-ipad-phone' : 'tab-' + sizeKey;
-            const tabEl = document.getElementById(tabId);
-            if (tabEl) tabEl.classList.add('active');
-        }
-
-        // Tablet size presets
-        const tabletSizes = {
-            ipadmini: { width: 480, height: 680, label: 'iPad Mini', borderRadius: '18px' },
-            ipadair:  { width: 560, height: 760, label: 'iPad Air', borderRadius: '20px' },
-            ipadpro:  { width: 640, height: 860, label: 'iPad Pro', borderRadius: '22px' }
-        };
-        let currentTabletSize = 'ipadmini';
-
-        function setTabletSize(sizeKey) {
-            currentTabletSize = sizeKey;
-            const size = tabletSizes[sizeKey];
-            const tabletShell = document.getElementById('tablet-shell');
-            const tabletScreen = tabletShell.querySelector('.tablet-screen');
-
-            tabletShell.style.width = (size.width + 32) + 'px';
-            tabletScreen.style.height = size.height + 'px';
-            tabletScreen.style.borderRadius = size.borderRadius;
-
-            document.querySelectorAll('#preview-size-tabs .group-tablet .size-tab').forEach(t => t.classList.remove('active'));
-            const tabEl = document.getElementById('tab-' + sizeKey);
-            if (tabEl) tabEl.classList.add('active');
-        }
-
-        // Laptop size presets
-        const laptopSizes = {
-            macbookair:  { width: 900, height: 540, label: 'MacBook Air' },
-            macbookpro:  { width: 1000, height: 620, label: 'MacBook Pro' },
-            laptop1080:  { width: 1100, height: 640, label: '1080p Laptop' }
-        };
-        let currentLaptopSize = 'macbookair';
-
-        function setLaptopSize(sizeKey) {
-            currentLaptopSize = sizeKey;
-            const size = laptopSizes[sizeKey];
-            const laptopShell = document.getElementById('laptop-shell');
-            const laptopScreen = laptopShell.querySelector('.laptop-screen');
-
-            // Cap width to available space so it never overflows the preview pane
-            const maxAvailable = Math.min(window.innerWidth - 120, 1100);
-            const finalWidth = Math.min(size.width, maxAvailable);
-
-            laptopShell.style.width = (finalWidth + 28) + 'px';
-            laptopScreen.style.height = size.height + 'px';
-
-            document.querySelectorAll('#preview-size-tabs .group-laptop .size-tab').forEach(t => t.classList.remove('active'));
-            const tabEl = document.getElementById('tab-' + sizeKey);
-            if (tabEl) tabEl.classList.add('active');
-        }
-
         function toggleFullscreen() {
-            // On mobile the EDIT / PREVIEW bottom tabs already handle switching
-            // between editor and preview, so the fullscreen toggle is a no-op there
-            // (avoids leaving a conflicting inline style behind).
-            if (window.innerWidth <= 767) {
-                switchMobileView(document.body.classList.contains('mobile-view-edit') ? 'preview' : 'edit');
-                return;
-            }
-
             const sidebar = document.getElementById('editor-sidebar');
             const btn = document.querySelector('[title="Toggle Fullscreen"]');
             
@@ -1695,135 +1207,9 @@
             updatePreview(); // Re-trigger layout calculations
         }
 
-        // Live clock for phone status bar
-        function startPhoneClock() {
-            const clockEl = document.getElementById('phone-clock');
-            if (!clockEl) return;
-            const update = () => {
-                const now = new Date();
-                let h = now.getHours(), m = now.getMinutes();
-                clockEl.textContent = `${h}:${m.toString().padStart(2, '0')}`;
-            };
-            update();
-            setInterval(update, 10000);
-        }
-
-        // Font size functions
-        function onFontSizeSlider(slider) {
-            const val = parseInt(slider.value);
-            data.design.fontSize = val;
-            const pct = ((val - 11) / (24 - 11)) * 100;
-            slider.style.background = `linear-gradient(to right, var(--accent) 0%, var(--accent) ${pct}%, var(--sidebar-border) ${pct}%, var(--sidebar-border) 100%)`;
-            applyFontSize();
-            document.getElementById('font-size-label').textContent = val + 'px';
-            // Sync preset buttons
-            document.querySelectorAll('.font-size-preset').forEach(b => {
-                b.classList.toggle('active', parseInt(b.dataset.size) === val);
-                b.style.borderColor = parseInt(b.dataset.size) === val ? 'var(--accent)' : '';
-                b.style.color = parseInt(b.dataset.size) === val ? 'var(--accent)' : '';
-            });
-            saveToStorage();
-        }
-
-        function setFontSizePreset(size, btn) {
-            data.design.fontSize = size;
-            document.getElementById('font-size-slider').value = size;
-            const pct = ((size - 11) / (24 - 11)) * 100;
-            document.getElementById('font-size-slider').style.background = `linear-gradient(to right, var(--accent) 0%, var(--accent) ${pct}%, var(--sidebar-border) ${pct}%, var(--sidebar-border) 100%)`;
-            document.getElementById('font-size-label').textContent = size + 'px';
-            document.querySelectorAll('.font-size-preset').forEach(b => {
-                b.classList.remove('active');
-                b.style.borderColor = '';
-                b.style.color = '';
-            });
-            btn.classList.add('active');
-            btn.style.borderColor = 'var(--accent)';
-            btn.style.color = 'var(--accent)';
-            applyFontSize();
-            saveToStorage();
-        }
-
-        function applyFontSize() {
-            const size = data.design.fontSize || 16;
-            const lh = data.design.lineHeight || 1.6;
-            const ls = data.design.letterSpacing || 0;
-            const content = document.getElementById('preview-content');
-            if (content) {
-                content.style.fontSize = size + 'px';
-                content.style.lineHeight = lh;
-                content.style.letterSpacing = ls + 'em';
-            }
-        }
-
-        function setLineHeight(val, btn) {
-            data.design.lineHeight = val;
-            document.getElementById('line-height-label').textContent = val;
-            document.querySelectorAll('.line-height-btn').forEach(b => {
-                b.classList.remove('active');
-                b.style.borderColor = '';
-                b.style.color = '';
-            });
-            btn.classList.add('active');
-            btn.style.borderColor = 'var(--accent)';
-            btn.style.color = 'var(--accent)';
-            applyFontSize();
-            saveToStorage();
-        }
-
-        function setLetterSpacing(val, btn) {
-            data.design.letterSpacing = val;
-            document.getElementById('letter-spacing-label').textContent = val + 'em';
-            document.querySelectorAll('.letter-spacing-btn').forEach(b => {
-                b.classList.remove('active');
-                b.style.borderColor = '';
-                b.style.color = '';
-            });
-            btn.classList.add('active');
-            btn.style.borderColor = 'var(--accent)';
-            btn.style.color = 'var(--accent)';
-            applyFontSize();
-            saveToStorage();
-        }
-
-        function initFontSizeUI() {
-            const size = data.design.fontSize || 16;
-            const lh = data.design.lineHeight || 1.6;
-            const ls = data.design.letterSpacing || 0;
-            
-            // Slider
-            const slider = document.getElementById('font-size-slider');
-            slider.value = size;
-            const pct = ((size - 11) / (24 - 11)) * 100;
-            slider.style.background = `linear-gradient(to right, var(--accent) 0%, var(--accent) ${pct}%, var(--sidebar-border) ${pct}%, var(--sidebar-border) 100%)`;
-            document.getElementById('font-size-label').textContent = size + 'px';
-            
-            // Preset buttons
-            document.querySelectorAll('.font-size-preset').forEach(b => {
-                const match = parseInt(b.dataset.size) === size;
-                b.classList.toggle('active', match);
-                if (match) { b.style.borderColor = 'var(--accent)'; b.style.color = 'var(--accent)'; }
-            });
-            
-            // Line height
-            document.getElementById('line-height-label').textContent = lh;
-            document.querySelectorAll('.line-height-btn').forEach(b => {
-                const match = parseFloat(b.dataset.lh) === lh;
-                b.classList.toggle('active', match);
-                if (match) { b.style.borderColor = 'var(--accent)'; b.style.color = 'var(--accent)'; }
-            });
-            
-            // Letter spacing
-            document.getElementById('letter-spacing-label').textContent = ls + 'em';
-            document.querySelectorAll('.letter-spacing-btn').forEach(b => {
-                const match = parseFloat(b.dataset.ls) === ls;
-                b.classList.toggle('active', match);
-                if (match) { b.style.borderColor = 'var(--accent)'; b.style.color = 'var(--accent)'; }
-            });
-            
-            applyFontSize();
-        }
 
         function getFontClass() {
+            if (data.design.customFont) return "font-custom";
             const map = {
                 'inter': "font-sans",
                 'playfair': "font-serif",
@@ -1865,7 +1251,7 @@
                         <p class="text-sm text-textMuted font-medium">&copy; ${new Date().getFullYear()} ${data.profile.name || 'Portfolio'}. All rights reserved.</p>
                         <p class="text-[10px] text-textMuted mt-1 opacity-50 uppercase tracking-widest">Developed by BEST_TEAM</p>
                     </div>
-                    <button onclick="(document.getElementById('preview-wrapper') || window).scrollTo({top:0, behavior:'smooth'})" class="w-10 h-10 rounded-full border border-sidebarBorder flex items-center justify-center text-textMuted hover:text-accent hover:border-accent transition-colors hover-lift">
+                    <button onclick="document.getElementById('preview-main').scrollTo({top:0, behavior:'smooth'})" class="w-10 h-10 rounded-full border border-sidebarBorder flex items-center justify-center text-textMuted hover:text-accent hover:border-accent transition-colors hover-lift">
                         <i class="ph-bold ph-arrow-up text-lg"></i>
                     </button>
                 </div>
@@ -1877,11 +1263,13 @@
             const h = data.design.customContactHeading || "Let's Connect";
             const d = data.design.customContactDesc || "I'm always open to discussing product design work or partnership opportunities.";
             
+            // Generate link buttons
             let linksHTML = '';
             if(data.links.email) linksHTML += `<a href="mailto:${data.links.email}" class="px-6 py-3 rounded-full bg-accent text-white font-bold text-sm hover-lift inline-flex items-center gap-2"><i class="ph-fill ph-envelope-simple text-lg"></i> Email Me</a>`;
             if(data.links.linkedin) linksHTML += `<a href="${data.links.linkedin}" target="_blank" class="w-12 h-12 rounded-full border border-sidebarBorder flex items-center justify-center text-textMain hover:text-accent hover:border-accent hover-lift"><i class="ph-fill ph-linkedin-logo text-xl"></i></a>`;
             if(data.links.github) linksHTML += `<a href="${data.links.github}" target="_blank" class="w-12 h-12 rounded-full border border-sidebarBorder flex items-center justify-center text-textMain hover:text-accent hover:border-accent hover-lift"><i class="ph-fill ph-github-logo text-xl"></i></a>`;
             
+            // Terminal layout specific styling
             if(layout === 'terminal' || layout === 'developer') {
                 return `
                 <div id="contact" class="mt-20 pt-10 border-t border-sidebarBorder/30 reveal">
@@ -1917,6 +1305,7 @@
                 ? 'text-lg font-bold text-accent mb-6 uppercase tracking-widest border-b border-sidebarBorder/30 pb-2' 
                 : 'text-2xl font-bold text-textMain mb-8 flex items-center gap-3 before:content-[""] before:w-8 before:h-px before:bg-accent';
 
+            // Skills & Languages (Grid)
             if (data.sections.skills.length > 0 || data.sections.languages.length > 0) {
                 html += `<div id="skills" class="grid grid-cols-1 md:grid-cols-2 gap-12 reveal"><div class="w-full"><h3 class="${sectionTitleClass}">Tech Skills</h3><div class="space-y-6">`;
                 data.sections.skills.forEach(item => {
@@ -1929,6 +1318,7 @@
                 html += `</div></div></div>`;
             }
 
+            // Work Experience
             if (data.sections.work.length > 0) {
                 html += `<div id="work" class="w-full reveal"><h3 class="${sectionTitleClass}">Work Experience</h3><div class="space-y-8 border-l-2 border-sidebarBorder/50 pl-6 ml-2">`;
                 data.sections.work.forEach(item => {
@@ -1937,6 +1327,7 @@
                 html += `</div></div>`;
             }
 
+            // Projects
             if (data.sections.projects.length > 0) {
                 html += `<div class="w-full reveal"><h3 class="${sectionTitleClass}">Selected Projects</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-6">`;
                 data.sections.projects.forEach(item => {
@@ -1945,6 +1336,7 @@
                 html += `</div></div>`;
             }
 
+            // Education & Certifications (Grid)
             if (data.sections.education.length > 0 || data.sections.certifications.length > 0) {
                 html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-12 mt-8 reveal">`;
                 
@@ -1974,11 +1366,13 @@
         function updatePreview() {
             const container = document.getElementById('preview-content');
             
+            // Clean specific theme styles on container, ensure it fills correctly
             container.className = `w-full min-h-full relative transition-all duration-500 ${getFontClass()}`;
             
             const d = data.profile;
             const layout = data.design.layout || 'bento';
             
+            // Build Socials HTML
             let socialHtml = '';
             if(data.links.github) socialHtml += `<a href="${data.links.github}" target="_blank" class="w-10 h-10 rounded-full bg-sidebarBg border border-sidebarBorder flex items-center justify-center text-textMuted hover:text-accent hover:border-accent transition-colors hover-lift shrink-0"><i class="ph-fill ph-github-logo text-xl"></i></a>`;
             if(data.links.linkedin) socialHtml += `<a href="${data.links.linkedin}" target="_blank" class="w-10 h-10 rounded-full bg-sidebarBg border border-sidebarBorder flex items-center justify-center text-textMuted hover:text-accent hover:border-accent transition-colors hover-lift shrink-0"><i class="ph-fill ph-linkedin-logo text-xl"></i></a>`;
@@ -1994,6 +1388,7 @@
             const avatarStyle = d.avatar ? '' : 'display:none;';
             const animClass = 'transition-transform duration-700 hover:scale-105';
 
+            // Safe Template Mapping - Screen FITTING adjusted!
             const L = {
                 bento: `${getHeaderHTML()}<div class="max-w-6xl mx-auto p-4 sm:p-8 grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10 w-full" id="about"><div class="col-span-1 md:col-span-2 bg-cardBg border border-sidebarBorder rounded-[2rem] p-8 sm:p-12 shadow-lg flex flex-col justify-center reveal-left"><div style="display: ${statusDisplay};" class="mb-6"><span class="bg-bgMain border border-sidebarBorder text-accent px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-sm hover-lift"><span class="w-2 h-2 rounded-full bg-accent inline-block mr-2 animate-pulse"></span>${d.status || 'Available'}</span></div><h1 class="text-4xl sm:text-7xl font-bold text-textMain mb-6 tracking-tight break-words">${d.name || 'Your Name'}</h1><h2 class="text-xl sm:text-2xl text-textMuted font-medium mb-8">${d.title || 'Your Title'}</h2><p class="text-base sm:text-lg text-textMain leading-relaxed max-w-2xl">${d.about || 'A brief introduction.'}</p><div class="mt-4">${socialHtml}</div></div><div class="col-span-1 bg-cardBg border border-sidebarBorder rounded-[2rem] p-6 shadow-lg flex items-center justify-center reveal-right delay-100"><div class="w-full max-w-[250px] aspect-square ${avatarWrapperClasses} shadow-inner bg-sidebarBg border-4 border-sidebarBg mx-auto float-anim">${d.avatar ? `<img src="${d.avatar}" class="w-full h-full object-cover ${animClass}" style="${avatarStyle}">` : `<i class="ph-fill ph-user text-6xl text-textMuted"></i>`}</div></div><div class="col-span-1 md:col-span-3 mt-4">${renderPreviewSections(layout)}</div><div class="col-span-1 md:col-span-3">${renderContactSection(layout)}</div><div class="col-span-1 md:col-span-3">${getFooterHTML()}</div></div>`,
 
@@ -2036,23 +1431,58 @@
             let html = L[layout] || L['bento'];
             container.setAttribute('data-layout', layout);
             container.innerHTML = html;
+
+            // Sync mobile phone frame preview
+            const mobileContainer = document.getElementById('preview-content-mobile');
+            if (mobileContainer) {
+                mobileContainer.className = container.className;
+                mobileContainer.setAttribute('data-layout', layout);
+                mobileContainer.innerHTML = html;
+                // Trigger reveal animations inside mobile container too
+                setTimeout(() => {
+                    mobileContainer.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale')
+                        .forEach((el, i) => setTimeout(() => el.classList.add('active'), i * 100));
+                }, 50);
+            }
             
+            // Trigger animation on load
             setTimeout(triggerReveals, 50);
-            setTimeout(applyFontSize, 60);
+        }
+
+        /* ── Mobile tab switching ── */
+        function switchMobileTab(tab) {
+            const sidebar = document.getElementById('editor-sidebar');
+            const previewPanel = document.getElementById('preview-panel');
+            const editBtn = document.getElementById('tab-btn-edit');
+            const previewBtn = document.getElementById('tab-btn-preview');
+
+            if (tab === 'edit') {
+                sidebar.classList.remove('mobile-hidden');
+                previewPanel.classList.remove('mobile-visible');
+                editBtn.classList.add('active');
+                previewBtn.classList.remove('active');
+            } else {
+                sidebar.classList.add('mobile-hidden');
+                previewPanel.classList.add('mobile-visible');
+                editBtn.classList.remove('active');
+                previewBtn.classList.add('active');
+                // Re-trigger animations when switching to preview
+                updatePreview();
+            }
         }
 
         function triggerReveals() {
-            const reveals = document.querySelectorAll('#preview-content .reveal, #preview-content .reveal-left, #preview-content .reveal-right, #preview-content .reveal-scale');
-            reveals.forEach((el, index) => {
+            const selectors = '#preview-content .reveal, #preview-content .reveal-left, #preview-content .reveal-right, #preview-content .reveal-scale, #preview-content-mobile .reveal, #preview-content-mobile .reveal-left, #preview-content-mobile .reveal-right, #preview-content-mobile .reveal-scale';
+            document.querySelectorAll(selectors).forEach((el, index) => {
                 setTimeout(() => el.classList.add('active'), index * 100);
             });
         }
 
         function handleScrollReveal() {
-            const reveals = document.querySelectorAll('#preview-content .reveal:not(.active), #preview-content .reveal-left:not(.active), #preview-content .reveal-right:not(.active), #preview-content .reveal-scale:not(.active)');
+            const selectors = '#preview-content .reveal:not(.active), #preview-content .reveal-left:not(.active), #preview-content .reveal-right:not(.active), #preview-content .reveal-scale:not(.active)';
             const windowHeight = window.innerHeight;
             
-            reveals.forEach(el => {
+            document.querySelectorAll(selectors).forEach(el => {
                 const elementTop = el.getBoundingClientRect().top;
                 if (elementTop < windowHeight - 50) {
                     el.classList.add('active');
@@ -2061,13 +1491,20 @@
         }
 
         function exportHTML() {
-            updatePreview(); 
+            updatePreview(); // Ensure latest DOM is ready
             
             const previewHTML = document.getElementById('preview-content').innerHTML;
             const coreStyles = document.getElementById('core-styles').innerHTML;
             
             const isLight = document.documentElement.classList.contains('light-mode') ? 'light-mode' : '';
 
+            // Custom Google Font <link> tag, if a custom font is set
+            const customFontLink = data.design.customFont
+                ? `<link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(data.design.customFont).replace(/%20/g, '+')}:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">`
+                : '';
+            const fontScale = fontSizeScaleMap[data.design.fontSize] || 1;
+
+            // Standalone HTML template for download
             const standaloneHTML = `
 <!DOCTYPE html>
 <html lang="en">
@@ -2078,6 +1515,7 @@
     <script src="https://cdn.tailwindcss.com"><\/script>
     <script src="https://unpkg.com/@phosphor-icons/web"><\/script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Fira+Code:wght@400;500&family=Syne:wght@700;800&family=Raleway:wght@400;700&display=swap" rel="stylesheet">
+    ${customFontLink}
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -2108,117 +1546,31 @@
         :root {
             --accent: ${data.design.accentHex};
             --accent-rgb: ${data.design.accentRgb};
+            --font-scale: ${fontScale};
+            --custom-font-family: '${data.design.customFont || 'Inter'}';
         }
         body { margin: 0; padding: 0; min-height: 100vh; overflow-y: auto; overflow-x: hidden; scroll-behavior: smooth; }
         .pixelated { image-rendering: pixelated; }
-        #preview-content, main {
-            font-size: ${data.design.fontSize || 16}px;
-            line-height: ${data.design.lineHeight || 1.6};
-            letter-spacing: ${data.design.letterSpacing || 0}em;
-        }
-
-        /* Real-device phone frame: only shown on actual mobile-width screens */
-        body.export-phone-active {
-            background: radial-gradient(ellipse at center, #1a1a2e 0%, #0f0f1a 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 1.25rem 0.5rem;
-        }
-        #export-phone-shell {
-            display: none;
-            position: relative;
-            width: 100%;
-            max-width: 360px;
-            margin: auto;
-            flex-direction: column;
-            box-sizing: border-box;
-        }
-        body.export-phone-active #export-phone-shell { display: flex; }
-        body.export-phone-active #export-site-content { display: none; }
-        #export-phone-shell .phone-body { width: 100%; box-sizing: border-box; }
-        #export-phone-shell .phone-screen { height: min(90vh, 740px); }
-        #export-phone-shell .phone-content { overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
-        #export-phone-shell main { padding-top: 0 !important; }
     </style>
 </head>
 <body class="font-sans antialiased ${isLight} ${getFontClass()}">
-    <!-- Normal full-width responsive site: shown on tablets/desktops, and as a fallback -->
-    <main id="export-site-content" class="w-full min-h-screen bg-bgMain relative pt-20" data-layout="${data.design.layout}">
+    <main id="preview-content" class="w-full min-h-screen bg-bgMain relative pt-20" data-layout="${data.design.layout}">
         ${previewHTML}
     </main>
-
-    <!-- Phone-frame mockup: content gets moved in here on real mobile-width screens -->
-    <div id="export-phone-shell">
-        <div class="phone-body">
-            <div class="phone-screen">
-                <div class="dynamic-island"></div>
-                <div class="phone-status-bar">
-                    <span class="status-time" id="export-phone-clock">9:41</span>
-                    <div class="status-icons">
-                        <svg viewBox="0 0 24 24"><rect x="1" y="13" width="3" height="8" rx="1"/><rect x="6" y="9" width="3" height="12" rx="1"/><rect x="11" y="5" width="3" height="16" rx="1"/><rect x="16" y="1" width="3" height="20" rx="1" opacity="0.3"/></svg>
-                        <svg viewBox="0 0 24 24"><path d="M1.5 8.5C5.2 4.8 10.3 2.5 12 2.5s6.8 2.3 10.5 6" opacity="0.3" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M5 12.5c1.9-1.9 4.4-3 7-3s5.1 1.1 7 3" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M8.5 16c.9-.9 2.2-1.5 3.5-1.5s2.6.6 3.5 1.5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="12" cy="20" r="1.5"/></svg>
-                        <svg viewBox="0 0 28 14"><rect x="0.5" y="0.5" width="23" height="13" rx="3.5" stroke="currentColor" fill="none"/><rect x="2" y="2" width="18" height="10" rx="2" fill="currentColor"/><path d="M25 4.5v5a2.5 2.5 0 000-5z" fill="currentColor" opacity="0.4"/></svg>
-                    </div>
-                </div>
-                <div class="phone-content" id="export-phone-content-area"></div>
-                <div class="phone-home-indicator"></div>
-            </div>
-        </div>
-    </div>
-
     <script>
-        (function() {
-            const siteContent = document.getElementById('export-site-content');
-            const phoneContentArea = document.getElementById('export-phone-content-area');
-            const mq = window.matchMedia('(max-width: 480px)');
-            let movedIn = false;
-
-            function applyMode(isPhone) {
-                if (isPhone && !movedIn) {
-                    phoneContentArea.appendChild(siteContent);
-                    document.body.classList.add('export-phone-active');
-                    movedIn = true;
-                } else if (!isPhone && movedIn) {
-                    document.body.insertBefore(siteContent, document.getElementById('export-phone-shell'));
-                    document.body.classList.remove('export-phone-active');
-                    movedIn = false;
-                }
-            }
-
-            applyMode(mq.matches);
-            mq.addEventListener('change', (e) => applyMode(e.matches));
-
-            // Live clock for the phone-frame status bar
-            const clockEl = document.getElementById('export-phone-clock');
-            if (clockEl) {
-                const updateClock = () => {
-                    const now = new Date();
-                    let h = now.getHours(), m = now.getMinutes();
-                    clockEl.textContent = h + ':' + m.toString().padStart(2, '0');
-                };
-                updateClock();
-                setInterval(updateClock, 10000);
-            }
-        })();
-
+        // Setup Reveal Animations on Scroll
         document.addEventListener('DOMContentLoaded', () => {
             const reveals = document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale');
             reveals.forEach((el, index) => setTimeout(() => el.classList.add('active'), index * 100));
-
-            function checkReveals() {
-                const pending = document.querySelectorAll('.reveal:not(.active), .reveal-left:not(.active), .reveal-right:not(.active), .reveal-scale:not(.active)');
-                pending.forEach(el => {
+            
+            window.addEventListener('scroll', () => {
+                const reveals = document.querySelectorAll('.reveal:not(.active), .reveal-left:not(.active), .reveal-right:not(.active), .reveal-scale:not(.active)');
+                reveals.forEach(el => {
                     if (el.getBoundingClientRect().top < window.innerHeight - 50) {
                         el.classList.add('active');
                     }
                 });
-            }
-
-            window.addEventListener('scroll', checkReveals);
-            const phoneContentArea = document.getElementById('export-phone-content-area');
-            if (phoneContentArea) phoneContentArea.addEventListener('scroll', checkReveals);
+            });
         });
     <\/script>
 </body>
