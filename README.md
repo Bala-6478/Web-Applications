@@ -4,12 +4,12 @@
 
 * (2026 New Update more ComingSoon......)  
 ---
-## 🛠️ Tech Stack  
+## 🛠️ Tech Stack.
 - HTML5    
 - CSS3    
 - JavaScript (ES6)  
 ---
-## Hosting Web Sites 
+## Hosting Web Sites. 
 
 `* Use  to hosting my pages
 www.neocities.org
