@@ -84,4 +84,7 @@ www.neocities.org
 ### 16. Portfolio Builder
 🔗 https://balavignesh2025.neocities.org/web%20apps%20/portfolio_builder/portfolio_builder_v2 
 ---
+### 17. QR payLink
+
+---
   *****
