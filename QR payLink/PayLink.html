@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>PayLink — UPI & QR Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: { extend: { fontFamily: { sans: ['Inter','sans-serif'], display: ['Space Grotesk','sans-serif'] } } }
+}
+</script>
+<style>
+* { box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; margin: 0; }
+.font-display { font-family: 'Space Grotesk', sans-serif; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 99px; }
+
+/* Color inputs */
+input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+input[type="color"]::-webkit-color-swatch { border: none; border-radius: 6px; }
+
+/* ── TOKENS ─────────────────────────── */
+:root {
+  --bg:        #07101f;
+  --surface:   #0d1b2e;
+  --surface2:  #111f33;
+  --border:    rgba(255,255,255,0.07);
+  --border2:   rgba(255,255,255,0.04);
+  --text:      #e8f0fe;
+  --muted:     #60748a;
+  --accent:    #5b72f8;
+  --accent2:   #7c5cf8;
+  --green:     #10b981;
+  --red:       #f87171;
+  --amber:     #f59e0b;
+  --radius-card: 20px;
+  --radius-input: 12px;
+}
+html.light {
+  --bg:        #eef2fa;
+  --surface:   #ffffff;
+  --surface2:  #f4f7ff;
+  --border:    rgba(0,0,0,0.08);
+  --border2:   rgba(0,0,0,0.05);
+  --text:      #0f1923;
+  --muted:     #7a8fa8;
+}
+
+body { background: var(--bg); color: var(--text); min-height: 100vh; transition: background .3s, color .3s; }
+
+/* ── CARD ─────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  backdrop-filter: blur(20px);
+  transition: background .3s, border .3s;
+}
+.card-inner {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+}
+
+/* ── INPUT ────────────────────────── */
+.inp {
+  width: 100%;
+  padding: 13px 16px;
+  border-radius: var(--radius-input);
+  outline: none;
+  border: 1.5px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  transition: border-color .2s, box-shadow .2s, background .3s;
+  -webkit-appearance: none;
+}
+.inp:focus { border-color: var(--accent); box-shadow: 0 0 0 3.5px rgba(91,114,248,.13); }
+.inp::placeholder { color: var(--muted); }
+textarea.inp { resize: vertical; min-height: 100px; }
+
+/* ── TABS ─────────────────────────── */
+.tab-wrap {
+  display: flex;
+  gap: 6px;
+  padding: 5px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 14px;
+  margin-bottom: 22px;
+}
+.tab {
+  flex: 1;
+  padding: 10px 8px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: none;
+  cursor: pointer;
+  transition: all .22s;
+  background: transparent;
+  color: var(--muted);
+  font-family: 'Inter', sans-serif;
+}
+.tab:hover { color: var(--text); }
+.tab.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(91,114,248,.3);
+}
+
+/* ── SECTION LABEL ──────────────────── */
+.sec-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+
+/* ── GENERATE BUTTON ──────────────── */
+.gen-btn {
+  width: 100%;
+  padding: 15px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  box-shadow: 0 4px 22px rgba(91,114,248,.32);
+  transition: transform .18s, box-shadow .18s;
+  font-family: 'Inter', sans-serif;
+  margin-top: 20px;
+  -webkit-tap-highlight-color: transparent;
+}
+.gen-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(91,114,248,.42); }
+.gen-btn:active { transform: translateY(0); }
+
+/* ── DROP ZONE ────────────────────── */
+.drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s;
+  margin-top: 14px;
+}
+.drop-zone:hover { border-color: var(--accent); background: rgba(91,114,248,.04); }
+
+/* ── RANGE ────────────────────────── */
+.range-inp {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  background: var(--border);
+  border-radius: 99px;
+  outline: none;
+  margin: 4px 0;
+}
+.range-inp::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 0 0 3px rgba(91,114,248,.22);
+}
+
+/* ── ACTION BUTTONS ──────────────── */
+.act-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; }
+.act-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 6px;
+  border-radius: 12px;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  border: 1.5px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: .45;
+  transition: all .2s;
+  font-family: 'Inter', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+.act-btn.enabled { opacity: 1; cursor: pointer; }
+.act-btn.enabled:active { transform: scale(.96); }
+.act-btn.dl.enabled:hover  { background: #3b82f6; color: #fff; border-color: #3b82f6; }
+.act-btn.sh.enabled:hover  { background: #8b5cf6; color: #fff; border-color: #8b5cf6; }
+.act-btn.cp.enabled:hover  { background: var(--green); color: #fff; border-color: var(--green); }
+
+/* ── QR PREVIEW ──────────────────── */
+.qr-wrap {
+  width: 230px;
+  height: 230px;
+  border-radius: 18px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.06);
+  flex-shrink: 0;
+}
+
+/* ── HISTORY ITEM ────────────────── */
+.hist-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  border: 1.5px solid var(--border2);
+  background: var(--surface2);
+  transition: all .15s;
+  gap: 8px;
+}
+.hist-item:hover { border-color: var(--accent); background: rgba(91,114,248,.07); }
+
+/* ── SUMMARY ─────────────────────── */
+.sum-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 0;
+  font-size: 13px;
+  gap: 8px;
+}
+.sum-row + .sum-row { border-top: 1px dashed var(--border2); }
+
+/* ── PILL BADGE ──────────────────── */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: rgba(91,114,248,.1);
+  color: var(--accent);
+  border: 1px solid rgba(91,114,248,.18);
+}
+
+/* ── TOAST ───────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(72px);
+  opacity: 0;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 99px;
+  padding: 11px 20px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.45);
+  z-index: 9999;
+  transition: all .3s cubic-bezier(.34,1.56,.64,1);
+  white-space: nowrap;
+  max-width: calc(100vw - 32px);
+}
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+/* ── SPIN ────────────────────────── */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin .8s linear infinite; }
+
+/* ── MOBILE BOTTOM BAR ───────────── */
+.mobile-preview-toggle {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 12px 16px 20px;
+}
+
+/* ── LAYOUT ──────────────────────── */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .main-grid { grid-template-columns: 1fr; }
+  .right-col { display: none; }
+  .right-col.mobile-open { display: block; }
+  .mobile-preview-toggle { display: flex; align-items: center; justify-content: space-between; }
+  body { padding-bottom: 72px; }
+
+  /* Mobile bottom sheet for QR */
+  .mobile-sheet {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 200;
+    background: var(--surface);
+    border-radius: 24px 24px 0 0;
+    border-top: 1px solid var(--border);
+    padding: 20px 16px 36px;
+    transform: translateY(100%);
+    transition: transform .32s cubic-bezier(.32,0,.15,1);
+    box-shadow: 0 -16px 60px rgba(0,0,0,.45);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .mobile-sheet.open { transform: translateY(0); }
+  .sheet-handle {
+    width: 40px; height: 4px;
+    background: var(--border);
+    border-radius: 99px;
+    margin: 0 auto 18px;
+  }
+  .sheet-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.55);
+    z-index: 190;
+    backdrop-filter: blur(3px);
+  }
+  .sheet-overlay.open { display: block; }
+}
+
+@media (max-width: 480px) {
+  .form-grid-2 { grid-template-columns: 1fr !important; }
+  h1 { font-size: 18px !important; }
+}
+
+/* ── AMBIENT ─────────────────────── */
+.blob {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(80px);
+}
+
+/* ── GLOW ACCENT LINE ─────────────── */
+.accent-line {
+  height: 3px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  margin-bottom: 22px;
+}
+
+/* ── STEP CHIP ──────────────────── */
+.step-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  background: rgba(91,114,248,.15);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* color picker wrap */
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border2);
+}
+</style>
+</head>
+
+<body>
+
+<!-- Ambient Blobs -->
+<div class="blob" style="width:420px;height:420px;top:-100px;right:-80px;background:radial-gradient(circle,rgba(91,114,248,.18),transparent 70%);animation:blobA 10s ease-in-out infinite"></div>
+<div class="blob" style="width:500px;height:500px;bottom:-120px;left:-100px;background:radial-gradient(circle,rgba(124,92,248,.12),transparent 70%);animation:blobA 13s 4s ease-in-out infinite"></div>
+<style>
+@keyframes blobA {
+  0%,100% { transform: translate(0,0) scale(1); }
+  40%  { transform: translate(22px,-32px) scale(1.06); }
+  70%  { transform: translate(-16px,18px) scale(.95); }
+}
+</style>
+
+<!-- Sheet Overlay (mobile) -->
+<div id="sheetOverlay" class="sheet-overlay" onclick="closeSheet()"></div>
+
+<!-- Mobile Bottom Sheet -->
+<div id="mobileSheet" class="mobile-sheet">
+  <div class="sheet-handle"></div>
+  <div id="sheetContent"><!-- injected --></div>
+</div>
+
+<div style="max-width:1100px;margin:0 auto;padding:20px 16px 32px;">
+
+  <!-- ── HEADER ── -->
+  <header style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(91,114,248,.35);flex-shrink:0;">
+        <i class="ph ph-qr-code" style="font-size:20px;color:#fff;"></i>
+      </div>
+      <div>
+        <h1 class="font-display" style="font-size:20px;font-weight:700;margin:0;line-height:1.2;">PayLink</h1>
+        <p style="font-size:11px;color:var(--muted);margin:0;">UPI & Link QR Generator</p>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span class="pill" style="display:none;" id="generatedBadge"><i class="ph ph-check-circle"></i> QR Ready</span>
+      <button id="themeToggle" style="width:40px;height:40px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent;">
+        <i class="ph ph-moon" style="font-size:17px;"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── MAIN GRID ── -->
+  <div class="main-grid">
+
+    <!-- ── LEFT COLUMN ── -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
+
+      <!-- Form Card -->
+      <div class="card" style="padding:20px 20px 24px;">
+
+        <!-- Tabs -->
+        <div class="tab-wrap">
+          <button id="tabUpi" class="tab active">
+            <i class="ph ph-currency-inr" style="font-size:16px;"></i> UPI Payment
+          </button>
+          <button id="tabLink" class="tab">
+            <i class="ph ph-link" style="font-size:16px;"></i> Link / Text
+          </button>
+        </div>
+
+        <!-- Section label -->
+        <div class="sec-label">
+          <i id="modeIcon" class="ph ph-smartphone"></i>
+          <span id="modeTitle">Payment Details</span>
+        </div>
+
+        <!-- UPI Form -->
+        <div id="upiForm" style="display:flex;flex-direction:column;gap:14px;">
+          <div>
+            <label style="display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:6px;">UPI ID <span style="color:var(--red)">*</span></label>
+            <div style="position:relative;">
+              <i class="ph ph-at" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px;pointer-events:none;"></i>
+              <input type="text" id="upiId" placeholder="merchant@okhdfcbank" class="inp" style="padding-left:36px;">
+            </div>
+          </div>
+          <div class="form-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <label style="display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:6px;">Amount (INR)</label>
+              <div style="position:relative;">
+                <i class="ph ph-currency-inr" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px;pointer-events:none;"></i>
+                <input type="number" id="amount" placeholder="0.00" class="inp" style="padding-left:36px;">
+              </div>
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:6px;">Payee Name</label>
+              <input type="text" id="payeeName" placeholder="John's Shop" class="inp">
+            </div>
+          </div>
+          <div class="form-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <label style="display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:6px;">Note / Description</label>
+              <input type="text" id="note" placeholder="Payment for goods" class="inp">
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:6px;">Ref / Invoice No.</label>
+              <input type="text" id="invoiceNo" placeholder="#INV-001" class="inp">
+            </div>
+          </div>
+        </div>
+
+        <!-- Link Form -->
+        <div id="linkForm" style="display:none;flex-direction:column;gap:14px;">
+          <div>
+            <label style="display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:6px;">Website URL or Text <span style="color:var(--red)">*</span></label>
+            <textarea id="linkText" placeholder="https://myshop.com/menu&#10;or any plain text…" class="inp"></textarea>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div style="margin:20px 0 0;border-top:1px solid var(--border2);"></div>
+
+        <!-- Logo Upload -->
+        <div id="dropZone" class="drop-zone" style="margin-top:16px;">
+          <input type="file" id="logoUpload" accept="image/*" style="display:none;">
+          <div id="uploadPlaceholder" style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+            <div style="width:36px;height:36px;border-radius:10px;background:rgba(91,114,248,.1);display:flex;align-items:center;justify-content:center;margin-bottom:2px;">
+              <i class="ph ph-upload-simple" style="font-size:18px;color:var(--accent);"></i>
+            </div>
+            <span style="font-size:13px;font-weight:500;color:var(--text);">Upload Logo</span>
+            <span style="font-size:11px;color:var(--muted);">PNG, JPG, SVG — optional</span>
+          </div>
+          <div id="logoPreviewContainer" style="display:none;flex-direction:column;align-items:center;gap:6px;">
+            <img id="logoPreview" style="width:52px;height:52px;object-fit:contain;border-radius:10px;background:#fff;padding:4px;">
+            <span style="font-size:11px;color:var(--green);display:flex;align-items:center;gap:4px;"><i class="ph ph-check-circle"></i> Logo ready</span>
+            <button id="removeLogo" style="font-size:11px;color:var(--red);background:none;border:none;cursor:pointer;padding:2px 8px;border-radius:6px;font-family:inherit;">✕ Remove</button>
+          </div>
+        </div>
+
+        <!-- Appearance -->
+        <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border2);">
+          <div class="sec-label"><i class="ph ph-paint-brush"></i> Appearance</div>
+          <div class="form-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+            <div>
+              <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:6px;">QR Foreground</label>
+              <div class="color-row">
+                <input type="color" id="colorDark" value="#000000" style="width:28px;height:28px;border-radius:6px;cursor:pointer;border:none;padding:0;background:none;">
+                <span style="font-size:12px;color:var(--muted);" id="colorDarkHex">#000000</span>
+              </div>
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:6px;">QR Background</label>
+              <div class="color-row">
+                <input type="color" id="colorLight" value="#ffffff" style="width:28px;height:28px;border-radius:6px;cursor:pointer;border:none;padding:0;background:none;">
+                <span style="font-size:12px;color:var(--muted);" id="colorLightHex">#ffffff</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <label style="font-size:11px;color:var(--muted);">Border Width</label>
+              <span id="borderWidthVal" style="font-size:12px;font-weight:600;color:var(--accent);">0 px</span>
+            </div>
+            <input type="range" id="borderWidth" min="0" max="40" value="0" step="1" class="range-inp">
+            <div class="color-row" style="margin-top:10px;width:fit-content;">
+              <input type="color" id="borderColor" value="#5b72f8" style="width:24px;height:24px;border-radius:5px;cursor:pointer;border:none;padding:0;background:none;">
+              <span style="font-size:11px;color:var(--muted);">Border Color</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Generate Button -->
+        <button id="generateBtn" class="gen-btn">
+          <i class="ph ph-qr-code" style="font-size:19px;"></i>
+          Generate QR Code
+        </button>
+      </div>
+
+      <!-- History Card -->
+      <div class="card" style="padding:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div class="sec-label" style="margin-bottom:0;">
+            <i class="ph ph-clock-counter-clockwise"></i> Recent
+          </div>
+          <button id="clearHistoryBtn" style="display:none;font-size:11px;color:var(--red);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;font-family:inherit;opacity:.8;">
+            <i class="ph ph-trash-simple"></i> Clear
+          </button>
+        </div>
+        <div id="historyList" style="display:flex;flex-direction:column;gap:6px;">
+          <p style="text-align:center;padding:24px 0;font-size:13px;color:var(--muted);font-style:italic;">No recent codes yet</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RIGHT COLUMN ── -->
+    <div class="right-col" style="position:sticky;top:20px;">
+      <div id="previewCard"><!-- rendered by buildPreviewHTML() --></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MOBILE BOTTOM BAR ── -->
+<div class="mobile-preview-toggle" id="mobileBar">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div id="mobileQrThumb" style="width:40px;height:40px;border-radius:8px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;">
+      <i class="ph ph-qr-code" style="font-size:20px;color:#cbd5e1;"></i>
+    </div>
+    <div>
+      <p style="margin:0;font-size:13px;font-weight:600;color:var(--text);" id="mobileBarTitle">QR Preview</p>
+      <p style="margin:0;font-size:11px;color:var(--muted);" id="mobileBarSub">Generate to see QR</p>
+    </div>
+  </div>
+  <button onclick="openSheet()" style="padding:9px 16px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;">
+    View QR <i class="ph ph-arrow-up-right"></i>
+  </button>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast">
+  <i id="toastIcon" class="ph ph-check-circle" style="font-size:16px;color:var(--green);flex-shrink:0;"></i>
+  <span id="toastMsg" style="font-size:13px;font-weight:500;color:var(--text);">Message</span>
+</div>
+
+<!-- Hidden raw QR output -->
+<div id="qrcode-raw" style="display:none;position:absolute;"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+let logoDataUrl = null;
+let qrGenerated = false;
+let currentMode = 'upi';
+let history = JSON.parse(localStorage.getItem('pl_history') || '[]');
+
+const html = document.documentElement;
+const body = document.body;
+
+// DOM refs
+const themeToggle   = $('themeToggle');
+const generateBtn   = $('generateBtn');
+const dropZone      = $('dropZone');
+const logoUpload    = $('logoUpload');
+const logoPreview   = $('logoPreview');
+const logoPrevCont  = $('logoPreviewContainer');
+const uploadPH      = $('uploadPlaceholder');
+const removeLogo    = $('removeLogo');
+const qrCanvas      = $('qrCanvas');
+const historyList   = $('historyList');
+const clearHistBtn  = $('clearHistoryBtn');
+const toastEl       = $('toast');
+const toastMsg      = $('toastMsg');
+const toastIcon     = $('toastIcon');
+const tabUpi        = $('tabUpi');
+const tabLink       = $('tabLink');
+const upiForm       = $('upiForm');
+const linkForm      = $('linkForm');
+const modeIcon      = $('modeIcon');
+const modeTitle     = $('modeTitle');
+const generatedBadge= $('generatedBadge');
+const mobileBarSub  = $('mobileBarSub');
+const mobileBarTitle= $('mobileBarTitle');
+
+const inputs = {
+  upiId: $('upiId'), amount: $('amount'),
+  payeeName: $('payeeName'), note: $('note'),
+  invoiceNo: $('invoiceNo'), linkText: $('linkText')
+};
+const styleIn = {
+  dark: $('colorDark'), light: $('colorLight'),
+  borderColor: $('borderColor'),
+  borderWidth: $('borderWidth'),
+  borderWidthVal: $('borderWidthVal')
+};
+
+// ── BUILD PREVIEW HTML ──────────────────────────────────────────
+function buildPreviewHTML() {
+  return `
+  <div class="card" style="padding:22px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:0;">
+    <div class="accent-line" style="width:100%;"></div>
+    <p class="font-display" style="font-size:15px;font-weight:700;margin:0 0 18px;color:var(--text);">QR Preview</p>
+
+    <div class="qr-wrap" style="margin-bottom:18px;">
+      <div id="qrPlaceholder" style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+        <i class="ph ph-qr-code" style="font-size:52px;color:var(--border);"></i>
+        <span style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;">Enter details</span>
+      </div>
+      <div id="qrLoader" style="display:none;">
+        <i class="ph ph-arrows-clockwise spin" style="font-size:30px;color:var(--accent);"></i>
+      </div>
+      <canvas id="qrCanvas" style="display:none;width:100%;height:100%;"></canvas>
+    </div>
+
+    <div style="width:100%;border-radius:12px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border2);text-align:left;margin-bottom:14px;">
+      <div id="upiSummaryContent">
+        <div class="sum-row">
+          <span style="color:var(--muted);font-size:11px;">Payee</span>
+          <span id="summaryName" style="font-weight:600;color:var(--text);font-size:13px;">—</span>
+        </div>
+        <div class="sum-row">
+          <span style="color:var(--muted);font-size:11px;">UPI ID</span>
+          <span id="summaryId" style="font-weight:500;color:var(--text);font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">—</span>
+        </div>
+        <div class="sum-row" style="padding-top:10px;margin-top:4px;border-top:1px dashed var(--border) !important;">
+          <span style="color:var(--muted);font-size:11px;">Amount</span>
+          <span id="summaryAmount" style="font-size:18px;font-weight:700;color:var(--green);">Any Amount</span>
+        </div>
+      </div>
+      <div id="linkSummaryContent" style="display:none;">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:5px;">Content</div>
+        <span id="summaryLink" style="font-size:13px;font-weight:500;color:var(--text);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;word-break:break-all;">—</span>
+      </div>
+    </div>
+
+    <div class="act-btns" style="margin-bottom:14px;">
+      <button id="downloadBtn" class="act-btn dl" disabled>
+        <i class="ph ph-download-simple" style="font-size:19px;"></i> Save
+      </button>
+      <button id="shareBtn" class="act-btn sh" disabled>
+        <i class="ph ph-share-network" style="font-size:19px;"></i> Share
+      </button>
+      <button id="copyBtn" class="act-btn cp" disabled>
+        <i class="ph ph-copy" style="font-size:19px;"></i> Copy
+      </button>
+    </div>
+
+    <div id="compatibilityText" style="display:flex;align-items:center;gap:5px;opacity:.35;transition:opacity .4s;">
+      <i class="ph ph-shield-check" style="font-size:12px;color:var(--green);"></i>
+      <span style="font-size:10px;color:var(--muted);">GPay · PhonePe · Paytm · BHIM</span>
+    </div>
+  </div>
+
+  <div style="margin-top:12px;border-radius:12px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px;background:rgba(91,114,248,.07);border:1px solid rgba(91,114,248,.15);">
+    <i class="ph ph-lock-simple" style="font-size:15px;color:var(--accent);flex-shrink:0;margin-top:1px;"></i>
+    <p style="margin:0;font-size:12px;color:var(--muted);line-height:1.6;">All QR codes are generated locally. No data leaves your device.</p>
+  </div>
+  `;
+}
+
+// render into both desktop and mobile
+function renderPreviewPanel() {
+  $('previewCard').innerHTML = buildPreviewHTML();
+  rebindPreviewRefs();
+}
+
+let previewRefs = {};
+function rebindPreviewRefs() {
+  previewRefs = {
+    qrPlaceholder: $('qrPlaceholder'),
+    qrLoader:      $('qrLoader'),
+    qrCanvas:      $('qrCanvas'),
+    downloadBtn:   $('downloadBtn'),
+    shareBtn:      $('shareBtn'),
+    copyBtn:       $('copyBtn'),
+    upiSum:        $('upiSummaryContent'),
+    linkSum:       $('linkSummaryContent'),
+    summaryName:   $('summaryName'),
+    summaryId:     $('summaryId'),
+    summaryAmount: $('summaryAmount'),
+    summaryLink:   $('summaryLink'),
+    compatText:    $('compatibilityText'),
+  };
+  previewRefs.downloadBtn.addEventListener('click', downloadQR);
+  previewRefs.shareBtn.addEventListener('click', shareQR);
+  previewRefs.copyBtn.addEventListener('click', copyLink);
+}
+
+// ── THEME ───────────────────────────────────────────────────────
+const savedTheme = localStorage.getItem('pl_theme');
+if (savedTheme === 'light') applyLight(); else applyDark();
+
+function applyDark() {
+  html.classList.add('dark'); html.classList.remove('light');
+  themeToggle.innerHTML = '<i class="ph ph-moon" style="font-size:17px;"></i>';
+}
+function applyLight() {
+  html.classList.remove('dark'); html.classList.add('light');
+  themeToggle.innerHTML = '<i class="ph ph-sun" style="font-size:17px;color:var(--amber);"></i>';
+}
+themeToggle.addEventListener('click', () => {
+  const isLight = html.classList.contains('light');
+  if (isLight) { applyDark(); localStorage.setItem('pl_theme','dark'); }
+  else { applyLight(); localStorage.setItem('pl_theme','light'); }
+});
+
+// ── TABS ────────────────────────────────────────────────────────
+tabUpi.addEventListener('click', () => switchMode('upi'));
+tabLink.addEventListener('click', () => switchMode('link'));
+
+function switchMode(mode) {
+  currentMode = mode;
+  resetQRState();
+  if (mode === 'upi') {
+    tabUpi.classList.add('active');    tabLink.classList.remove('active');
+    upiForm.style.display = 'flex';   linkForm.style.display = 'none';
+    modeIcon.className = 'ph ph-smartphone';
+    modeTitle.textContent = 'Payment Details';
+    if (previewRefs.upiSum) { previewRefs.upiSum.style.display=''; previewRefs.linkSum.style.display='none'; }
+    if (previewRefs.compatText) previewRefs.compatText.style.opacity = '.35';
+  } else {
+    tabLink.classList.add('active');   tabUpi.classList.remove('active');
+    linkForm.style.display = 'flex';  upiForm.style.display = 'none';
+    modeIcon.className = 'ph ph-link';
+    modeTitle.textContent = 'Content Details';
+    if (previewRefs.linkSum) { previewRefs.linkSum.style.display=''; previewRefs.upiSum.style.display='none'; }
+    if (previewRefs.compatText) previewRefs.compatText.style.opacity = '0';
+  }
+}
+
+// ── LOGO ────────────────────────────────────────────────────────
+dropZone.addEventListener('click', e => { if (e.target !== removeLogo) logoUpload.click(); });
+logoUpload.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    logoDataUrl = ev.target.result;
+    logoPreview.src = logoDataUrl;
+    logoPrevCont.style.display = 'flex';
+    uploadPH.style.display = 'none';
+    resetQRState();
+  };
+  reader.readAsDataURL(file);
+});
+removeLogo.addEventListener('click', e => {
+  e.stopPropagation();
+  logoDataUrl = null; logoUpload.value = '';
+  logoPrevCont.style.display = 'none';
+  uploadPH.style.display = 'flex';
+  resetQRState();
+});
+
+// ── COLOR HEX LABELS ────────────────────────────────────────────
+styleIn.dark.addEventListener('input', e => { $('colorDarkHex').textContent = e.target.value; if(qrGenerated) generateQR(); });
+styleIn.light.addEventListener('input', e => { $('colorLightHex').textContent = e.target.value; if(qrGenerated) generateQR(); });
+styleIn.borderColor.addEventListener('input', () => { if(qrGenerated) renderCanvas(); });
+styleIn.borderWidth.addEventListener('input', e => {
+  styleIn.borderWidthVal.textContent = `${e.target.value} px`;
+  if(qrGenerated) renderCanvas();
+});
+
+Object.values(inputs).forEach(i => i.addEventListener('input', resetQRState));
+
+generateBtn.addEventListener('click', generateQR);
+clearHistBtn.addEventListener('click', clearHistory);
+
+// ── STATE HELPERS ────────────────────────────────────────────────
+function setBtn(btn, on) {
+  if (!btn) return;
+  btn.disabled = !on;
+  btn.style.opacity = on ? '1' : '.4';
+  btn.style.cursor = on ? 'pointer' : 'not-allowed';
+  if (on) btn.classList.add('enabled'); else btn.classList.remove('enabled');
+}
+
+function resetQRState() {
+  qrGenerated = false;
+  generatedBadge.style.display = 'none';
+  setBtn(previewRefs.downloadBtn, false);
+  setBtn(previewRefs.shareBtn, false);
+  const hasData = currentMode === 'upi' ? inputs.upiId.value : inputs.linkText.value;
+  setBtn(previewRefs.copyBtn, !!hasData);
+  if (previewRefs.qrCanvas) previewRefs.qrCanvas.style.display = 'none';
+  if (previewRefs.qrPlaceholder) previewRefs.qrPlaceholder.style.display = '';
+}
+
+// ── TOAST ────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type='success') {
+  toastMsg.textContent = msg;
+  toastIcon.className = type === 'error' ? 'ph ph-warning-circle' : 'ph ph-check-circle';
+  toastIcon.style.color = type === 'error' ? 'var(--red)' : 'var(--green)';
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3000);
+}
+
+// ── VALIDATE ─────────────────────────────────────────────────────
+function validate() {
+  if (currentMode === 'upi') {
+    if (!inputs.upiId.value) { showToast('UPI ID is required', 'error'); return false; }
+    if (!/[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}/.test(inputs.upiId.value)) { showToast('Invalid UPI ID format', 'error'); return false; }
+    if (inputs.amount.value && parseFloat(inputs.amount.value) <= 0) { showToast('Amount must be positive', 'error'); return false; }
+  } else {
+    if (!inputs.linkText.value.trim()) { showToast('Please enter a URL or text', 'error'); return false; }
+  }
+  return true;
+}
+
+// ── GENERATE ─────────────────────────────────────────────────────
+function generateQR() {
+  if (!validate()) return;
+  previewRefs.qrPlaceholder.style.display = 'none';
+  previewRefs.qrCanvas.style.display = 'none';
+  previewRefs.qrLoader.style.display = 'flex';
+
+  let qrContent = '';
+  if (currentMode === 'upi') {
+    qrContent = `upi://pay?pa=${inputs.upiId.value}&cu=INR`;
+    if (inputs.payeeName.value) qrContent += `&pn=${encodeURIComponent(inputs.payeeName.value)}`;
+    if (inputs.amount.value)    qrContent += `&am=${inputs.amount.value}`;
+    if (inputs.note.value)      qrContent += `&tn=${encodeURIComponent(inputs.note.value)}`;
+    if (inputs.invoiceNo.value) qrContent += `&tr=${encodeURIComponent(inputs.invoiceNo.value)}`;
+    previewRefs.summaryName.textContent   = inputs.payeeName.value || '—';
+    previewRefs.summaryId.textContent     = inputs.upiId.value;
+    previewRefs.summaryAmount.textContent = inputs.amount.value ? `₹${inputs.amount.value}` : 'Any Amount';
+    mobileBarTitle.textContent = inputs.payeeName.value || inputs.upiId.value;
+    mobileBarSub.textContent = inputs.amount.value ? `₹${inputs.amount.value}` : 'Any Amount';
+  } else {
+    qrContent = inputs.linkText.value;
+    previewRefs.summaryLink.textContent = qrContent;
+    mobileBarTitle.textContent = 'Link / Text QR';
+    mobileBarSub.textContent = qrContent.substring(0,32)+'…';
+  }
+
+  $('qrcode-raw').innerHTML = '';
+  setTimeout(() => {
+    try {
+      new QRCode($('qrcode-raw'), {
+        text: qrContent, width: 1000, height: 1000,
+        colorDark: styleIn.dark.value, colorLight: styleIn.light.value,
+        correctLevel: QRCode.CorrectLevel.H
+      });
+      renderCanvas();
+    } catch(err) {
+      console.error(err);
+      showToast('Error generating QR', 'error');
+      previewRefs.qrLoader.style.display = 'none';
+      previewRefs.qrPlaceholder.style.display = '';
+    }
+  }, 400);
+}
+
+function renderCanvas() {
+  setTimeout(() => {
+    const rawImg = document.querySelector('#qrcode-raw img');
+    if (!rawImg) return;
+    const cv = previewRefs.qrCanvas;
+    const ctx = cv.getContext('2d');
+    const size = 600;
+    const border = parseInt(styleIn.borderWidth.value);
+    const inner = size - border * 2;
+    cv.width = size; cv.height = size;
+    ctx.fillStyle = styleIn.light.value;
+    ctx.fillRect(0, 0, size, size);
+    ctx.drawImage(rawImg, border, border, inner, inner);
+    if (border > 0) {
+      ctx.strokeStyle = styleIn.borderColor.value;
+      ctx.lineWidth = border;
+      ctx.strokeRect(border/2, border/2, size - border, size - border);
+    }
+    if (logoDataUrl) {
+      const li = new Image();
+      li.onload = () => {
+        const ls = inner * 0.2;
+        const x = (size - ls) / 2, y = (size - ls) / 2;
+        ctx.fillStyle = styleIn.light.value;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(x-5, y-5, ls+10, ls+10, 10);
+        else ctx.rect(x-5, y-5, ls+10, ls+10);
+        ctx.fill();
+        ctx.drawImage(li, x, y, ls, ls);
+        finalizeGeneration();
+      };
+      li.src = logoDataUrl;
+    } else {
+      finalizeGeneration();
+    }
+  }, 120);
+}
+
+function finalizeGeneration() {
+  previewRefs.qrLoader.style.display = 'none';
+  previewRefs.qrCanvas.style.display = 'block';
+  qrGenerated = true;
+  generatedBadge.style.display = 'inline-flex';
+  setBtn(previewRefs.downloadBtn, true);
+  setBtn(previewRefs.shareBtn, true);
+  setBtn(previewRefs.copyBtn, true);
+  if (previewRefs.compatText) previewRefs.compatText.style.opacity = currentMode === 'upi' ? '1' : '0';
+  // update mobile thumb
+  const thumb = $('mobileQrThumb');
+  if (thumb) {
+    const url = previewRefs.qrCanvas.toDataURL('image/png');
+    thumb.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">`;
+  }
+  addToHistory();
+  showToast('QR Code ready!');
+}
+
+// ── DOWNLOAD ──────────────────────────────────────────────────────
+function downloadQR() {
+  if (!qrGenerated) return;
+  const url = previewRefs.qrCanvas.toDataURL('image/png');
+  const a = document.createElement('a');
+  a.download = currentMode === 'upi'
+    ? `UPI-QR-${inputs.payeeName.value || 'Pay'}.png`
+    : `QR-Code-${Date.now()}.png`;
+  a.href = url; a.click();
+}
+
+// ── SHARE ─────────────────────────────────────────────────────────
+async function shareQR() {
+  if (!qrGenerated) return;
+  previewRefs.qrCanvas.toBlob(async blob => {
+    const file = new File([blob], 'qr-code.png', { type:'image/png' });
+    const text = currentMode === 'upi'
+      ? `Pay ${inputs.amount.value ? '₹'+inputs.amount.value : ''} to ${inputs.payeeName.value || inputs.upiId.value}`
+      : inputs.linkText.value;
+    try {
+      if (navigator.share && navigator.canShare({ title:'QR Code', text, files:[file] }))
+        await navigator.share({ title:'QR Code', text, files:[file] });
+      else { copyLink(); showToast('Sharing unavailable — copied!'); }
+    } catch(e) { console.error(e); }
+  });
+}
+
+// ── COPY ──────────────────────────────────────────────────────────
+function copyLink() {
+  let content = '';
+  if (currentMode === 'upi') {
+    if (!inputs.upiId.value) return;
+    content = `upi://pay?pa=${inputs.upiId.value}&cu=INR`;
+    if (inputs.amount.value) content += `&am=${inputs.amount.value}`;
+  } else {
+    content = inputs.linkText.value;
+  }
+  if (content) navigator.clipboard.writeText(content).then(() => showToast('Copied to clipboard!'));
+}
+
+// ── HISTORY ───────────────────────────────────────────────────────
+function addToHistory() {
+  const last = history[0];
+  if (last) {
+    if (currentMode==='upi' && last.upiId===inputs.upiId.value && last.amount===inputs.amount.value) return;
+    if (currentMode!=='upi' && last.content===inputs.linkText.value) return;
+  }
+  history.unshift({
+    id: Date.now(), type: currentMode,
+    upiId: inputs.upiId.value, name: inputs.payeeName.value,
+    amount: inputs.amount.value, content: inputs.linkText.value,
+    date: new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short'})
+  });
+  if (history.length > 10) history.pop();
+  localStorage.setItem('pl_history', JSON.stringify(history));
+  renderHistory();
+}
+
+function renderHistory() {
+  if (!history.length) {
+    historyList.innerHTML = '<p style="text-align:center;padding:24px 0;font-size:13px;color:var(--muted);font-style:italic;">No recent codes yet</p>';
+    clearHistBtn.style.display = 'none';
+    return;
+  }
+  clearHistBtn.style.display = 'flex';
+  historyList.innerHTML = history.map(item => {
+    const isUpi = item.type !== 'link';
+    const icon  = isUpi ? 'ph-currency-inr' : 'ph-link';
+    const main  = isUpi ? (item.name || item.upiId) : 'Text / Link';
+    const sub   = isUpi ? item.date : (item.content ? item.content.substring(0,30)+'…' : '');
+    const right = isUpi ? (item.amount ? '₹'+item.amount : 'Open') : '<i class="ph ph-qr-code"></i>';
+    const rc    = isUpi ? 'var(--green)' : 'var(--muted)';
+    return `<div onclick="loadHistoryItem(${item.id})" class="hist-item">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+        <div style="width:34px;height:34px;border-radius:9px;background:rgba(91,114,248,.11);display:flex;align-items:center;justify-content:center;color:var(--accent);flex-shrink:0;">
+          <i class="ph ${icon}"></i>
+        </div>
+        <div style="min-width:0;">
+          <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${main}</div>
+          <div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${sub}</div>
+        </div>
+      </div>
+      <span style="font-weight:700;font-size:13px;color:${rc};flex-shrink:0;margin-left:8px;">${right}</span>
+    </div>`;
+  }).join('');
+}
+
+window.loadHistoryItem = function(id) {
+  const item = history.find(h => h.id === id);
+  if (!item) return;
+  if (item.type === 'link') { switchMode('link'); inputs.linkText.value = item.content || ''; }
+  else {
+    switchMode('upi');
+    inputs.upiId.value = item.upiId || '';
+    inputs.payeeName.value = item.name || '';
+    inputs.amount.value = item.amount || '';
+  }
+  resetQRState();
+  window.scrollTo({ top:0, behavior:'smooth' });
+};
+
+function clearHistory() {
+  if (confirm('Clear all recent history?')) {
+    history = []; localStorage.removeItem('pl_history'); renderHistory();
+  }
+}
+
+// ── MOBILE SHEET ──────────────────────────────────────────────────
+function openSheet() {
+  const sc = $('sheetContent');
+  sc.innerHTML = buildPreviewHTML();
+  rebindPreviewRefs();
+  // If QR already generated, re-draw canvas in sheet
+  if (qrGenerated) {
+    const rawImg = document.querySelector('#qrcode-raw img');
+    if (rawImg) {
+      previewRefs.qrPlaceholder.style.display = 'none';
+      previewRefs.qrLoader.style.display = 'none';
+      const cv = previewRefs.qrCanvas;
+      const ctx = cv.getContext('2d');
+      const size = 600;
+      const border = parseInt(styleIn.borderWidth.value);
+      const inner = size - border * 2;
+      cv.width = size; cv.height = size;
+      ctx.fillStyle = styleIn.light.value;
+      ctx.fillRect(0,0,size,size);
+      ctx.drawImage(rawImg, border, border, inner, inner);
+      if (border > 0) {
+        ctx.strokeStyle = styleIn.borderColor.value;
+        ctx.lineWidth = border;
+        ctx.strokeRect(border/2,border/2,size-border,size-border);
+      }
+      cv.style.display = 'block';
+      setBtn(previewRefs.downloadBtn, true);
+      setBtn(previewRefs.shareBtn, true);
+      setBtn(previewRefs.copyBtn, true);
+    }
+  }
+  $('mobileSheet').classList.add('open');
+  $('sheetOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSheet() {
+  $('mobileSheet').classList.remove('open');
+  $('sheetOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  // rebind to desktop preview
+  $('previewCard').innerHTML = buildPreviewHTML();
+  rebindPreviewRefs();
+  if (qrGenerated) {
+    const rawImg = document.querySelector('#qrcode-raw img');
+    if (rawImg) {
+      previewRefs.qrPlaceholder.style.display = 'none';
+      const cv = previewRefs.qrCanvas;
+      const ctx = cv.getContext('2d');
+      const size = 600, border = parseInt(styleIn.borderWidth.value), inner = size - border*2;
+      cv.width = size; cv.height = size;
+      ctx.fillStyle = styleIn.light.value;
+      ctx.fillRect(0,0,size,size);
+      ctx.drawImage(rawImg, border, border, inner, inner);
+      cv.style.display = 'block';
+      setBtn(previewRefs.downloadBtn, true);
+      setBtn(previewRefs.shareBtn, true);
+      setBtn(previewRefs.copyBtn, true);
+    }
+  }
+}
+
+// ── INIT ──────────────────────────────────────────────────────────
+renderPreviewPanel();
+renderHistory();
+resetQRState();
+</script>
+</body>
+</html>
