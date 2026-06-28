@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PayLink — UPI & QR Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#07101f;--surf:#0d1b2e;--surf2:#111f33;
+  --bdr:rgba(255,255,255,.07);--bdr2:rgba(255,255,255,.04);
+  --txt:#e8f0fe;--mut:#60748a;
+  --acc:#5b72f8;--acc2:#7c5cf8;
+  --grn:#10b981;--red:#f87171;--amb:#f59e0b;
+}
+html.light{
+  --bg:#eef2fa;--surf:#fff;--surf2:#f4f7ff;
+  --bdr:rgba(0,0,0,.08);--bdr2:rgba(0,0,0,.05);
+  --txt:#0f1923;--mut:#7a8fa8;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;transition:background .3s,color .3s;overflow-x:hidden;}
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-thumb{background:#1e293b;border-radius:99px;}
+input[type=color]::-webkit-color-swatch-wrapper{padding:0;}
+input[type=color]::-webkit-color-swatch{border:none;border-radius:6px;}
+
+/* CARD */
+.card{background:var(--surf);border:1px solid var(--bdr);border-radius:20px;transition:background .3s,border .3s;}
+
+/* INPUT */
+.inp{width:100%;padding:13px 16px;border-radius:12px;outline:none;border:1.5px solid var(--bdr);background:var(--surf2);color:var(--txt);font-size:15px;font-family:inherit;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;appearance:none;}
+.inp:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(91,114,248,.14);}
+.inp::placeholder{color:var(--mut);}
+textarea.inp{resize:vertical;min-height:110px;}
+
+/* TABS */
+.tab-bar{display:flex;gap:5px;padding:5px;background:var(--surf2);border:1px solid var(--bdr2);border-radius:14px;margin-bottom:22px;}
+.tab{flex:1;padding:11px 8px;border-radius:10px;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;border:none;cursor:pointer;background:transparent;color:var(--mut);font-family:inherit;transition:all .2s;-webkit-tap-highlight-color:transparent;}
+.tab.on{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;box-shadow:0 4px 14px rgba(91,114,248,.3);}
+
+/* LABEL */
+.slabel{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--acc);margin-bottom:14px;}
+
+/* GEN BTN */
+.genbtn{width:100%;padding:15px;border-radius:14px;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;font-size:15px;font-weight:700;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 4px 20px rgba(91,114,248,.3);transition:transform .18s,box-shadow .18s;font-family:inherit;-webkit-tap-highlight-color:transparent;margin-top:20px;}
+.genbtn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(91,114,248,.42);}
+.genbtn:active{transform:scale(.98);}
+
+/* DROP */
+.drop{border:2px dashed var(--bdr);border-radius:12px;padding:18px;text-align:center;cursor:pointer;transition:all .2s;margin-top:14px;}
+.drop:hover{border-color:var(--acc);background:rgba(91,114,248,.04);}
+
+/* RANGE */
+.range{-webkit-appearance:none;appearance:none;width:100%;height:4px;background:var(--bdr);border-radius:99px;outline:none;}
+.range::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--acc);cursor:pointer;box-shadow:0 0 0 3px rgba(91,114,248,.22);}
+.range::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--acc);cursor:pointer;border:none;}
+
+/* ACTION BTNS */
+.actrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;}
+.abtn{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:13px 6px;border-radius:12px;gap:5px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border:1.5px solid var(--bdr);background:var(--surf2);color:var(--mut);transition:all .2s;font-family:inherit;-webkit-tap-highlight-color:transparent;}
+.abtn[disabled]{opacity:.4;cursor:not-allowed;}
+.abtn:not([disabled]){cursor:pointer;}
+.abtn:not([disabled]):active{transform:scale(.95);}
+.abtn.dl:not([disabled]):hover{background:#3b82f6;color:#fff;border-color:#3b82f6;}
+.abtn.sh:not([disabled]):hover{background:#8b5cf6;color:#fff;border-color:#8b5cf6;}
+.abtn.cp:not([disabled]):hover{background:var(--grn);color:#fff;border-color:var(--grn);}
+
+/* QR BOX */
+.qrbox{width:220px;height:220px;border-radius:16px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.3);flex-shrink:0;position:relative;}
+.qrbox canvas{width:100%!important;height:100%!important;display:none;}
+
+/* HIST */
+.hitem{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-radius:12px;cursor:pointer;border:1.5px solid var(--bdr2);background:var(--surf2);transition:all .15s;gap:8px;}
+.hitem:hover{border-color:var(--acc);background:rgba(91,114,248,.07);}
+
+/* SUMROW */
+.srow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;gap:8px;}
+.srow+.srow{border-top:1px dashed var(--bdr2);}
+
+/* COLORPICK */
+.cpick{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;background:var(--surf2);border:1.5px solid var(--bdr2);}
+
+/* TOAST */
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);opacity:0;background:var(--surf);border:1.5px solid var(--bdr);border-radius:99px;padding:11px 20px;display:flex;align-items:center;gap:9px;box-shadow:0 8px 32px rgba(0,0,0,.4);z-index:9999;transition:all .32s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;max-width:calc(100vw - 32px);}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+
+/* SPIN */
+@keyframes spin{to{transform:rotate(360deg);}}
+.spin{animation:spin .8s linear infinite;}
+
+/* BLOB */
+.blob{position:fixed;border-radius:50%;pointer-events:none;filter:blur(80px);}
+@keyframes blobA{0%,100%{transform:translate(0,0) scale(1);}40%{transform:translate(20px,-30px) scale(1.06);}70%{transform:translate(-15px,18px) scale(.95);}}
+
+/* ─── LAYOUT ─────────────────────────── */
+.layout{display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start;max-width:1080px;margin:0 auto;padding:20px 16px 40px;}
+
+/* MOBILE BOTTOM BAR */
+#mbar{display:none;position:fixed;bottom:0;left:0;right:0;z-index:100;background:var(--surf);border-top:1px solid var(--bdr);padding:10px 16px 22px;align-items:center;justify-content:space-between;gap:12px;}
+#mbar .mthumb{width:42px;height:42px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;}
+#mbar .mbtn{padding:10px 18px;border-radius:10px;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;white-space:nowrap;}
+
+/* SHEET */
+#sheet{position:fixed;bottom:0;left:0;right:0;z-index:200;background:var(--surf);border-radius:24px 24px 0 0;border-top:1px solid var(--bdr);padding:0 16px 40px;transform:translateY(100%);transition:transform .32s cubic-bezier(.32,0,.15,1);box-shadow:0 -16px 60px rgba(0,0,0,.45);max-height:92vh;overflow-y:auto;display:none;}
+#sheet.open{transform:translateY(0);display:block;}
+#sovl{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:190;backdrop-filter:blur(3px);}
+#sovl.open{display:block;}
+.shandle{width:40px;height:4px;background:var(--bdr);border-radius:99px;margin:14px auto 20px;}
+
+/* HEADER */
+header{display:flex;justify-content:space-between;align-items:center;max-width:1080px;margin:0 auto;padding:18px 16px 0;}
+
+@media(max-width:860px){
+  .layout{grid-template-columns:1fr;padding-bottom:90px;}
+  .rcol{display:none;}
+  #mbar{display:flex;}
+  .form-2col{grid-template-columns:1fr!important;}
+}
+@media(max-width:420px){
+  .qrbox{width:190px;height:190px;}
+  header h1{font-size:18px!important;}
+}
+</style>
+</head>
+<body>
+
+<!-- Blobs -->
+<div class="blob" style="width:400px;height:400px;top:-80px;right:-60px;background:radial-gradient(circle,rgba(91,114,248,.16),transparent 70%);animation:blobA 10s ease-in-out infinite;"></div>
+<div class="blob" style="width:460px;height:460px;bottom:-100px;left:-80px;background:radial-gradient(circle,rgba(124,92,248,.11),transparent 70%);animation:blobA 13s 4s ease-in-out infinite;"></div>
+
+<!-- Sheet overlay -->
+<div id="sovl" onclick="closeSheet()"></div>
+
+<!-- Bottom sheet (mobile QR preview) -->
+<div id="sheet">
+  <div class="shandle"></div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding-bottom:8px;">
+    <div style="width:100%;height:3px;border-radius:99px;background:linear-gradient(90deg,var(--acc),var(--acc2));margin-bottom:4px;"></div>
+    <p style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:var(--txt);">QR Preview</p>
+
+    <!-- QR in sheet -->
+    <div class="qrbox" id="sqrbox">
+      <div id="sqrph" style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+        <i class="ph ph-qr-code" style="font-size:48px;color:var(--bdr);"></i>
+        <span style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);font-weight:600;">Generate first</span>
+      </div>
+      <div id="sqrld" style="display:none;"><i class="ph ph-arrows-clockwise spin" style="font-size:28px;color:var(--acc);"></i></div>
+      <img id="sqrimg" style="display:none;width:100%;height:100%;object-fit:contain;border-radius:14px;" alt="QR Code">
+    </div>
+
+    <!-- Sheet Summary -->
+    <div style="width:100%;border-radius:12px;padding:12px 14px;background:var(--surf2);border:1px solid var(--bdr2);">
+      <div id="ssum_upi">
+        <div class="srow"><span style="color:var(--mut);font-size:11px;">Payee</span><span id="ss_name" style="font-weight:600;font-size:13px;color:var(--txt);">—</span></div>
+        <div class="srow"><span style="color:var(--mut);font-size:11px;">UPI ID</span><span id="ss_id" style="font-weight:500;font-size:12px;color:var(--txt);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">—</span></div>
+        <div class="srow" style="padding-top:10px;border-top:1px dashed var(--bdr2)!important;"><span style="color:var(--mut);font-size:11px;">Amount</span><span id="ss_amt" style="font-size:18px;font-weight:700;color:var(--grn);">Any Amount</span></div>
+      </div>
+      <div id="ssum_lnk" style="display:none;">
+        <div style="font-size:11px;color:var(--mut);margin-bottom:5px;">Content</div>
+        <span id="ss_lnk" style="font-size:13px;font-weight:500;color:var(--txt);word-break:break-all;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">—</span>
+      </div>
+    </div>
+
+    <!-- Sheet action buttons -->
+    <div class="actrow" style="width:100%;">
+      <button id="s_dl" class="abtn dl" disabled onclick="downloadQR()"><i class="ph ph-download-simple" style="font-size:20px;"></i>Save</button>
+      <button id="s_sh" class="abtn sh" disabled onclick="shareQR()"><i class="ph ph-share-network" style="font-size:20px;"></i>Share</button>
+      <button id="s_cp" class="abtn cp" disabled onclick="copyLink()"><i class="ph ph-copy" style="font-size:20px;"></i>Copy</button>
+    </div>
+
+    <div id="s_compat" style="display:flex;align-items:center;gap:5px;opacity:.4;">
+      <i class="ph ph-shield-check" style="font-size:12px;color:var(--grn);"></i>
+      <span style="font-size:10px;color:var(--mut);">GPay · PhonePe · Paytm · BHIM</span>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div style="width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,var(--acc),var(--acc2));display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(91,114,248,.35);flex-shrink:0;">
+      <i class="ph ph-qr-code" style="font-size:20px;color:#fff;"></i>
+    </div>
+    <div>
+      <h1 style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;line-height:1.2;color:var(--txt);">PayLink</h1>
+      <p style="font-size:11px;color:var(--mut);">UPI & Link QR Generator</p>
+    </div>
+  </div>
+  <button id="themeBtn" style="width:40px;height:40px;border-radius:12px;border:1.5px solid var(--bdr);background:var(--surf2);color:var(--mut);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent;">
+    <i class="ph ph-moon" style="font-size:17px;"></i>
+  </button>
+</header>
+
+<!-- MAIN LAYOUT -->
+<div class="layout">
+
+  <!-- LEFT: Form -->
+  <div style="display:flex;flex-direction:column;gap:16px;">
+    <div class="card" style="padding:20px 20px 24px;">
+
+      <!-- Tabs -->
+      <div class="tab-bar">
+        <button id="tabUpi" class="tab on" onclick="switchMode('upi')">
+          <i class="ph ph-currency-inr" style="font-size:16px;"></i> UPI Payment
+        </button>
+        <button id="tabLnk" class="tab" onclick="switchMode('link')">
+          <i class="ph ph-link" style="font-size:16px;"></i> Link / Text
+        </button>
+      </div>
+
+      <!-- Section label -->
+      <div class="slabel"><i id="modeIco" class="ph ph-smartphone"></i><span id="modeTxt">Payment Details</span></div>
+
+      <!-- UPI Form -->
+      <div id="upiForm" style="display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <label style="display:block;font-size:12px;font-weight:500;color:var(--mut);margin-bottom:6px;">UPI ID <span style="color:var(--red);">*</span></label>
+          <div style="position:relative;">
+            <i class="ph ph-at" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--mut);font-size:15px;pointer-events:none;"></i>
+            <input type="text" id="upiId" placeholder="merchant@okhdfcbank" class="inp" style="padding-left:38px;" inputmode="email">
+          </div>
+        </div>
+        <div class="form-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <label style="display:block;font-size:12px;font-weight:500;color:var(--mut);margin-bottom:6px;">Amount (INR)</label>
+            <div style="position:relative;">
+              <i class="ph ph-currency-inr" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--mut);font-size:15px;pointer-events:none;"></i>
+              <input type="number" id="amount" placeholder="0.00" class="inp" style="padding-left:38px;" inputmode="decimal">
+            </div>
+          </div>
+          <div>
+            <label style="display:block;font-size:12px;font-weight:500;color:var(--mut);margin-bottom:6px;">Payee Name</label>
+            <input type="text" id="payeeName" placeholder="John's Shop" class="inp">
+          </div>
+        </div>
+        <div class="form-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <label style="display:block;font-size:12px;font-weight:500;color:var(--mut);margin-bottom:6px;">Note / Description</label>
+            <input type="text" id="note" placeholder="Payment for goods" class="inp">
+          </div>
+          <div>
+            <label style="display:block;font-size:12px;font-weight:500;color:var(--mut);margin-bottom:6px;">Ref / Invoice No.</label>
+            <input type="text" id="invoiceNo" placeholder="#INV-001" class="inp">
+          </div>
+        </div>
+      </div>
+
+      <!-- Link Form -->
+      <div id="lnkForm" style="display:none;flex-direction:column;gap:14px;">
+        <div>
+          <label style="display:block;font-size:12px;font-weight:500;color:var(--mut);margin-bottom:6px;">Website URL or Text <span style="color:var(--red);">*</span></label>
+          <textarea id="linkText" placeholder="https://myshop.com/menu&#10;or any plain text…" class="inp"></textarea>
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div style="margin:20px 0 16px;border-top:1px solid var(--bdr2);"></div>
+
+      <!-- Logo Upload -->
+      <div id="dropZone" class="drop">
+        <input type="file" id="logoFile" accept="image/*" style="display:none;">
+        <div id="upPH" style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+          <div style="width:38px;height:38px;border-radius:10px;background:rgba(91,114,248,.1);display:flex;align-items:center;justify-content:center;">
+            <i class="ph ph-upload-simple" style="font-size:18px;color:var(--acc);"></i>
+          </div>
+          <span style="font-size:13px;font-weight:500;color:var(--txt);">Upload Logo</span>
+          <span style="font-size:11px;color:var(--mut);">PNG, JPG, SVG — optional</span>
+        </div>
+        <div id="upPrev" style="display:none;flex-direction:column;align-items:center;gap:6px;">
+          <img id="logoImg" style="width:52px;height:52px;object-fit:contain;border-radius:10px;background:#fff;padding:4px;">
+          <span style="font-size:11px;color:var(--grn);display:flex;align-items:center;gap:4px;"><i class="ph ph-check-circle"></i> Logo ready</span>
+          <button id="removeLogoBtn" style="font-size:11px;color:var(--red);background:none;border:none;cursor:pointer;font-family:inherit;padding:2px 8px;">✕ Remove</button>
+        </div>
+      </div>
+
+      <!-- Appearance -->
+      <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--bdr2);">
+        <div class="slabel"><i class="ph ph-paint-brush"></i> Appearance</div>
+        <div class="form-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+          <div>
+            <label style="display:block;font-size:11px;color:var(--mut);margin-bottom:6px;">QR Foreground</label>
+            <div class="cpick">
+              <input type="color" id="clrDark" value="#000000" style="width:28px;height:28px;border-radius:6px;cursor:pointer;border:none;padding:0;background:none;">
+              <span id="clrDarkHex" style="font-size:12px;color:var(--mut);">#000000</span>
+            </div>
+          </div>
+          <div>
+            <label style="display:block;font-size:11px;color:var(--mut);margin-bottom:6px;">QR Background</label>
+            <div class="cpick">
+              <input type="color" id="clrLight" value="#ffffff" style="width:28px;height:28px;border-radius:6px;cursor:pointer;border:none;padding:0;background:none;">
+              <span id="clrLightHex" style="font-size:12px;color:var(--mut);">#ffffff</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <label style="font-size:11px;color:var(--mut);">Border Width</label>
+            <span id="bwVal" style="font-size:12px;font-weight:600;color:var(--acc);">0 px</span>
+          </div>
+          <input type="range" id="bwRange" min="0" max="40" value="0" class="range">
+          <div class="cpick" style="margin-top:10px;width:fit-content;">
+            <input type="color" id="clrBdr" value="#5b72f8" style="width:24px;height:24px;border-radius:5px;cursor:pointer;border:none;padding:0;background:none;">
+            <span style="font-size:11px;color:var(--mut);">Border Color</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Generate -->
+      <button id="genBtn" class="genbtn">
+        <i class="ph ph-qr-code" style="font-size:19px;"></i> Generate QR Code
+      </button>
+    </div>
+
+    <!-- History -->
+    <div class="card" style="padding:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div class="slabel" style="margin-bottom:0;"><i class="ph ph-clock-counter-clockwise"></i> Recent</div>
+        <button id="clrHistBtn" style="display:none;font-size:11px;color:var(--red);background:none;border:none;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;"><i class="ph ph-trash-simple"></i> Clear</button>
+      </div>
+      <div id="histList" style="display:flex;flex-direction:column;gap:6px;">
+        <p style="text-align:center;padding:24px 0;font-size:13px;color:var(--mut);font-style:italic;">No recent codes yet</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Preview (desktop only) -->
+  <div class="rcol" style="position:sticky;top:20px;display:flex;flex-direction:column;gap:12px;">
+    <div class="card" style="padding:22px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:0;">
+      <div style="width:100%;height:3px;border-radius:99px;background:linear-gradient(90deg,var(--acc),var(--acc2));margin-bottom:20px;"></div>
+      <p style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:var(--txt);margin-bottom:18px;">QR Preview</p>
+
+      <!-- Desktop QR box -->
+      <div class="qrbox" id="dqrbox" style="margin-bottom:18px;">
+        <div id="dqrph" style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+          <i class="ph ph-qr-code" style="font-size:52px;color:var(--bdr);"></i>
+          <span style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);font-weight:600;">Enter details</span>
+        </div>
+        <div id="dqrld" style="display:none;"><i class="ph ph-arrows-clockwise spin" style="font-size:30px;color:var(--acc);"></i></div>
+        <img id="dqrimg" style="display:none;width:100%;height:100%;object-fit:contain;border-radius:14px;" alt="QR Code">
+      </div>
+
+      <!-- Desktop Summary -->
+      <div style="width:100%;border-radius:12px;padding:12px 14px;background:var(--surf2);border:1px solid var(--bdr2);text-align:left;margin-bottom:14px;">
+        <div id="dsum_upi">
+          <div class="srow"><span style="color:var(--mut);font-size:11px;">Payee</span><span id="ds_name" style="font-weight:600;font-size:13px;color:var(--txt);">—</span></div>
+          <div class="srow"><span style="color:var(--mut);font-size:11px;">UPI ID</span><span id="ds_id" style="font-weight:500;font-size:12px;color:var(--txt);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">—</span></div>
+          <div class="srow" style="margin-top:4px;padding-top:10px;border-top:1px dashed var(--bdr2)!important;"><span style="color:var(--mut);font-size:11px;">Amount</span><span id="ds_amt" style="font-size:18px;font-weight:700;color:var(--grn);">Any Amount</span></div>
+        </div>
+        <div id="dsum_lnk" style="display:none;">
+          <div style="font-size:11px;color:var(--mut);margin-bottom:5px;">Content</div>
+          <span id="ds_lnk" style="font-size:13px;font-weight:500;color:var(--txt);word-break:break-all;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">—</span>
+        </div>
+      </div>
+
+      <!-- Desktop action buttons -->
+      <div class="actrow" style="margin-bottom:14px;">
+        <button id="d_dl" class="abtn dl" disabled onclick="downloadQR()"><i class="ph ph-download-simple" style="font-size:20px;"></i>Save</button>
+        <button id="d_sh" class="abtn sh" disabled onclick="shareQR()"><i class="ph ph-share-network" style="font-size:20px;"></i>Share</button>
+        <button id="d_cp" class="abtn cp" disabled onclick="copyLink()"><i class="ph ph-copy" style="font-size:20px;"></i>Copy</button>
+      </div>
+
+      <div id="d_compat" style="display:flex;align-items:center;gap:5px;opacity:.4;transition:opacity .4s;">
+        <i class="ph ph-shield-check" style="font-size:12px;color:var(--grn);"></i>
+        <span style="font-size:10px;color:var(--mut);">GPay · PhonePe · Paytm · BHIM</span>
+      </div>
+    </div>
+
+    <div style="border-radius:12px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px;background:rgba(91,114,248,.07);border:1px solid rgba(91,114,248,.15);">
+      <i class="ph ph-lock-simple" style="font-size:15px;color:var(--acc);flex-shrink:0;margin-top:2px;"></i>
+      <p style="font-size:12px;color:var(--mut);line-height:1.6;">All QR codes are generated locally. No data leaves your device.</p>
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE BOTTOM BAR -->
+<div id="mbar">
+  <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+    <div class="mthumb" id="mthumb">
+      <i class="ph ph-qr-code" style="font-size:20px;color:#cbd5e1;"></i>
+    </div>
+    <div style="min-width:0;">
+      <p id="mbarT" style="font-size:13px;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">QR Preview</p>
+      <p id="mbarS" style="font-size:11px;color:var(--mut);">Generate to see QR</p>
+    </div>
+  </div>
+  <button class="mbtn" onclick="openSheet()">View QR <i class="ph ph-arrow-up-right"></i></button>
+</div>
+
+<!-- TOAST -->
+<div id="toast">
+  <i id="toastIco" class="ph ph-check-circle" style="font-size:16px;color:var(--grn);flex-shrink:0;"></i>
+  <span id="toastTxt" style="font-size:13px;font-weight:500;color:var(--txt);">Message</span>
+</div>
+
+<!-- Hidden QR render target -->
+<div id="qrRaw" style="display:none;position:absolute;top:-9999px;left:-9999px;"></div>
+
+<script>
+// ─── STATE ────────────────────────────────────────────
+let logoDataUrl = null;
+let qrGenerated = false;
+let mode = 'upi';
+let hist = JSON.parse(localStorage.getItem('pl_hist') || '[]');
+let lastQrDataUrl = null; // store rendered QR as data URL
+
+const $ = id => document.getElementById(id);
+const html = document.documentElement;
+
+// ─── THEME ─────────────────────────────────────────────
+(function(){
+  const t = localStorage.getItem('pl_theme');
+  if(t === 'light'){ html.classList.add('light'); $('themeBtn').innerHTML='<i class="ph ph-sun" style="font-size:17px;color:var(--amb);"></i>'; }
+})();
+
+$('themeBtn').addEventListener('click', () => {
+  const isLight = html.classList.contains('light');
+  if(isLight){
+    html.classList.remove('light');
+    $('themeBtn').innerHTML='<i class="ph ph-moon" style="font-size:17px;"></i>';
+    localStorage.setItem('pl_theme','dark');
+  } else {
+    html.classList.add('light');
+    $('themeBtn').innerHTML='<i class="ph ph-sun" style="font-size:17px;color:var(--amb);"></i>';
+    localStorage.setItem('pl_theme','light');
+  }
+});
+
+// ─── TABS ──────────────────────────────────────────────
+function switchMode(m) {
+  mode = m;
+  resetState();
+  if(m === 'upi'){
+    $('tabUpi').classList.add('on'); $('tabLnk').classList.remove('on');
+    $('upiForm').style.display = 'flex'; $('lnkForm').style.display = 'none';
+    $('modeIco').className = 'ph ph-smartphone'; $('modeTxt').textContent = 'Payment Details';
+    // summary
+    $('dsum_upi').style.display=''; $('dsum_lnk').style.display='none';
+    $('ssum_upi').style.display=''; $('ssum_lnk').style.display='none';
+    setCompat(0.4);
+  } else {
+    $('tabLnk').classList.add('on'); $('tabUpi').classList.remove('on');
+    $('lnkForm').style.display = 'flex'; $('upiForm').style.display = 'none';
+    $('modeIco').className = 'ph ph-link'; $('modeTxt').textContent = 'Content Details';
+    $('dsum_lnk').style.display=''; $('dsum_upi').style.display='none';
+    $('ssum_lnk').style.display=''; $('ssum_upi').style.display='none';
+    setCompat(0);
+  }
+}
+function setCompat(v){ $('d_compat').style.opacity=v; $('s_compat').style.opacity=v; }
+
+// ─── LOGO ──────────────────────────────────────────────
+$('dropZone').addEventListener('click', e => { if(e.target !== $('removeLogoBtn')) $('logoFile').click(); });
+$('logoFile').addEventListener('change', e => {
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    logoDataUrl = ev.target.result;
+    $('logoImg').src = logoDataUrl;
+    $('upPrev').style.display='flex'; $('upPH').style.display='none';
+    resetState();
+  };
+  r.readAsDataURL(f);
+});
+$('removeLogoBtn').addEventListener('click', e => {
+  e.stopPropagation();
+  logoDataUrl = null; $('logoFile').value='';
+  $('upPrev').style.display='none'; $('upPH').style.display='flex';
+  resetState();
+});
+
+// ─── COLOR LABELS ──────────────────────────────────────
+$('clrDark').addEventListener('input', e => { $('clrDarkHex').textContent = e.target.value; if(qrGenerated) generateQR(); });
+$('clrLight').addEventListener('input', e => { $('clrLightHex').textContent = e.target.value; if(qrGenerated) generateQR(); });
+$('clrBdr').addEventListener('input', () => { if(qrGenerated) redrawFromCache(); });
+$('bwRange').addEventListener('input', e => { $('bwVal').textContent = e.target.value+' px'; if(qrGenerated) redrawFromCache(); });
+
+// Input listeners
+['upiId','amount','payeeName','note','invoiceNo','linkText'].forEach(id => {
+  $(id).addEventListener('input', resetState);
+});
+
+$('genBtn').addEventListener('click', generateQR);
+$('clrHistBtn').addEventListener('click', clearHist);
+
+// ─── STATE HELPERS ─────────────────────────────────────
+function resetState(){
+  qrGenerated = false; lastQrDataUrl = null;
+  // hide QR images, show placeholders
+  showPlaceholder('d'); showPlaceholder('s');
+  setActionBtns(false);
+  const hasData = mode === 'upi' ? $('upiId').value : $('linkText').value;
+  enableBtn('d_cp', !!hasData); enableBtn('s_cp', !!hasData);
+}
+
+function showPlaceholder(prefix){
+  $(prefix+'qrph').style.display='flex';
+  $(prefix+'qrld').style.display='none';
+  $(prefix+'qrimg').style.display='none';
+}
+function showLoader(prefix){
+  $(prefix+'qrph').style.display='none';
+  $(prefix+'qrld').style.display='flex';
+  $(prefix+'qrimg').style.display='none';
+}
+function showQR(prefix, src){
+  $(prefix+'qrph').style.display='none';
+  $(prefix+'qrld').style.display='none';
+  const img = $(prefix+'qrimg');
+  img.src = src;
+  img.style.display='block';
+}
+
+function enableBtn(id, on){
+  const b = $(id); if(!b) return;
+  b.disabled = !on;
+}
+function setActionBtns(on){
+  ['d_dl','d_sh','d_cp','s_dl','s_sh','s_cp'].forEach(id => enableBtn(id, on));
+}
+
+// ─── TOAST ─────────────────────────────────────────────
+let toastTimer;
+function toast(msg, type='ok'){
+  $('toastTxt').textContent = msg;
+  $('toastIco').className = type==='err' ? 'ph ph-warning-circle' : 'ph ph-check-circle';
+  $('toastIco').style.color = type==='err' ? 'var(--red)' : 'var(--grn)';
+  const el = $('toast');
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ─── VALIDATE ──────────────────────────────────────────
+function validate(){
+  if(mode === 'upi'){
+    if(!$('upiId').value){ toast('UPI ID is required','err'); return false; }
+    if(!/[a-zA-Z0-9.\-_]{2,}@[a-zA-Z]{2,}/.test($('upiId').value)){ toast('Invalid UPI ID format','err'); return false; }
+    if($('amount').value && parseFloat($('amount').value) <= 0){ toast('Amount must be positive','err'); return false; }
+  } else {
+    if(!$('linkText').value.trim()){ toast('Please enter a URL or text','err'); return false; }
+  }
+  return true;
+}
+
+// ─── GENERATE ──────────────────────────────────────────
+function generateQR(){
+  if(!validate()) return;
+  showLoader('d'); showLoader('s');
+
+  let qrContent = '';
+  if(mode === 'upi'){
+    const upiId = $('upiId').value;
+    const name  = $('payeeName').value;
+    const amt   = $('amount').value;
+    const note  = $('note').value;
+    const inv   = $('invoiceNo').value;
+    qrContent = `upi://pay?pa=${upiId}&cu=INR`;
+    if(name) qrContent += `&pn=${encodeURIComponent(name)}`;
+    if(amt)  qrContent += `&am=${amt}`;
+    if(note) qrContent += `&tn=${encodeURIComponent(note)}`;
+    if(inv)  qrContent += `&tr=${encodeURIComponent(inv)}`;
+    // update summaries
+    $('ds_name').textContent = $('ss_name').textContent = name || '—';
+    $('ds_id').textContent   = $('ss_id').textContent   = upiId;
+    $('ds_amt').textContent  = $('ss_amt').textContent  = amt ? `₹${amt}` : 'Any Amount';
+    $('mbarT').textContent = name || upiId;
+    $('mbarS').textContent = amt ? `₹${amt}` : 'Any Amount';
+  } else {
+    qrContent = $('linkText').value.trim();
+    $('ds_lnk').textContent = $('ss_lnk').textContent = qrContent;
+    $('mbarT').textContent = 'Link / Text QR';
+    $('mbarS').textContent = qrContent.substring(0,34) + (qrContent.length>34?'…':'');
+  }
+
+  $('qrRaw').innerHTML = '';
+  setTimeout(() => {
+    try {
+      new QRCode($('qrRaw'), {
+        text: qrContent,
+        width: 800, height: 800,
+        colorDark:  $('clrDark').value,
+        colorLight: $('clrLight').value,
+        correctLevel: QRCode.CorrectLevel.H
+      });
+      // QRCode.js creates a canvas element
+      setTimeout(drawCanvas, 200);
+    } catch(e){
+      console.error(e);
+      toast('Error generating QR','err');
+      showPlaceholder('d'); showPlaceholder('s');
+    }
+  }, 300);
+}
+
+// ─── DRAW CANVAS ───────────────────────────────────────
+function drawCanvas(){
+  // Get canvas from QRCode.js
+  const srcCanvas = $('qrRaw').querySelector('canvas');
+  if(!srcCanvas){ toast('QR render failed','err'); showPlaceholder('d'); showPlaceholder('s'); return; }
+
+  const cv = document.createElement('canvas');
+  const size = 600;
+  const border = parseInt($('bwRange').value);
+  const inner = size - border*2;
+  cv.width = cv.height = size;
+  const ctx = cv.getContext('2d');
+
+  ctx.fillStyle = $('clrLight').value;
+  ctx.fillRect(0,0,size,size);
+  ctx.drawImage(srcCanvas, border, border, inner, inner);
+
+  if(border > 0){
+    ctx.strokeStyle = $('clrBdr').value;
+    ctx.lineWidth = border;
+    ctx.strokeRect(border/2, border/2, size-border, size-border);
+  }
+
+  if(logoDataUrl){
+    const li = new Image();
+    li.onload = () => {
+      const ls = inner * 0.2;
+      const x = (size-ls)/2, y = (size-ls)/2;
+      ctx.fillStyle = $('clrLight').value;
+      ctx.beginPath();
+      if(ctx.roundRect) ctx.roundRect(x-6,y-6,ls+12,ls+12,10);
+      else ctx.rect(x-6,y-6,ls+12,ls+12);
+      ctx.fill();
+      ctx.drawImage(li,x,y,ls,ls);
+      finalize(cv);
+    };
+    li.src = logoDataUrl;
+  } else {
+    finalize(cv);
+  }
+}
+
+function redrawFromCache(){
+  if(!lastQrDataUrl) return;
+  // re-apply border/color on top of cached base
+  // simpler: just re-generate
+  generateQR();
+}
+
+function finalize(cv){
+  lastQrDataUrl = cv.toDataURL('image/png');
+  showQR('d', lastQrDataUrl);
+  showQR('s', lastQrDataUrl);
+  // mobile bar thumb
+  $('mthumb').innerHTML = `<img src="${lastQrDataUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">`;
+  qrGenerated = true;
+  setActionBtns(true);
+  if(mode === 'upi') setCompat(1); else setCompat(0);
+  addToHist();
+  toast('QR Code ready!');
+}
+
+// ─── DOWNLOAD ──────────────────────────────────────────
+function downloadQR(){
+  if(!lastQrDataUrl) return;
+  const a = document.createElement('a');
+  a.download = mode === 'upi'
+    ? `UPI-QR-${$('payeeName').value || 'Pay'}.png`
+    : `QR-${Date.now()}.png`;
+  a.href = lastQrDataUrl; a.click();
+}
+
+// ─── SHARE ─────────────────────────────────────────────
+async function shareQR(){
+  if(!lastQrDataUrl) return;
+  try {
+    const res = await fetch(lastQrDataUrl);
+    const blob = await res.blob();
+    const file = new File([blob], 'qr-code.png', { type:'image/png' });
+    const text = mode === 'upi'
+      ? `Pay ${$('amount').value ? '₹'+$('amount').value : ''} to ${$('payeeName').value || $('upiId').value}`
+      : $('linkText').value;
+    if(navigator.share && navigator.canShare({ title:'QR Code', text, files:[file] })){
+      await navigator.share({ title:'QR Code', text, files:[file] });
+    } else {
+      copyLink(); toast('Sharing unavailable — copied!');
+    }
+  } catch(e){ console.error(e); }
+}
+
+// ─── COPY ──────────────────────────────────────────────
+function copyLink(){
+  let c = '';
+  if(mode === 'upi'){
+    if(!$('upiId').value) return;
+    c = `upi://pay?pa=${$('upiId').value}&cu=INR`;
+    if($('amount').value) c += `&am=${$('amount').value}`;
+  } else { c = $('linkText').value; }
+  if(c) navigator.clipboard.writeText(c).then(() => toast('Copied to clipboard!'));
+}
+
+// ─── HISTORY ───────────────────────────────────────────
+function addToHist(){
+  const last = hist[0];
+  if(last){
+    if(mode==='upi' && last.upiId===$('upiId').value && last.amt===$('amount').value) return;
+    if(mode!=='upi' && last.content===$('linkText').value) return;
+  }
+  hist.unshift({
+    id: Date.now(), type: mode,
+    upiId: $('upiId').value, name: $('payeeName').value,
+    amt: $('amount').value, content: $('linkText').value,
+    date: new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short'})
+  });
+  if(hist.length > 10) hist.pop();
+  localStorage.setItem('pl_hist', JSON.stringify(hist));
+  renderHist();
+}
+
+function renderHist(){
+  if(!hist.length){
+    $('histList').innerHTML='<p style="text-align:center;padding:24px 0;font-size:13px;color:var(--mut);font-style:italic;">No recent codes yet</p>';
+    $('clrHistBtn').style.display='none'; return;
+  }
+  $('clrHistBtn').style.display='flex';
+  $('histList').innerHTML = hist.map(item => {
+    const isUpi = item.type !== 'link';
+    const ico   = isUpi ? 'ph-currency-inr' : 'ph-link';
+    const main  = isUpi ? (item.name || item.upiId) : 'Text / Link';
+    const sub   = isUpi ? item.date : (item.content||'').substring(0,30)+'…';
+    const right = isUpi ? (item.amt ? '₹'+item.amt : 'Open') : '<i class="ph ph-qr-code"></i>';
+    const rc    = isUpi ? 'var(--grn)' : 'var(--mut)';
+    return `<div onclick="loadHist(${item.id})" class="hitem">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+        <div style="width:34px;height:34px;border-radius:9px;background:rgba(91,114,248,.12);display:flex;align-items:center;justify-content:center;color:var(--acc);flex-shrink:0;"><i class="ph ${ico}"></i></div>
+        <div style="min-width:0;">
+          <div style="font-size:13px;font-weight:600;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${main}</div>
+          <div style="font-size:11px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${sub}</div>
+        </div>
+      </div>
+      <span style="font-weight:700;font-size:13px;color:${rc};flex-shrink:0;margin-left:8px;">${right}</span>
+    </div>`;
+  }).join('');
+}
+
+window.loadHist = function(id){
+  const item = hist.find(h => h.id===id); if(!item) return;
+  if(item.type==='link'){ switchMode('link'); $('linkText').value=item.content||''; }
+  else { switchMode('upi'); $('upiId').value=item.upiId||''; $('payeeName').value=item.name||''; $('amount').value=item.amt||''; }
+  resetState();
+  window.scrollTo({top:0,behavior:'smooth'});
+};
+
+function clearHist(){
+  if(confirm('Clear all history?')){ hist=[]; localStorage.removeItem('pl_hist'); renderHist(); }
+}
+
+// ─── MOBILE SHEET ──────────────────────────────────────
+function openSheet(){
+  if(qrGenerated && lastQrDataUrl){ showQR('s', lastQrDataUrl); setActionBtns(true); if(mode==='upi') setCompat(1); }
+  $('sheet').classList.add('open');
+  $('sovl').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeSheet(){
+  $('sheet').classList.remove('open');
+  $('sovl').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+// ─── INIT ──────────────────────────────────────────────
+renderHist();
+</script>
+</body>
+</html>
