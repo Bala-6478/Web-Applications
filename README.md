@@ -91,6 +91,6 @@ www.neocities.org
 🔗 https://balavignesh2025.neocities.org/web%20apps%20/TextWriter%20HTML/textwriter%20v2.0
 ---
 ### 19. Image Editor Pro
-🔗 https://balavignesh2025.neocities.org/web%20apps%20/Image%20Editor%20Pro/image-editor-pro
+🔗 
 ---
   *****
