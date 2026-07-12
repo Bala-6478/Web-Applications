@@ -1,4 +1,4 @@
-# 🌐 Web Applications Portfolio
+# 🌐 Web Applications Portfolio.
 
 🚀 A curated collection of modern, responsive, and interactive web applications built using **HTML, CSS, and JavaScript**.
 
