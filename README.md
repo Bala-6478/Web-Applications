@@ -20,7 +20,7 @@ www.neocities.org
 - 🎯 Clean and modern design  
 - 📱 Mobile-friendly layouts  
 - 🔥 Real-time functionality  
-- 🧠 Practical real-world projects  
+- 🧠 Practical real-world projects   
 --- 
   
 ## 🙌 Author
