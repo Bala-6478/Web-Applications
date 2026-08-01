@@ -21,7 +21,7 @@ www.neocities.org
 - 📱 Mobile-friendly layouts  
 - 🔥 Real-time functionality  
 - 🧠 Practical real-world projects  
----
+--- 
   
 ## 🙌 Author
 
