@@ -9,7 +9,7 @@
 - CSS3    
 - JavaScript     
 --- 
-## Hosting Web Sites. 
+## Hosting Web Sites.  
    
 `* Use  to hosting my pages. 
 www.neocities.org  
