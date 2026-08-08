@@ -16,7 +16,7 @@ www.neocities.org
 
 ---
 ## ✨ Features
-- ⚡ Fast and responsive UI  
+- ⚡ Fast and responsive UI   
 - 🎯 Clean and modern design  
 - 📱 Mobile-friendly layouts  
 - 🔥 Real-time functionality  
