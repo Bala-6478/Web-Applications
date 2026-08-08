@@ -26,7 +26,7 @@ www.neocities.org
 ## 🙌 Author
 
 **Balavignesh A**
-💼 Frontend Developer
+💼 Frontend Developer 
 
 ### ⭐ My Web Site :  https://balavignesh2025.neocities.org/New  
 ---
