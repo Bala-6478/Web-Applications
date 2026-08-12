@@ -19,7 +19,7 @@ www.neocities.org
 - ⚡ Fast and responsive UI   
 - 🎯 Clean and modern design  
 - 📱 Mobile-friendly layouts  
-- 🔥 Real-time functionality  
+- 🔥 Real-time functionality   
 - 🧠 Practical real-world projects   
 --- 
   
