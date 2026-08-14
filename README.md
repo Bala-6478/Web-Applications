@@ -6,7 +6,7 @@
 ---   
 ## 🛠️ Tech Stack. 
 - HTML5       
-- CSS3       
+- CSS3         
 - JavaScript       
 ---     
 ## Hosting Web Sites.    
