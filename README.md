@@ -1,4 +1,4 @@
-# 🌐 Web Applications..
+# 🌐 Web Applications...
 
 🚀 A curated collection of modern, responsive, and interactive web applications built using **HTML, CSS, and JavaScript**.
 
