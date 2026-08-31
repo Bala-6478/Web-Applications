@@ -4,7 +4,7 @@
 
 * (2026 New Update more ComingSoon................. )     
 ---   
-## 🛠️ Tech Stack.   
+## 🛠️ Tech Stack.    
 - HTML5       
 - CSS3            
 - JavaScript       
