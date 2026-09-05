@@ -11,7 +11,7 @@
 ---      
 ## Hosting Web Sites.    
    
-`* Use  to hosting my pages. 
+`* Use  to hosting my pages.  
 www.neocities.org     
 
 --- 
