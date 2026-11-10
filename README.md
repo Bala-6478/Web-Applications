@@ -18,7 +18,7 @@
 ## ✨ Features 
 - ⚡ Fast and responsive UI    
 - 🎯 Clean and modern design   
-- 📱 Mobile-friendly layouts  
+- 📱 Mobile-friendly layouts   
 - 🔥 Real-time functionality   
 - 🧠 Practical real-world projects   
 --- 
