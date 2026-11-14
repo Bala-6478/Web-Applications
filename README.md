@@ -12,7 +12,7 @@
 ## Hosting Web Sites.        
     
 ## `* Use  to hosting my pages.  
-### www.neocities.org     || https://www.netlify.com
+### www.neocities.org     || https://www.netlify.com 
 
 ---       
 ## ✨ Features 
