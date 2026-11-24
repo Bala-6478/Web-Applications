@@ -15,7 +15,7 @@
 ### www.neocities.org     || https://www.netlify.com  
 
 ---       
-## ✨ Features 
+## ✨ Features  
 - ⚡ Fast and responsive UI      
 - 🎯 Clean and modern design     
 - 📱 Mobile-friendly layouts   
